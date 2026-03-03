@@ -10,7 +10,9 @@
         body { background-color: #1a1a1a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
         .container { width: 380px; background: #3c4043; border: 3px solid #5f6368; padding: 25px; border-radius: 5px; text-align: center; position: relative; }
         .settings-icon { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 24px; z-index: 10; opacity: 0.7; }
-        #settings-panel { display: none; position: absolute; top: 45px; right: 15px; background: #202124; border: 1px solid #5f6368; padding: 15px; text-align: left; z-index: 20; width: 220px; border-radius: 8px; }
+        .admin-icon { position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 24px; z-index: 10; display: none; }
+        #settings-panel, #admin-panel { display: none; position: absolute; top: 45px; left: 15px; right: 15px; background: #202124; border: 1px solid #5f6368; padding: 15px; text-align: left; z-index: 20; border-radius: 8px; }
+        #settings-panel { left: auto; width: 220px; }
         .slot-machine { background: #202124; border: 2px solid #5f6368; display: flex; justify-content: center; gap: 10px; padding: 20px; margin: 20px 0; }
         .slot { width: 80px; height: 110px; background: #202124; border: 2px solid #5f6368; font-size: 60px; line-height: 110px; }
         .btn-main { width: 100%; padding: 15px; font-size: 18px; font-weight: bold; border: none; cursor: pointer; color: #fff; margin-bottom: 10px; text-transform: uppercase; }
@@ -18,20 +20,30 @@
         .btn-promo { background: #b8860b; border-bottom: 4px solid #8b4513; }
         .logs-box { background: #1a1a1a; border: 1px solid #5f6368; height: 100px; overflow-y: auto; text-align: left; padding: 10px; font-size: 13px; color: #fdd835; }
         input[type=range] { width: 100%; margin: 5px 0 10px 0; }
+        .admin-btn { background: #d32f2f; color: white; border: none; padding: 5px 10px; margin-top: 5px; cursor: pointer; width: 100%; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="auth-section">
-        <h1 style="color:#b71c1c">🍓 БУРМАЛДА</h1>
+        <h1>🍓 БУРМАЛДА</h1>
         <input type="text" id="username" placeholder="Логин" style="width:90%; padding:10px; margin-bottom:10px;">
-        <input type="password" id="password" placeholder="Пароль" style="width:90%; padding:10px; margin-bottom:10px;">
+        <input type="password" id="password" placeholder="Пароль" style="width:90+%; padding:10px; margin-bottom:10px;">
         <button onclick="login()" class="btn-main" style="background:#5f6368">ЗАЙТИ</button>
     </div>
 
     <div id="game-section" style="display:none;">
+        <div id="admin-btn" class="admin-icon" onclick="toggleAdmin()">👑</div>
         <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
+        
+        <div id="admin-panel">
+            <h4 style="margin:0 0 10px 0">АДМИН-ПАНЕЛЬ</h4>
+            <button class="admin-btn" onclick="adminAddMoney()">+100 АР ВСЕМ</button>
+            <button class="admin-btn" onclick="adminResetAll()" style="background:black">ОБНУЛИТЬ ВСЕХ</button>
+            <button class="admin-btn" onclick="toggleAdmin()" style="background:#555">ЗАКРЫТЬ</button>
+        </div>
+
         <div id="settings-panel">
             <label style="font-size:11px;">Музыка:</label>
             <select id="bg-music-select" onchange="changeMusic()" style="width:100%; margin-bottom:10px;">
@@ -42,17 +54,20 @@
                 <option value="nobody.mp3">Возьми телефон</option>
                 <option value="pay_pay_pay.mp3">Пай Пай Пай</option>
             </select>
-            <label style="font-size:11px;">Громкость Музыки:</label>
             <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
-            <label style="font-size:11px;">Громкость Звуков:</label>
             <input type="range" id="sound-vol" min="0" max="1" step="0.1" value="0.7" oninput="applyVolumes()">
             <label style="cursor:pointer; font-size:12px;"><input type="checkbox" id="sounds-on" checked> Звук ВКЛ</label>
         </div>
-        <div class="info-header">
-            <h2 id="display-name" style="margin:0; color:#bdc1c6">---</h2>
-            <h3 style="color:#81c995">АР: <span id="balance">0</span></h3>
+
+        <h2 id="display-name" style="margin:0; color:#bdc1c6">---</h2>
+        <h3 style="color:#81c995">АР: <span id="balance">0</span></h3>
+
+        <div class="slot-machine">
+            <div id="s1" class="slot">?</div>
+            <div id="s2" class="slot">?</div>
+            <div id="s3" class="slot">?</div>
         </div>
-        <div class="slot-machine"><div id="s1" class="slot">?</div><div id="s2" class="slot">?</div><div id="s3" class="slot">?</div></div>
+
         <button id="spin-btn" class="btn-main btn-spin" onclick="spin()">КРУТИТЬ (1 АР)</button>
         <button class="btn-main btn-promo" onclick="promptPromo()">ПРОМОКОД</button>
         <div id="history" class="logs-box"></div>
@@ -72,7 +87,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Звуки
     const S = {
         fail: new Audio('ti_blat_dolbaub_naxyi_1.mp3'),
         win2: new Audio('vrode_da_vrode_net_1.mp3'),
@@ -85,6 +99,7 @@
 
     let bgMusic = new Audio();
     bgMusic.loop = true;
+    let user = "";
 
     function applyVolumes() {
         bgMusic.volume = document.getElementById('music-vol').value;
@@ -95,27 +110,18 @@
     function playSnd(aud) {
         if (!document.getElementById('sounds-on').checked) return;
         aud.currentTime = 0;
-        aud.play().catch(() => {});
+        aud.play().catch(()=>{});
     }
 
     function playBam() {
         if (!document.getElementById('sounds-on').checked) return;
         S.bam.currentTime = 0;
-        S.bam.play().catch(() => {});
+        S.bam.play().catch(()=>{});
         setTimeout(() => { S.bam.pause(); }, 400); 
     }
 
-    function changeMusic() {
-        bgMusic.src = document.getElementById('bg-music-select').value;
-        bgMusic.play().catch(() => {});
-    }
-
-    let user = "";
-
     function login() {
-        // Разблокировка звука при первом клике
         Object.values(S).flat().forEach(a => { a.play().then(()=>a.pause()).catch(()=>{}); });
-        
         user = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value;
         if(!user || !p) return;
@@ -134,8 +140,16 @@
         document.getElementById('auth-section').style.display='none';
         document.getElementById('game-section').style.display='block';
         document.getElementById('display-name').innerText = user;
+        
+        // Показываем корону, если логин admin
+        if(user.toLowerCase() === 'admin') {
+            document.getElementById('admin-btn').style.display = 'block';
+        }
+
         applyVolumes();
-        changeMusic();
+        bgMusic.src = document.getElementById('bg-music-select').value;
+        bgMusic.play().catch(()=>{});
+
         db.ref('players/' + user).on('value', snap => {
             const d = snap.val();
             if(d) {
@@ -150,22 +164,24 @@
         const s = await db.ref('players/' + user).once('value');
         const d = s.val();
         if(d.balance < 1) { playSnd(S.interpol); return alert("АР закончились!"); }
+        
         btn.disabled = true;
         playBam();
+        
         const ic = ['🍏', '🍌', '🍓', '🍒', '🍋'];
         const r = [ic[Math.floor(Math.random()*5)], ic[Math.floor(Math.random()*5)], ic[Math.floor(Math.random()*5)]];
         const el = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
+        
         el.forEach(e => e.innerText = "?");
         setTimeout(() => el[0].innerText = r[0], 1600);
         setTimeout(() => el[1].innerText = r[1], 3200);
         setTimeout(() => {
             el[2].innerText = r[2];
             let win = 0;
-            const jp = (r[0] === r[1] && r[1] === r[2]);
-            const pair = (r[0] === r[1] || r[1] === r[2] || r[0] === r[2]);
-            if(jp) { win = 5; playSnd(S.jps[Math.floor(Math.random()*3)]); }
-            else if(pair) { win = 2; playSnd(S.win2); }
+            if(r[0]===r[1] && r[1]===r[2]) { win = 5; playSnd(S.jps[Math.floor(Math.random()*3)]); }
+            else if(r[0]===r[1] || r[1]===r[2] || r[0]===r[2]) { win = 2; playSnd(S.win2); }
             else { if(Math.random() < 0.4) playSnd(S.stay); else if(Math.random() < 0.3) playSnd(S.cry); }
+            
             db.ref('players/' + user).update({
                 balance: d.balance - 1 + win,
                 history: [...(d.history || []), `${r.join('')} | ${win-1>=0 ? '+'+(win-1) : '-1'} АР`].slice(-10)
@@ -174,21 +190,41 @@
         }, 5000);
     }
 
+    // Функции админа
+    function adminAddMoney() {
+        db.ref('players').once('value', s => {
+            s.forEach(p => {
+                db.ref('players/' + p.key + '/balance').transaction(b => (b || 0) + 100);
+                db.ref('players/' + p.key + '/history').transaction(h => [...(h || []), "АДМИН ДАЛ 100 АР"].slice(-10));
+            });
+            alert("Раздал по 100 АР всем!");
+        });
+    }
+    function adminResetAll() {
+        if(confirm("УДАЛИТЬ ВСЕХ?")) db.ref('players').remove().then(() => location.reload());
+    }
+
+    function toggleAdmin() {
+        const p = document.getElementById('admin-panel');
+        p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+    }
+    function toggleSettings() {
+        const p = document.getElementById('settings-panel');
+        p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+    }
+    function changeMusic() {
+        bgMusic.src = document.getElementById('bg-music-select').value;
+        bgMusic.play();
+    }
     function promptPromo() {
         const code = prompt("Промокод:");
         if(!code) return;
         const c = code.trim().toUpperCase();
         let b = (c === "MELL") ? 3 : (c === "МЕЛЛ" || c === "МЕЛЛСТРОЙ") ? 5 : 0;
         if(b > 0) {
-            db.ref('players/' + user + '/balance').transaction(v => (v || 0) + b, (err, comm) => {
-                if(comm) { playSnd(S.win2); alert("+" + b + " АР"); }
-            });
-        } else alert("Хуйня код");
-    }
-
-    function toggleSettings() {
-        const p = document.getElementById('settings-panel');
-        p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+            db.ref('players/' + user + '/balance').transaction(v => (v || 0) + b);
+            alert("Бонус получен!");
+        } else alert("Код неверный");
     }
 </script>
 </body>
