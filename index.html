@@ -21,6 +21,7 @@
         .logs-box { background: #1a1a1a; border: 1px solid #5f6368; height: 100px; overflow-y: auto; text-align: left; padding: 10px; font-size: 13px; color: #fdd835; }
         input[type=range] { width: 100%; margin: 5px 0 10px 0; }
         .admin-action-btn { background: #d32f2f; color: white; border: none; padding: 8px; margin-top: 5px; cursor: pointer; width: 100%; font-weight: bold; }
+        #auth-section input { width: 90%; padding: 10px; margin-bottom: 10px; border: 1px solid #5f6368; border-radius: 3px; background: #fff; }
     </style>
 </head>
 <body>
@@ -28,8 +29,8 @@
 <div class="container">
     <div id="auth-section">
         <h1>🍓 БУРМАЛДА</h1>
-        <input type="text" id="username" placeholder="Логин" style="width:90%; padding:10px; margin-bottom:10px;">
-        <input type="password" id="password" placeholder="Пароль" style="width:90%; padding:10px; margin-bottom:10px;">
+        <input type="text" id="username" placeholder="Логин">
+        <input type="password" id="password" placeholder="Пароль">
         <button onclick="login()" class="btn-main" style="background:#5f6368">ЗАЙТИ</button>
     </div>
 
@@ -38,8 +39,8 @@
         <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
         
         <div id="admin-panel">
-            <h4 style="margin:0 0 10px 0; color: #fdd835;">УПРАВЛЕНИЕ ГЕЙ-КЛУБОМ</h4>
-            <button class="admin-action-btn" onclick="adminAddMoney()">+100 АР ВСЕМ</button>
+            <h4 style="margin:0 0 10px 0; color: #fdd835;">АДМИНКА</h4>
+            <button class="admin-action-btn" onclick="adminAddMoney()">+100 АРЫ ВСЕМ</button>
             <button class="admin-action-btn" onclick="adminResetAll()" style="background:black">ОБНУЛИТЬ БАЗУ</button>
             <button class="admin-action-btn" onclick="document.getElementById('admin-panel').style.display='none'" style="background:#555">ЗАКРЫТЬ</button>
         </div>
@@ -52,7 +53,7 @@
                 <option value="bad_piggies.mp3">Bad Piggies</option>
                 <option value="bam_bam_bam_1.mp3">Бам Бам Бам</option>
                 <option value="nobody.mp3">Возьми телефон</option>
-                <option value="pay_pay_pay.mp3">Пау Пау Пау</option>
+                <option value="pay_pay_pay.mp3">Пай Пай Пай</option>
             </select>
             <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
             <input type="range" id="sound-vol" min="0" max="1" step="0.1" value="0.7" oninput="applyVolumes()">
@@ -60,7 +61,7 @@
         </div>
 
         <h2 id="display-name" style="margin:0; color:#bdc1c6">---</h2>
-        <h3 style="color:#81c995">АР: <span id="balance">0</span></h3>
+        <h3 style="color:#81c995">АРы: <span id="balance">0</span></h3>
 
         <div class="slot-machine">
             <div id="s1" class="slot">?</div>
@@ -126,7 +127,7 @@
         const p = document.getElementById('password').value;
         if(!user || !p) return;
         db.ref('players/' + user).once('value', s => {
-            if(!s.exists()) db.ref('players/' + user).set({balance: 5, password: p, history: ["Регистрация +5 АР"]}).then(() => go());
+            if(!s.exists()) db.ref('players/' + user).set({balance: 5, password: p, history: ["Регистрация +5 АРы"]}).then(() => go());
             else (s.val().password === p) ? go() : (playSnd(S.fail), alert("ПАРОЛЬ!"));
         });
     }
@@ -151,7 +152,7 @@
         const btn = document.getElementById('spin-btn');
         const s = await db.ref('players/' + user).once('value');
         const d = s.val();
-        if(d.balance < 1) { playSnd(S.interpol); return alert("Ары закончились!"); }
+        if(d.balance < 1) { playSnd(S.interpol); return alert("АРы закончились!"); }
         btn.disabled = true;
         playBam();
         const ic = ['🍏', '🍌', '🍓', '🍒', '🍋'];
@@ -168,7 +169,7 @@
             else { if(Math.random() < 0.4) playSnd(S.stay); else if(Math.random() < 0.3) playSnd(S.cry); }
             db.ref('players/' + user).update({
                 balance: d.balance - 1 + win,
-                history: [...(d.history || []), `${r.join('')} | ${win-1>=0 ? '+'+(win-1) : '-1'} АР`].slice(-10)
+                history: [...(d.history || []), `${r.join('')} | ${win-1>=0 ? '+'+(win-1) : '-1'} АРы`].slice(-10)
             });
             btn.disabled = false;
         }, 5000);
@@ -188,7 +189,7 @@
             s.forEach(p => {
                 db.ref('players/' + p.key + '/balance').transaction(b => (b || 0) + 100);
             });
-            alert("Выдано по 100 АР!");
+            alert("Выдано по 100 АРы!");
         });
     }
 
