@@ -10,8 +10,8 @@
         body { background-color: #1a1a1a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
         .container { width: 380px; background: #3c4043; border: 3px solid #5f6368; padding: 25px; border-radius: 5px; text-align: center; position: relative; }
         .settings-icon { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 24px; z-index: 10; opacity: 0.7; }
-        .admin-icon { position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 24px; z-index: 10; display: none; }
-        #settings-panel, #admin-panel { display: none; position: absolute; top: 45px; left: 15px; right: 15px; background: #202124; border: 1px solid #5f6368; padding: 15px; text-align: left; z-index: 20; border-radius: 8px; }
+        .admin-btn-open { position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 12px; background: #555; padding: 5px; border-radius: 3px; z-index: 10; }
+        #settings-panel, #admin-panel { display: none; position: absolute; top: 50px; left: 15px; right: 15px; background: #202124; border: 1px solid #5f6368; padding: 15px; text-align: left; z-index: 20; border-radius: 8px; }
         #settings-panel { left: auto; width: 220px; }
         .slot-machine { background: #202124; border: 2px solid #5f6368; display: flex; justify-content: center; gap: 10px; padding: 20px; margin: 20px 0; }
         .slot { width: 80px; height: 110px; background: #202124; border: 2px solid #5f6368; font-size: 60px; line-height: 110px; }
@@ -20,7 +20,7 @@
         .btn-promo { background: #b8860b; border-bottom: 4px solid #8b4513; }
         .logs-box { background: #1a1a1a; border: 1px solid #5f6368; height: 100px; overflow-y: auto; text-align: left; padding: 10px; font-size: 13px; color: #fdd835; }
         input[type=range] { width: 100%; margin: 5px 0 10px 0; }
-        .admin-btn { background: #d32f2f; color: white; border: none; padding: 5px 10px; margin-top: 5px; cursor: pointer; width: 100%; }
+        .admin-action-btn { background: #d32f2f; color: white; border: none; padding: 8px; margin-top: 5px; cursor: pointer; width: 100%; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -29,19 +29,19 @@
     <div id="auth-section">
         <h1>🍓 БУРМАЛДА</h1>
         <input type="text" id="username" placeholder="Логин" style="width:90%; padding:10px; margin-bottom:10px;">
-        <input type="password" id="password" placeholder="Пароль" style="width:90+%; padding:10px; margin-bottom:10px;">
+        <input type="password" id="password" placeholder="Пароль" style="width:90%; padding:10px; margin-bottom:10px;">
         <button onclick="login()" class="btn-main" style="background:#5f6368">ЗАЙТИ</button>
     </div>
 
     <div id="game-section" style="display:none;">
-        <div id="admin-btn" class="admin-icon" onclick="toggleAdmin()">👑</div>
+        <div class="admin-btn-open" onclick="toggleAdmin()">АДМИН</div>
         <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
         
         <div id="admin-panel">
-            <h4 style="margin:0 0 10px 0">АДМИН-ПАНЕЛЬ</h4>
-            <button class="admin-btn" onclick="adminAddMoney()">+100 АР ВСЕМ</button>
-            <button class="admin-btn" onclick="adminResetAll()" style="background:black">ОБНУЛИТЬ ВСЕХ</button>
-            <button class="admin-btn" onclick="toggleAdmin()" style="background:#555">ЗАКРЫТЬ</button>
+            <h4 style="margin:0 0 10px 0; color: #fdd835;">УПРАВЛЕНИЕ ГЕЙ-КЛУБОМ</h4>
+            <button class="admin-action-btn" onclick="adminAddMoney()">+100 АР ВСЕМ</button>
+            <button class="admin-action-btn" onclick="adminResetAll()" style="background:black">ОБНУЛИТЬ БАЗУ</button>
+            <button class="admin-action-btn" onclick="document.getElementById('admin-panel').style.display='none'" style="background:#555">ЗАКРЫТЬ</button>
         </div>
 
         <div id="settings-panel">
@@ -52,7 +52,7 @@
                 <option value="bad_piggies.mp3">Bad Piggies</option>
                 <option value="bam_bam_bam_1.mp3">Бам Бам Бам</option>
                 <option value="nobody.mp3">Возьми телефон</option>
-                <option value="pay_pay_pay.mp3">Пай Пай Пай</option>
+                <option value="pay_pay_pay.mp3">Пау Пау Пау</option>
             </select>
             <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
             <input type="range" id="sound-vol" min="0" max="1" step="0.1" value="0.7" oninput="applyVolumes()">
@@ -125,14 +125,9 @@
         user = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value;
         if(!user || !p) return;
-
         db.ref('players/' + user).once('value', s => {
-            if(!s.exists()) {
-                db.ref('players/' + user).set({balance: 5, password: p, history: ["Регистрация +5 АР"]}).then(() => go());
-            } else {
-                if(s.val().password === p) go();
-                else { playSnd(S.fail); alert("ПАРОЛЬ!"); }
-            }
+            if(!s.exists()) db.ref('players/' + user).set({balance: 5, password: p, history: ["Регистрация +5 АР"]}).then(() => go());
+            else (s.val().password === p) ? go() : (playSnd(S.fail), alert("ПАРОЛЬ!"));
         });
     }
 
@@ -140,16 +135,9 @@
         document.getElementById('auth-section').style.display='none';
         document.getElementById('game-section').style.display='block';
         document.getElementById('display-name').innerText = user;
-        
-        // Показываем корону, если логин admin
-        if(user.toLowerCase() === 'admin') {
-            document.getElementById('admin-btn').style.display = 'block';
-        }
-
         applyVolumes();
         bgMusic.src = document.getElementById('bg-music-select').value;
         bgMusic.play().catch(()=>{});
-
         db.ref('players/' + user).on('value', snap => {
             const d = snap.val();
             if(d) {
@@ -163,15 +151,12 @@
         const btn = document.getElementById('spin-btn');
         const s = await db.ref('players/' + user).once('value');
         const d = s.val();
-        if(d.balance < 1) { playSnd(S.interpol); return alert("АР закончились!"); }
-        
+        if(d.balance < 1) { playSnd(S.interpol); return alert("Ары закончились!"); }
         btn.disabled = true;
         playBam();
-        
         const ic = ['🍏', '🍌', '🍓', '🍒', '🍋'];
         const r = [ic[Math.floor(Math.random()*5)], ic[Math.floor(Math.random()*5)], ic[Math.floor(Math.random()*5)]];
         const el = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
-        
         el.forEach(e => e.innerText = "?");
         setTimeout(() => el[0].innerText = r[0], 1600);
         setTimeout(() => el[1].innerText = r[1], 3200);
@@ -181,7 +166,6 @@
             if(r[0]===r[1] && r[1]===r[2]) { win = 5; playSnd(S.jps[Math.floor(Math.random()*3)]); }
             else if(r[0]===r[1] || r[1]===r[2] || r[0]===r[2]) { win = 2; playSnd(S.win2); }
             else { if(Math.random() < 0.4) playSnd(S.stay); else if(Math.random() < 0.3) playSnd(S.cry); }
-            
             db.ref('players/' + user).update({
                 balance: d.balance - 1 + win,
                 history: [...(d.history || []), `${r.join('')} | ${win-1>=0 ? '+'+(win-1) : '-1'} АР`].slice(-10)
@@ -190,32 +174,38 @@
         }, 5000);
     }
 
-    // Функции админа
+    function toggleAdmin() {
+        const pass = prompt("Введите пароль админа:");
+        if (pass === "1337") { 
+            document.getElementById('admin-panel').style.display = 'block';
+        } else {
+            alert("НЕВЕРНО!");
+        }
+    }
+
     function adminAddMoney() {
         db.ref('players').once('value', s => {
             s.forEach(p => {
                 db.ref('players/' + p.key + '/balance').transaction(b => (b || 0) + 100);
-                db.ref('players/' + p.key + '/history').transaction(h => [...(h || []), "АДМИН ДАЛ 100 АР"].slice(-10));
             });
-            alert("Раздал по 100 АР всем!");
+            alert("Выдано по 100 АР!");
         });
     }
+
     function adminResetAll() {
         if(confirm("УДАЛИТЬ ВСЕХ?")) db.ref('players').remove().then(() => location.reload());
     }
 
-    function toggleAdmin() {
-        const p = document.getElementById('admin-panel');
-        p.style.display = (p.style.display === 'block') ? 'none' : 'block';
-    }
     function toggleSettings() {
         const p = document.getElementById('settings-panel');
         p.style.display = (p.style.display === 'block') ? 'none' : 'block';
     }
+
     function changeMusic() {
         bgMusic.src = document.getElementById('bg-music-select').value;
         bgMusic.play();
     }
+
     function promptPromo() {
         const code = prompt("Промокод:");
         if(!code) return;
