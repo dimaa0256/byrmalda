@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
+        * { box-sizing: border-box; } /* Это выровняет размеры полей */
         body { background-color: #1a1a1a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
         .container { width: 380px; background: #3c4043; border: 3px solid #5f6368; padding: 25px; border-radius: 5px; text-align: center; position: relative; }
         .settings-icon { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 24px; z-index: 10; opacity: 0.7; }
@@ -20,15 +21,15 @@
         .btn-promo { background: #b8860b; border-bottom: 4px solid #8b4513; }
         .logs-box { background: #1a1a1a; border: 1px solid #5f6368; height: 100px; overflow-y: auto; text-align: left; padding: 10px; font-size: 13px; color: #fdd835; }
         input[type=range] { width: 100%; margin: 5px 0 10px 0; }
+        #auth-section input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #5f6368; border-radius: 3px; background: #fff; display: block; }
         .admin-action-btn { background: #d32f2f; color: white; border: none; padding: 8px; margin-top: 5px; cursor: pointer; width: 100%; font-weight: bold; }
-        #auth-section input { width: 90%; padding: 10px; margin-bottom: 10px; border: 1px solid #5f6368; border-radius: 3px; background: #fff; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="auth-section">
-        <h1>🍓 БУРМАЛДА</h1>
+        <h1 style="color:#b71c1c">🍓 БУРМАЛДА</h1>
         <input type="text" id="username" placeholder="Логин">
         <input type="password" id="password" placeholder="Пароль">
         <button onclick="login()" class="btn-main" style="background:#5f6368">ЗАЙТИ</button>
@@ -39,8 +40,8 @@
         <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
         
         <div id="admin-panel">
-            <h4 style="margin:0 0 10px 0; color: #fdd835;">АДМИНКА</h4>
-            <button class="admin-action-btn" onclick="adminAddMoney()">+100 АРЫ ВСЕМ</button>
+            <h4 style="margin:0 0 10px 0; color: #fdd835;">АДМИН ПАНЕЛЬ</h4>
+            <button class="admin-action-btn" onclick="adminAddMoney()">+100 АР ВСЕМ</button>
             <button class="admin-action-btn" onclick="adminResetAll()" style="background:black">ОБНУЛИТЬ БАЗУ</button>
             <button class="admin-action-btn" onclick="document.getElementById('admin-panel').style.display='none'" style="background:#555">ЗАКРЫТЬ</button>
         </div>
@@ -61,7 +62,7 @@
         </div>
 
         <h2 id="display-name" style="margin:0; color:#bdc1c6">---</h2>
-        <h3 style="color:#81c995">АРы: <span id="balance">0</span></h3>
+        <h3 style="color:#81c995">АР: <span id="balance">0</span></h3>
 
         <div class="slot-machine">
             <div id="s1" class="slot">?</div>
@@ -127,7 +128,7 @@
         const p = document.getElementById('password').value;
         if(!user || !p) return;
         db.ref('players/' + user).once('value', s => {
-            if(!s.exists()) db.ref('players/' + user).set({balance: 5, password: p, history: ["Регистрация +5 АРы"]}).then(() => go());
+            if(!s.exists()) db.ref('players/' + user).set({balance: 5, password: p, history: ["Регистрация +5 АР"]}).then(() => go());
             else (s.val().password === p) ? go() : (playSnd(S.fail), alert("ПАРОЛЬ!"));
         });
     }
@@ -152,7 +153,7 @@
         const btn = document.getElementById('spin-btn');
         const s = await db.ref('players/' + user).once('value');
         const d = s.val();
-        if(d.balance < 1) { playSnd(S.interpol); return alert("АРы закончились!"); }
+        if(d.balance < 1) { playSnd(S.interpol); return alert("АР закончились!"); }
         btn.disabled = true;
         playBam();
         const ic = ['🍏', '🍌', '🍓', '🍒', '🍋'];
@@ -169,18 +170,18 @@
             else { if(Math.random() < 0.4) playSnd(S.stay); else if(Math.random() < 0.3) playSnd(S.cry); }
             db.ref('players/' + user).update({
                 balance: d.balance - 1 + win,
-                history: [...(d.history || []), `${r.join('')} | ${win-1>=0 ? '+'+(win-1) : '-1'} АРы`].slice(-10)
+                history: [...(d.history || []), `${r.join('')} | ${win-1>=0 ? '+'+(win-1) : '-1'} АР`].slice(-10)
             });
             btn.disabled = false;
         }, 5000);
     }
 
     function toggleAdmin() {
-        const pass = prompt("Введите пароль админа:");
+        const pass = prompt("Пароль:");
         if (pass === "1337") { 
             document.getElementById('admin-panel').style.display = 'block';
         } else {
-            alert("НЕВЕРНО!");
+            alert("НЕТ!");
         }
     }
 
@@ -189,7 +190,7 @@
             s.forEach(p => {
                 db.ref('players/' + p.key + '/balance').transaction(b => (b || 0) + 100);
             });
-            alert("Выдано по 100 АРы!");
+            alert("Готово! +100 АР всем.");
         });
     }
 
@@ -214,8 +215,8 @@
         let b = (c === "MELL") ? 3 : (c === "МЕЛЛ" || c === "МЕЛЛСТРОЙ") ? 5 : 0;
         if(b > 0) {
             db.ref('players/' + user + '/balance').transaction(v => (v || 0) + b);
-            alert("Бонус получен!");
-        } else alert("Код неверный");
+            alert("Бонус зачислен!");
+        } else alert("Неверный код");
     }
 </script>
 </body>
