@@ -29,13 +29,18 @@
 
         .logs-box { background: #1a1a1a; border: 1px solid #5f6368; height: 100px; overflow-y: auto; text-align: left; padding: 10px; font-size: 13px; color: #fdd835; border-radius: 5px; }
         .user-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #333; }
-        .user-item span:first-child { cursor: pointer; flex-grow: 1; }
+        .user-item span:first-child { cursor: pointer; flex-grow: 1; color: #bdc1c6; } /* Ник серый */
+        .ar-count { color: #81c995; font-weight: bold; } /* АР зеленые */
         .del-btn { color: #ff4444; font-weight: bold; padding: 5px; cursor: pointer; }
         
         #auth-section input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #5f6368; border-radius: 8px; background: #fff; display: block; color: black; }
         .settings-icon { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 24px; opacity: 0.7; }
         .admin-btn-open { position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 12px; background: #555; padding: 5px 10px; border-radius: 5px; }
         .hist-item-admin { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #2a2a2a; }
+        
+        /* Цвета кнопок в админке */
+        .btn-plus { background: #2e7d32 !important; }
+        .btn-minus { background: #c62828 !important; }
     </style>
 </head>
 <body onclick="closePanels(event)">
@@ -79,13 +84,13 @@
         </div>
 
         <div id="user-profile-panel">
-            <h3 id="prof-name" style="color:#81c995"></h3>
-            <p>Баланс: <span id="prof-balance"></span> АР</p>
+            <h3 id="prof-name" style="color:#bdc1c6"></h3>
+            <p style="color:#bdc1c6">Баланс: <span id="prof-balance" class="ar-count"></span> <span class="ar-count">АР</span></p>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-                <button class="btn-main" style="background:#444; padding:10px;" onclick="modBal(1)">+1</button>
-                <button class="btn-main" style="background:#444; padding:10px;" onclick="modBal(10)">+10</button>
-                <button class="btn-main" style="background:#444; padding:10px;" onclick="modBal(-1)">-1</button>
-                <button class="btn-main" style="background:#444; padding:10px;" onclick="modBal(-10)">-10</button>
+                <button class="btn-main btn-plus" onclick="modBal(1)">+1</button>
+                <button class="btn-main btn-plus" onclick="modBal(10)">+10</button>
+                <button class="btn-main btn-minus" onclick="modBal(-1)">-1</button>
+                <button class="btn-main btn-minus" onclick="modBal(-10)">-10</button>
             </div>
             <div id="prof-history" class="logs-box" style="height:120px; margin-top:10px;"></div>
             <button class="btn-main" style="background:#555; font-size:12px; margin-top:10px;" onclick="backToAdmin()">НАЗАД</button>
@@ -250,7 +255,7 @@
             s.forEach(child => {
                 const u = child.key;
                 const div = document.createElement('div'); div.className = 'user-item';
-                div.innerHTML = `<span onclick="openProfile('${u}')">${u} (${child.val().balance} АР)</span><span class="del-btn" onclick="delUser('${u}')">✖</span>`;
+                div.innerHTML = `<span onclick="openProfile('${u}')">${u} <span class="ar-count">(${child.val().balance} АР)</span></span><span class="del-btn" onclick="delUser('${u}')">✖</span>`;
                 list.appendChild(div);
             });
         });
