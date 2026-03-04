@@ -9,6 +9,21 @@
     <style>
         * { box-sizing: border-box; }
         body { background-color: #1a1a1a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        
+        /* ОКНО 18+ */
+        #age-gate {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #b71c1c; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 9999; 
+            text-align: center; padding: 20px;
+        }
+        #age-gate h1 { font-size: 40px; margin-bottom: 20px; }
+        #age-gate p { font-size: 20px; margin-bottom: 30px; }
+        .age-btns { display: flex; gap: 20px; }
+        .btn-age { padding: 15px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; text-transform: uppercase; }
+        .btn-yes { background: white; color: #b71c1c; }
+        .btn-no { background: rgba(0,0,0,0.3); color: white; }
+
         .container { width: 380px; background: #3c4043; border: 3px solid #5f6368; padding: 25px; border-radius: 15px; text-align: center; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 10; }
         
         .slot-machine { background: #202124; border: 4px solid #5f6368; display: flex; justify-content: center; gap: 10px; padding: 20px; margin: 20px 0; border-radius: 10px; overflow: hidden; }
@@ -16,9 +31,9 @@
         .slot-reel { position: absolute; top: 0; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; transition: transform 0s cubic-bezier(0.45, 0.05, 0.55, 0.95); }
         .slot-reel span { height: 100px; font-size: 60px; line-height: 100px; display: block; }
 
-        #settings-panel, #admin-panel, #user-profile-panel { display: none; position: absolute; top: 50px; left: 15px; right: 15px; background: #202124; border: 1px solid #5f6368; padding: 15px; text-align: left; z-index: 20; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
+        #settings-panel, #admin-panel, #user-profile-panel { display: none; position: absolute; top: 50px; left: 15px; right: 15px; background: #202124; border: 1px solid #5f6368; padding: 15px; text-align: left; z-index: 100; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
         
-        .btn-main { width: 100%; padding: 15px; font-size: 18px; font-weight: bold; border: none; cursor: pointer; color: #fff; margin-bottom: 10px; text-transform: uppercase; border-radius: 8px; }
+        .btn-main { width: 100%; padding: 15px; font-size: 18px; font-weight: bold; border: none; cursor: pointer; color: #fff; margin-bottom: 10px; text-transform: uppercase; border-radius: 8px; position: relative; z-index: 5; }
         .btn-spin { background: #b71c1c; border-bottom: 4px solid #7f0000; }
         .btn-spin:disabled { background: #555; border-bottom: none; opacity: 0.6; }
 
@@ -29,28 +44,35 @@
 
         .logs-box { background: #1a1a1a; border: 1px solid #5f6368; height: 100px; overflow-y: auto; text-align: left; padding: 10px; font-size: 13px; color: #fdd835; border-radius: 5px; }
         .user-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #333; }
-        .user-item span:first-child { cursor: pointer; flex-grow: 1; color: #bdc1c6; } /* Ник серый */
-        .ar-count { color: #81c995; font-weight: bold; } /* АР зеленые */
+        .user-item span:first-child { cursor: pointer; flex-grow: 1; color: #bdc1c6; }
+        .ar-count { color: #81c995; font-weight: bold; }
         .del-btn { color: #ff4444; font-weight: bold; padding: 5px; cursor: pointer; }
         
-        #auth-section input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #5f6368; border-radius: 8px; background: #fff; display: block; color: black; }
-        .settings-icon { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 24px; opacity: 0.7; }
-        .admin-btn-open { position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 12px; background: #555; padding: 5px 10px; border-radius: 5px; }
-        .hist-item-admin { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #2a2a2a; }
+        #auth-section input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #5f6368; border-radius: 8px; background: #fff; display: block; color: black; position: relative; z-index: 5; }
+        .settings-icon { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 24px; opacity: 0.7; z-index: 11; }
+        .admin-btn-open { position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 12px; background: #555; padding: 5px 10px; border-radius: 5px; z-index: 11; }
         
-        /* Цвета кнопок в админке */
         .btn-plus { background: #2e7d32 !important; }
         .btn-minus { background: #c62828 !important; }
     </style>
 </head>
 <body onclick="closePanels(event)">
 
+<div id="age-gate">
+    <h1>🔞 ВНИМАНИЕ</h1>
+    <p>Тебе уже есть 18 лет?</p>
+    <div class="age-btns">
+        <button class="btn-age btn-yes" onclick="verifyAge()">ДА</button>
+        <button class="btn-age btn-no" onclick="window.location.href='https://google.com'">НЕТ</button>
+    </div>
+</div>
+
 <div class="container" onclick="event.stopPropagation()">
     <div id="auth-section">
         <h1 style="color:#b71c1c">🍓 БУРМАЛДА</h1>
         <input type="text" id="username" placeholder="Логин">
         <input type="password" id="password" placeholder="Пароль">
-        <button onclick="login()" class="btn-main" style="background:#5f6368">ЗАЙТИ</button>
+        <button id="login-btn" onclick="login()" class="btn-main" style="background:#5f6368">ЗАЙТИ</button>
     </div>
 
     <div id="game-section" style="display:none;">
@@ -62,10 +84,10 @@
                 <button id="m-mute" class="mute-btn mute-on" onclick="toggleMute('music')">(ВКЛ)</button>
                 <span>Музыка:</span>
                 <select id="bg-music-select" onchange="changeMusic()" style="width:100%; padding:5px;">
+                    <option value="bam_bam_bam_1.mp3">Бам Бам Бам</option>
                     <option value="ananasevi_sirop_1.mp3">Ананасовый сироп</option>
                     <option value="baclachn.mp3">Баклажан</option>
                     <option value="bad_piggies.mp3">Bad Piggies</option>
-                    <option value="bam_bam_bam_1.mp3">Бам Бам Бам</option>
                     <option value="nobody.mp3">Возьми телефон</option>
                     <option value="pay_pay_pay.mp3">Ам Ам Ам</option>
                 </select>
@@ -112,6 +134,16 @@
 </div>
 
 <script>
+    // ПРОВЕРКА ВОЗРАСТА ПРИ ЗАГРУЗКЕ
+    if (localStorage.getItem('adult') === 'true') {
+        document.getElementById('age-gate').style.display = 'none';
+    }
+
+    function verifyAge() {
+        localStorage.setItem('adult', 'true');
+        document.getElementById('age-gate').style.display = 'none';
+    }
+
     const firebaseConfig = {
         apiKey: "AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s",
         authDomain: "dima256.firebaseapp.com",
@@ -131,6 +163,7 @@
         stay: new Audio('echo_posedim_1.mp3'),
         interpol: new Audio('zapert_na_ostrove_izza_interpola_1.mp3'),
         cry: new Audio('dai_cledychi_spin_1.mp3'),
+        normal: new Audio('nu_normalno_blyat.mp3'),
         jps: [new Audio('o_mai_gad_1.mp3'), new Audio('nixya_ti_blat_1.mp3'), new Audio('oi_oi_oi_oi_1.mp3')]
     };
 
@@ -141,6 +174,7 @@
     function fillReels() {
         [1,2,3].forEach(n => {
             const r = document.getElementById('reel'+n);
+            if(!r) return;
             let h = ''; for(let i=0; i<30; i++) h += `<span>${icons[Math.floor(Math.random()*5)]}</span>`;
             r.innerHTML = h;
         });
@@ -151,7 +185,7 @@
         if(mOn) bgMusic.volume = document.getElementById('music-vol').value;
         if(sOn) {
             const v = document.getElementById('sound-vol').value;
-            Object.values(S).flat().forEach(a => a.volume = v);
+            Object.values(S).flat().forEach(a => { if(a instanceof Audio) a.volume = v; });
         }
     }
 
@@ -164,7 +198,7 @@
         } else {
             sOn = !sOn;
             const v = sOn ? document.getElementById('sound-vol').value : 0;
-            Object.values(S).flat().forEach(a => a.volume = v);
+            Object.values(S).flat().forEach(a => { if(a instanceof Audio) a.volume = v; });
             document.getElementById('s-mute').innerText = sOn ? '(ВКЛ)' : '(ВЫКЛ)';
             document.getElementById('s-mute').className = sOn ? 'mute-btn mute-on' : 'mute-btn mute-off';
         }
@@ -173,15 +207,17 @@
     function login() {
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value;
-        if(!u || !p) return;
-        db.ref('players/' + u).once('value', s => {
+        if(!u || !p) { alert("Введите логин и пароль!"); return; }
+        const btn = document.getElementById('login-btn');
+        btn.disabled = true;
+        db.ref('players/' + u).once('value').then(s => {
             if(!s.exists()) {
                 db.ref('players/' + u).set({balance: 5, password: p, history: ["Регистрация +5 АР"]}).then(() => { user = u; go(); });
             } else {
                 if(s.val().password === p) { user = u; go(); }
-                else alert("НЕВЕРНЫЙ ПАРОЛЬ!");
+                else { alert("НЕВЕРНЫЙ ПАРОЛЬ!"); btn.disabled = false; }
             }
-        });
+        }).catch(err => { alert("Ошибка!"); btn.disabled = false; });
     }
 
     function go() {
@@ -206,9 +242,7 @@
         const d = s.val();
         if(d.balance < 1) { if(sOn) S.interpol.play(); return alert("АР закончились!"); }
         btn.disabled = true;
-        
         const res = [icons[Math.floor(Math.random()*5)], icons[Math.floor(Math.random()*5)], icons[Math.floor(Math.random()*5)]];
-
         [1,2,3].forEach((n, i) => {
             const r = document.getElementById('reel'+n);
             r.style.transition = '0s'; r.style.transform = 'translateY(0)';
@@ -218,13 +252,20 @@
                 r.style.transform = 'translateY(-2900px)';
             }, 50);
         });
-
         setTimeout(() => {
             let win = 0;
-            if(res[0]===res[1] && res[1]===res[2]) { win = 5; if(sOn) S.jps[Math.floor(Math.random()*3)].play(); }
-            else if(res[0]===res[1] || res[1]===res[2] || res[0]===res[2]) { 
-                win = 2; if(sOn && Math.random() < 0.5) S.win2.play(); 
-            } else { if(sOn) { if(Math.random() < 0.4) S.stay.play(); else if(Math.random() < 0.3) S.cry.play(); } }
+            let isWin = false;
+            if(res[0]===res[1] && res[1]===res[2]) { win = 5; isWin = true; }
+            else if(res[0]===res[1] || res[1]===res[2] || res[0]===res[2]) { win = 2; isWin = true; }
+
+            if(isWin && sOn) {
+                if(win === 5) { S.jps[Math.floor(Math.random()*3)].play(); }
+                else { if(Math.random() < 0.5) S.win2.play(); }
+            } else if(!isWin && sOn) {
+                if(Math.random() < 0.3) { S.normal.play(); }
+                else if(Math.random() < 0.4) S.stay.play(); 
+                else if(Math.random() < 0.3) S.cry.play();
+            }
             
             db.ref('players/' + user).update({
                 balance: d.balance - 1 + win,
@@ -239,16 +280,8 @@
         document.getElementById('admin-panel').style.display = 'none';
         document.getElementById('user-profile-panel').style.display = 'none';
     }
-
     function toggleSettings(e) { e.stopPropagation(); document.getElementById('settings-panel').style.display = 'block'; }
-    
-    function toggleAdmin(e) {
-        e.stopPropagation();
-        if (prompt("Пароль:") !== "1337") return alert("НЕТ!");
-        document.getElementById('admin-panel').style.display = 'block';
-        loadUsers();
-    }
-
+    function toggleAdmin(e) { e.stopPropagation(); if (prompt("Пароль:") === "1337") { document.getElementById('admin-panel').style.display = 'block'; loadUsers(); } }
     function loadUsers() {
         db.ref('players').on('value', s => {
             const list = document.getElementById('users-list'); list.innerHTML = "";
@@ -260,7 +293,6 @@
             });
         });
     }
-
     function openProfile(u) {
         selectedUser = u;
         document.getElementById('admin-panel').style.display = 'none';
@@ -276,23 +308,20 @@
             }).join('');
         });
     }
-
     function delHist(idx) {
         db.ref('players/' + selectedUser + '/history').once('value', s => {
             let h = s.val() || []; h.splice(idx, 1);
             db.ref('players/' + selectedUser).update({ history: h });
         });
     }
-
     function modBal(amt) {
         db.ref('players/' + selectedUser).once('value', s => {
             const cur = s.val().balance || 0;
             db.ref('players/' + selectedUser).update({ balance: cur + amt });
         });
     }
-
     function backToAdmin() { document.getElementById('user-profile-panel').style.display = 'none'; document.getElementById('admin-panel').style.display = 'block'; }
-    function delUser(u) { if(confirm("Удалить " + u + "?")) db.ref('players/' + u).remove(); }
+    function delUser(u) { if(confirm("Удалить?")) db.ref('players/' + u).remove(); }
     function changeMusic() { bgMusic.src = document.getElementById('bg-music-select').value; if(mOn) bgMusic.play(); }
     function promptPromo() {
         const c = prompt("Промокод:"); if(!c) return;
