@@ -7,22 +7,28 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        * { box-sizing: border-box; } /* Это выровняет размеры полей */
+        * { box-sizing: border-box; }
         body { background-color: #1a1a1a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
         .container { width: 380px; background: #3c4043; border: 3px solid #5f6368; padding: 25px; border-radius: 5px; text-align: center; position: relative; }
         .settings-icon { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 24px; z-index: 10; opacity: 0.7; }
         .admin-btn-open { position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 12px; background: #555; padding: 5px; border-radius: 3px; z-index: 10; }
-        #settings-panel, #admin-panel { display: none; position: absolute; top: 50px; left: 15px; right: 15px; background: #202124; border: 1px solid #5f6368; padding: 15px; text-align: left; z-index: 20; border-radius: 8px; }
-        #settings-panel { left: auto; width: 220px; }
+        
+        /* Панели */
+        #settings-panel, #admin-panel, #user-profile-panel { display: none; position: absolute; top: 50px; left: 15px; right: 15px; background: #202124; border: 1px solid #5f6368; padding: 15px; text-align: left; z-index: 20; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
+        
         .slot-machine { background: #202124; border: 2px solid #5f6368; display: flex; justify-content: center; gap: 10px; padding: 20px; margin: 20px 0; }
         .slot { width: 80px; height: 110px; background: #202124; border: 2px solid #5f6368; font-size: 60px; line-height: 110px; }
         .btn-main { width: 100%; padding: 15px; font-size: 18px; font-weight: bold; border: none; cursor: pointer; color: #fff; margin-bottom: 10px; text-transform: uppercase; }
         .btn-spin { background: #b71c1c; border-bottom: 4px solid #7f0000; }
         .btn-promo { background: #b8860b; border-bottom: 4px solid #8b4513; }
         .logs-box { background: #1a1a1a; border: 1px solid #5f6368; height: 100px; overflow-y: auto; text-align: left; padding: 10px; font-size: 13px; color: #fdd835; }
-        input[type=range] { width: 100%; margin: 5px 0 10px 0; }
+        
+        /* Стили админки */
+        .user-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #333; cursor: pointer; }
+        .user-item:hover { background: #333; }
+        .del-btn { color: #ff4444; font-weight: bold; padding: 5px 10px; cursor: pointer; }
+        .profile-btn { background: #444; color: white; border: none; padding: 10px; margin: 5px; cursor: pointer; width: 45%; font-size: 16px; }
         #auth-section input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #5f6368; border-radius: 3px; background: #fff; display: block; }
-        .admin-action-btn { background: #d32f2f; color: white; border: none; padding: 8px; margin-top: 5px; cursor: pointer; width: 100%; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -40,10 +46,22 @@
         <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
         
         <div id="admin-panel">
-            <h4 style="margin:0 0 10px 0; color: #fdd835;">АДМИН ПАНЕЛЬ</h4>
-            <button class="admin-action-btn" onclick="adminAddMoney()">+100 АР ВСЕМ</button>
-            <button class="admin-action-btn" onclick="adminResetAll()" style="background:black">ОБНУЛИТЬ БАЗУ</button>
-            <button class="admin-action-btn" onclick="document.getElementById('admin-panel').style.display='none'" style="background:#555">ЗАКРЫТЬ</button>
+            <h3 style="margin:0 0 10px 0; color: #fdd835;">ИГРОКИ</h3>
+            <div id="users-list"></div>
+            <button class="btn-main" style="background:#555; font-size:12px; margin-top:10px;" onclick="closePanels()">ЗАКРЫТЬ</button>
+        </div>
+
+        <div id="user-profile-panel">
+            <h3 id="prof-name" style="margin:0; color:#81c995"></h3>
+            <p>Баланс: <span id="prof-balance"></span> АР</p>
+            <div style="display:flex; flex-wrap: wrap; justify-content: center;">
+                <button class="profile-btn" onclick="modBal(1)">+1</button>
+                <button class="profile-btn" onclick="modBal(10)">+10</button>
+                <button class="profile-btn" onclick="modBal(-1)">-1</button>
+                <button class="profile-btn" onclick="modBal(-10)">-10</button>
+            </div>
+            <div id="prof-history" class="logs-box" style="height:150px; margin-top:10px;"></div>
+            <button class="btn-main" style="background:#555; font-size:12px; margin-top:10px;" onclick="backToAdmin()">НАЗАД</button>
         </div>
 
         <div id="settings-panel">
@@ -102,6 +120,7 @@
     let bgMusic = new Audio();
     bgMusic.loop = true;
     let user = "";
+    let selectedUser = "";
 
     function applyVolumes() {
         bgMusic.volume = document.getElementById('music-vol').value;
@@ -113,13 +132,6 @@
         if (!document.getElementById('sounds-on').checked) return;
         aud.currentTime = 0;
         aud.play().catch(()=>{});
-    }
-
-    function playBam() {
-        if (!document.getElementById('sounds-on').checked) return;
-        S.bam.currentTime = 0;
-        S.bam.play().catch(()=>{});
-        setTimeout(() => { S.bam.pause(); }, 400); 
     }
 
     function login() {
@@ -155,11 +167,17 @@
         const d = s.val();
         if(d.balance < 1) { playSnd(S.interpol); return alert("АР закончились!"); }
         btn.disabled = true;
-        playBam();
+        
+        // Звук Бэм
+        if (document.getElementById('sounds-on').checked) {
+            S.bam.currentTime = 0; S.bam.play(); setTimeout(()=>S.bam.pause(), 400);
+        }
+
         const ic = ['🍏', '🍌', '🍓', '🍒', '🍋'];
         const r = [ic[Math.floor(Math.random()*5)], ic[Math.floor(Math.random()*5)], ic[Math.floor(Math.random()*5)]];
         const el = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
         el.forEach(e => e.innerText = "?");
+        
         setTimeout(() => el[0].innerText = r[0], 1600);
         setTimeout(() => el[1].innerText = r[1], 3200);
         setTimeout(() => {
@@ -176,26 +194,59 @@
         }, 5000);
     }
 
+    // --- АДМИНКА ---
     function toggleAdmin() {
-        const pass = prompt("Пароль:");
-        if (pass === "1337") { 
-            document.getElementById('admin-panel').style.display = 'block';
-        } else {
-            alert("НЕТ!");
-        }
+        if (prompt("Пароль:") !== "1337") return alert("НЕТ!");
+        document.getElementById('admin-panel').style.display = 'block';
+        loadUsers();
     }
 
-    function adminAddMoney() {
-        db.ref('players').once('value', s => {
-            s.forEach(p => {
-                db.ref('players/' + p.key + '/balance').transaction(b => (b || 0) + 100);
+    function loadUsers() {
+        db.ref('players').on('value', s => {
+            const list = document.getElementById('users-list');
+            list.innerHTML = "";
+            s.forEach(child => {
+                const u = child.key;
+                const div = document.createElement('div');
+                div.className = 'user-item';
+                div.innerHTML = `<span onclick="openProfile('${u}')">${u} (${child.val().balance} АР)</span><span class="del-btn" onclick="delUser('${u}')">✖</span>`;
+                list.appendChild(div);
             });
-            alert("Готово! +100 АР всем.");
         });
     }
 
-    function adminResetAll() {
-        if(confirm("УДАЛИТЬ ВСЕХ?")) db.ref('players').remove().then(() => location.reload());
+    function delUser(u) {
+        if(confirm("Удалить " + u + "?")) db.ref('players/' + u).remove();
+    }
+
+    function openProfile(u) {
+        selectedUser = u;
+        document.getElementById('admin-panel').style.display = 'none';
+        document.getElementById('user-profile-panel').style.display = 'block';
+        document.getElementById('prof-name').innerText = u;
+        
+        db.ref('players/' + u).on('value', s => {
+            const d = s.val();
+            if(d) {
+                document.getElementById('prof-balance').innerText = d.balance;
+                document.getElementById('prof-history').innerHTML = (d.history || []).slice().reverse().map(h => `<div>> ${h}</div>`).join('');
+            }
+        });
+    }
+
+    function modBal(amt) {
+        db.ref('players/' + selectedUser + '/balance').transaction(b => (b || 0) + amt);
+        db.ref('players/' + selectedUser + '/history').transaction(h => [...(h || []), `АДМИН: ${amt > 0 ? '+'+amt : amt} АР`].slice(-10));
+    }
+
+    function backToAdmin() {
+        document.getElementById('user-profile-panel').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'block';
+    }
+
+    function closePanels() {
+        document.getElementById('admin-panel').style.display = 'none';
+        document.getElementById('settings-panel').style.display = 'none';
     }
 
     function toggleSettings() {
@@ -208,16 +259,4 @@
         bgMusic.play();
     }
 
-    function promptPromo() {
-        const code = prompt("Промокод:");
-        if(!code) return;
-        const c = code.trim().toUpperCase();
-        let b = (c === "MELL") ? 3 : (c === "МЕЛЛ" || c === "МЕЛЛСТРОЙ") ? 5 : 0;
-        if(b > 0) {
-            db.ref('players/' + user + '/balance').transaction(v => (v || 0) + b);
-            alert("Бонус зачислен!");
-        } else alert("Неверный код");
-    }
-</script>
-</body>
-</html>
+    function promptPromo
