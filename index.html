@@ -3,186 +3,489 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🍓 БУРМАЛДА</title>
+    <title>馃崜 袘校袪袦袗袥袛袗</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        :root {
-            --spin-red: linear-gradient(180deg, #ff0000 0%, #7a0000 100%);
-            --accent-red: #ff3c3c;
-            --vip-gold: #ffc107;
-            --panel-bg: rgba(17, 17, 17, 0.95);
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Nunito', sans-serif; }
+        body {
+            display: flex; justify-content: center; align-items: center;
+            background: radial-gradient(ellipse at 60% 30%, #2a0a3a 0%, #0a0018 50%, #000 100%);
         }
 
-        /* КОСМИЧЕСКИЙ ФОН */
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-        
-        @keyframes cosmicBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* FALLING COINS */
+        .coin-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .coin {
+            position: absolute; top: -40px; font-size: 20px;
+            animation: coinFall linear infinite; opacity: 0;
+            filter: drop-shadow(0 0 4px #ffd700);
         }
-        
-        body { 
-            display: flex; justify-content: center; align-items: center; 
-            font-family: 'Arial Black', sans-serif; 
-            background: linear-gradient(-45deg, #050011, #1a0000, #00051a, #0a001a);
-            background-size: 400% 400%;
-            animation: cosmicBG 15s ease infinite;
+        @keyframes coinFall {
+            0%   { transform: translateY(-40px) rotate(0deg); opacity: 0; }
+            10%  { opacity: 0.16; }
+            90%  { opacity: 0.1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
         }
 
-        .stars { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; 
-            background-image: 
-                radial-gradient(2px 2px at 20px 30px, #fff, rgba(0,0,0,0)), 
-                radial-gradient(2.5px 2.5px at 150px 50px, #e0e0e0, rgba(0,0,0,0)), 
-                radial-gradient(1.5px 1.5px at 100px 180px, #fff, rgba(0,0,0,0)), 
-                radial-gradient(2px 2px at 250px 250px, #f2f2f2, rgba(0,0,0,0)),
-                radial-gradient(3px 3px at 320px 100px, #ffffff, rgba(0,0,0,0));
-            background-size: 350px 350px; 
-            animation: twinkle 3s infinite alternate ease-in-out; 
+        /* MAIN CARD */
+        .casino-machine {
+            width: 400px; max-height: 96vh;
+            overflow-y: auto; overflow-x: hidden;
+            position: relative; z-index: 10;
+            border-radius: 28px; padding: 24px 20px 20px;
+            background: linear-gradient(170deg, #1a0025 0%, #0d0018 60%, #1a0008 100%);
+            border: 2px solid rgba(255,200,0,0.35);
+            box-shadow: 0 0 0 1px rgba(255,180,0,0.1), 0 0 40px rgba(200,0,0,0.4),
+                        0 0 80px rgba(255,140,0,0.1), inset 0 1px 0 rgba(255,220,0,0.2);
+            scrollbar-width: thin; scrollbar-color: #8b0000 transparent;
         }
-        @keyframes twinkle { 0% { opacity: 0.2; transform: scale(0.9); } 100% { opacity: 0.8; transform: scale(1.1); } }
+        .casino-machine::-webkit-scrollbar { width: 4px; }
+        .casino-machine::-webkit-scrollbar-thumb { background: #8b0000; border-radius: 4px; }
 
-        .casino-machine { width: 390px; background: var(--panel-bg); border-radius: 45px; padding: 35px 25px 25px 25px; position: relative; border: 2px solid #333; box-shadow: 0 0 60px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 60, 60, 0.2); z-index: 10; backdrop-filter: blur(10px); }
+        /* TITLE */
+        .casino-title {
+            font-family: 'Fredoka One', cursive; font-size: 34px;
+            text-align: center; margin-bottom: 14px; letter-spacing: 2px; color: #fff;
+            text-shadow: 0 0 10px #ff4400, 0 0 30px #ff2200, 2px 2px 0 #8b0000, 4px 4px 0 #5a0000;
+            animation: titlePop 3s ease-in-out infinite;
+        }
+        @keyframes titlePop {
+            0%,100% { text-shadow: 0 0 10px #ff4400, 0 0 30px #ff2200, 2px 2px 0 #8b0000, 4px 4px 0 #5a0000; transform: scale(1); }
+            50%      { text-shadow: 0 0 20px #ff6600, 0 0 50px #ff4400, 2px 2px 0 #8b0000, 4px 4px 0 #5a0000; transform: scale(1.02); }
+        }
 
-        @keyframes glow-clean { 0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); } 50% { box-shadow: 0 0 35px rgba(255, 0, 0, 0.8); } }
-        @keyframes burmalda-glow { 0%, 100% { text-shadow: 0 0 10px rgba(255, 60, 60, 0.6); } 50% { text-shadow: 0 0 25px rgba(255, 60, 60, 1); } }
-        @keyframes vip-pulse { 0%, 100% { transform: translateX(-50%) scale(1); text-shadow: 0 0 5px var(--vip-gold); } 50% { transform: translateX(-50%) scale(1.1); text-shadow: 0 0 20px var(--vip-gold); } }
+        /* LIGHT DOTS */
+        .title-lights { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+        .light-dot {
+            width: 10px; height: 10px; border-radius: 50%; background: #ffd700;
+            box-shadow: 0 0 6px #ffd700, 0 0 12px #ffaa00;
+            animation: lightBlink 1.2s ease-in-out infinite;
+        }
+        .light-dot:nth-child(2n) { animation-delay: 0.4s; background: #ff4400; box-shadow: 0 0 6px #ff4400, 0 0 12px #ff2200; }
+        .light-dot:nth-child(3n) { animation-delay: 0.8s; }
+        @keyframes lightBlink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
 
-        h1 { font-size: 28px; margin: 0; color: var(--accent-red); animation: burmalda-glow 2s infinite ease-in-out; text-align: center; margin-bottom: 20px;}
-        .vip-access { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--vip-gold); font-weight: 900; letter-spacing: 6px; cursor: pointer; z-index: 10; animation: vip-pulse 2s infinite ease-in-out; }
+        /* VIP BADGE */
+        .vip-access {
+            display: block;
+            text-align: center;
+            font-family: 'Fredoka One', cursive; font-size: 13px;
+            letter-spacing: 3px; color: #111; cursor: pointer;
+            padding: 5px 20px; margin: 0 auto 14px;
+            width: fit-content;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border-radius: 20px;
+            box-shadow: 0 2px 0 #8b4500, 0 4px 12px rgba(255,180,0,0.5);
+            animation: vipPulse 2s ease-in-out infinite; font-weight: 900;
+        }
+        @keyframes vipPulse {
+            0%,100%{box-shadow:0 2px 0 #8b4500,0 4px 12px rgba(255,180,0,0.5)}
+            50%    {box-shadow:0 2px 0 #8b4500,0 4px 22px rgba(255,180,0,0.9)}
+        }
 
-        .btn-main { width: 100%; padding: 20px; font-size: 24px; font-weight: 900; color: #fff; border: none; border-radius: 20px; cursor: pointer; text-transform: uppercase; margin-bottom: 15px; box-sizing: border-box; }
-        .btn-spin { background: var(--spin-red); box-shadow: 0 8px 0 #500; animation: glow-clean 2.5s infinite; }
-        .btn-spin:disabled { filter: grayscale(1); opacity: 0.5; animation: none; }
-        
-        .promo-btn { width: 100%; padding: 12px; font-size: 16px; font-weight: 900; background: #222; color: #fff; border: 1px solid #444; border-radius: 15px; cursor: pointer; text-transform: uppercase; margin-bottom: 15px; transition: 0.2s; }
-        .promo-btn:active { background: #111; }
+        /* INFO BAR */
+        .info-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.45); padding: 10px 14px;
+            border-radius: 16px; border: 1px solid rgba(255,180,0,0.2); margin-bottom: 14px;
+        }
+        .player-name { font-size: 12px; font-weight: 800; color: rgba(255,220,100,0.65); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 3px; }
+        .balance-val { font-family: 'Fredoka One', cursive; font-size: 22px; color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.7); }
+        .settings-btn {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,180,0,0.25);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 18px; transition: all 0.3s;
+        }
+        .settings-btn:hover { background: rgba(255,180,0,0.15); transform: rotate(45deg); }
 
-        .music-list { background: #000; border: 1px solid #333; border-radius: 15px; padding: 5px; max-height: 150px; overflow-y: auto; margin-bottom: 15px; }
-        .music-item { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #222; font-size: 13px; color: #ccc; }
-        .music-item.active { color: var(--accent-red); background: rgba(255,0,0,0.1); }
-        .music-item label { flex-grow: 1; cursor: pointer; }
-        .loop-checkbox { width: 18px; height: 18px; margin-left: 10px; cursor: pointer; accent-color: var(--accent-red); }
+        /* SLOT FRAME */
+        .slot-frame {
+            background: linear-gradient(180deg, #8b0000 0%, #6b0000 40%, #3d0000 100%);
+            border-radius: 22px; padding: 4px; margin-bottom: 16px;
+            box-shadow: 0 0 0 2px #ffd700, 0 0 0 4px #cc8800, 0 6px 20px rgba(200,0,0,0.6), 0 0 40px rgba(255,100,0,0.2);
+            position: relative;
+        }
+        .slot-frame-lights { position: absolute; top: -5px; left: 10px; right: 10px; display: flex; justify-content: space-between; }
+        .frame-light {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #ffd700; box-shadow: 0 0 5px #ffd700;
+            animation: frameLightAnim 0.7s ease-in-out infinite alternate;
+        }
+        .frame-light:nth-child(even) { background: #ff4400; box-shadow: 0 0 5px #ff4400; animation-delay: 0.35s; }
+        @keyframes frameLightAnim { from{opacity:1} to{opacity:0.15} }
 
-        .info-bar { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 10px 15px; border-radius: 15px; border: 1px solid #222; margin-bottom: 15px; }
-        .balance-val { color: #00ff00; font-size: 22px; font-weight: bold; }
-        .slot-container { background: #000; padding: 15px; border-radius: 20px; border: 2px solid #333; display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        .slot-window { width: 85px; height: 110px; background: #111; border-radius: 12px; position: relative; overflow: hidden; }
+        .slot-container {
+            background: linear-gradient(180deg, #1a0000, #0a0010);
+            padding: 14px 12px; border-radius: 18px;
+            display: flex; gap: 8px; justify-content: center; position: relative;
+        }
+        .slot-container::before {
+            content: ''; position: absolute; left: 12px; right: 12px; top: 50%;
+            height: 2px; background: rgba(255,215,0,0.15); pointer-events: none;
+        }
+        .slot-window {
+            width: 88px; height: 110px;
+            background: linear-gradient(180deg, #0a0010, #15001a);
+            border-radius: 12px; position: relative; overflow: hidden;
+            border: 2px solid rgba(255,180,0,0.3);
+            box-shadow: inset 0 4px 16px rgba(0,0,0,0.9);
+        }
         .slot-reel { position: absolute; top: 0; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
-        .slot-reel span { height: 110px; font-size: 55px; line-height: 110px; display: block; }
-        
-        #settings-panel, #admin-panel, #user-profile-panel { display: none; position: absolute; top: 10px; left: 10px; right: 10px; background: #1e1e1e; border: 2px solid #555; padding: 20px; z-index: 100; border-radius: 30px; box-shadow: 0 10px 50px rgba(0,0,0,0.8); }
-        
-        /* КРАСИВЫЕ И РОВНЫЕ ИНПУТЫ ДЛЯ ЛОГИНА */
-        input[type="text"], input[type="password"] { 
-            width: 100%; 
-            box-sizing: border-box; 
-            display: block; 
-            margin: 0 0 15px 0; 
-            padding: 18px; 
-            border-radius: 20px; 
-            background: #1a1a1a; 
-            color: #fff; 
-            border: 2px solid #444; 
-            text-align: center; 
-            font-size: 16px; 
-            font-family: 'Arial Black', sans-serif;
-            outline: none;
-        }
-        input[type="text"]:focus, input[type="password"]:focus { border-color: var(--accent-red); }
+        .slot-reel span { height: 110px; font-size: 58px; line-height: 110px; display: block; }
 
-        input[type="range"] { width: 85%; display: block; margin: 0 auto 10px auto; }
-        
-        .mute-toggle { padding: 10px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; border: none; margin-bottom: 5px; }
-        .on { background: #2e7d32; color: white; }
-        .off { background: #c62828; color: white; }
-        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333; cursor: pointer; color: white; }
-        #age-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
-        
-        .history-box { height: 60px; overflow-y: auto; font-size: 11px; color: #00ff00; font-family: monospace; background: #000; padding: 5px; border-radius: 10px; border: 1px solid #333;}
+        /* SPIN BUTTON */
+        .btn-spin {
+            width: 100%; padding: 18px;
+            font-family: 'Fredoka One', cursive; font-size: 24px;
+            letter-spacing: 4px; color: #fff; border: none;
+            border-radius: 18px; cursor: pointer; text-transform: uppercase;
+            margin-bottom: 10px; position: relative; overflow: hidden;
+            background: linear-gradient(180deg, #ff3300 0%, #cc0000 50%, #8b0000 100%);
+            box-shadow: 0 6px 0 #4a0000, 0 10px 20px rgba(200,0,0,0.5), inset 0 1px 0 rgba(255,150,100,0.4);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: all 0.12s;
+            animation: spinBtnGlow 2.5s ease-in-out infinite;
+        }
+        @keyframes spinBtnGlow {
+            0%,100%{box-shadow:0 6px 0 #4a0000,0 10px 20px rgba(200,0,0,0.5),inset 0 1px 0 rgba(255,150,100,0.4)}
+            50%    {box-shadow:0 6px 0 #4a0000,0 10px 35px rgba(255,60,0,0.8),inset 0 1px 0 rgba(255,150,100,0.4)}
+        }
+        .btn-spin::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: btnShimmer 2.5s ease-in-out infinite;
+        }
+        @keyframes btnShimmer { 0%{left:-100%} 60%,100%{left:150%} }
+        .btn-spin:active { transform: translateY(5px); box-shadow: 0 1px 0 #4a0000, 0 4px 10px rgba(200,0,0,0.3), inset 0 1px 0 rgba(255,150,100,0.4); }
+        .btn-spin:disabled { filter: grayscale(0.7) brightness(0.5); animation: none; cursor: not-allowed; }
+        .btn-spin:disabled::before { animation: none; }
+
+        /* PROMO BUTTON */
+        .promo-btn {
+            width: 100%; padding: 13px;
+            font-family: 'Fredoka One', cursive; font-size: 16px;
+            letter-spacing: 2px; color: #ffd700;
+            border: 2px solid rgba(255,215,0,0.35); border-radius: 14px;
+            cursor: pointer; text-transform: uppercase; margin-bottom: 12px;
+            background: rgba(255,180,0,0.07); transition: all 0.25s;
+        }
+        .promo-btn:hover { background: rgba(255,180,0,0.15); border-color: #ffd700; box-shadow: 0 0 16px rgba(255,180,0,0.3); }
+        .promo-btn:active { transform: scale(0.98); }
+
+        /* HISTORY */
+        .history-label { font-size: 10px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,180,0,0.4); text-align: center; margin-bottom: 5px; }
+        .history-box {
+            height: 56px; overflow-y: auto;
+            font-size: 11px; font-weight: 700;
+            color: rgba(255,200,80,0.6);
+            background: rgba(0,0,0,0.4); padding: 7px 10px;
+            border-radius: 12px; border: 1px solid rgba(255,180,0,0.1);
+            scrollbar-width: thin; scrollbar-color: #4a0000 transparent;
+        }
+        .history-box::-webkit-scrollbar { width: 3px; }
+        .history-box::-webkit-scrollbar-thumb { background: #4a0000; }
+
+        /* PANELS */
+        #settings-panel, #admin-panel, #user-profile-panel {
+            display: none; position: absolute; top: 8px; left: 8px; right: 8px;
+            background: linear-gradient(160deg, #180020, #0a0015);
+            border: 2px solid rgba(255,200,0,0.4);
+            padding: 20px 18px; z-index: 100; border-radius: 22px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.95), 0 0 30px rgba(200,0,0,0.15);
+        }
+        .panel-title { font-family: 'Fredoka One', cursive; font-size: 18px; letter-spacing: 2px; text-align: center; margin-bottom: 14px; color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+        .panel-title.red { color: #ff5555; text-shadow: 0 0 10px rgba(255,60,60,0.4); }
+
+        /* INPUTS */
+        input[type="text"], input[type="password"] {
+            width: 100%; display: block; margin: 0 0 12px;
+            padding: 14px 18px; border-radius: 14px;
+            background: rgba(0,0,0,0.55); color: #fff;
+            border: 2px solid rgba(255,100,0,0.3);
+            text-align: center; font-size: 15px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; letter-spacing: 2px;
+            outline: none; transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="text"]::placeholder, input[type="password"]::placeholder { color: rgba(255,180,100,0.35); letter-spacing: 2px; font-size: 13px; }
+        input[type="text"]:focus, input[type="password"]:focus { border-color: #ff4400; box-shadow: 0 0 14px rgba(255,60,0,0.25); }
+        input[type="range"] { width: 85%; display: block; margin: 0 auto 10px; accent-color: #ff3300; }
+
+        /* LOGIN BUTTON */
+        .btn-login {
+            width: 100%; padding: 15px;
+            font-family: 'Fredoka One', cursive; font-size: 18px; letter-spacing: 4px;
+            color: #fff; background: linear-gradient(180deg, #ff3300, #8b0000);
+            border: none; border-radius: 14px; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 5px 0 #3a0000, 0 8px 18px rgba(200,0,0,0.4); transition: all 0.15s;
+        }
+        .btn-login:hover { filter: brightness(1.1); }
+        .btn-login:active { transform: translateY(4px); box-shadow: 0 1px 0 #3a0000; }
+
+        /* MUTE */
+        .mute-toggle { padding: 10px 14px; border-radius: 10px; width: 100%; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 1px; cursor: pointer; border: 1px solid; margin-bottom: 5px; transition: all 0.2s; }
+        .on  { background: rgba(46,125,50,0.2); color: #66bb6a; border-color: rgba(76,175,80,0.3); }
+        .off { background: rgba(192,57,43,0.2); color: #ef5350; border-color: rgba(231,76,60,0.3); }
+
+        /* MUSIC LIST */
+        .music-list {
+            background: rgba(0,0,0,0.45); border: 1px solid rgba(255,180,0,0.15);
+            border-radius: 12px; padding: 4px; max-height: 130px; overflow-y: auto; margin-bottom: 10px;
+            scrollbar-width: thin; scrollbar-color: #4a0000 transparent;
+        }
+        .music-item { display: flex; align-items: center; padding: 7px 10px; border-bottom: 1px solid rgba(255,180,0,0.05); font-size: 12px; font-weight: 700; color: rgba(255,220,150,0.55); transition: background 0.2s; border-radius: 8px; }
+        .music-item:hover { background: rgba(255,100,0,0.07); }
+        .music-item.active { color: #ffd700; background: rgba(255,100,0,0.12); }
+        .music-item label { flex-grow: 1; cursor: pointer; }
+        .loop-checkbox { width: 16px; height: 16px; margin-left: 8px; cursor: pointer; accent-color: #ff3300; }
+
+        /* PANEL CLOSE */
+        .btn-panel-close { width: 100%; padding: 10px; margin-top: 10px; border-radius: 12px; background: transparent; color: rgba(255,180,0,0.45); border: 1px solid rgba(255,180,0,0.2); cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; transition: all 0.2s; }
+        .btn-panel-close:hover { border-color: #ffd700; color: #ffd700; }
+
+        /* ADMIN LIST */
+        .users-list-container { max-height: 170px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 12px; border: 1px solid rgba(255,180,0,0.15); padding: 4px; margin-bottom: 4px; scrollbar-width: thin; scrollbar-color: #4a0000 transparent; }
+        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-bottom: 1px solid rgba(255,180,0,0.07); color: rgba(255,220,150,0.8); font-size: 13px; font-weight: 700; transition: background 0.2s; border-radius: 8px; }
+        .user-row:hover { background: rgba(255,100,0,0.07); }
+
+        .mod-btn-pos { flex:1; padding: 9px; background: rgba(46,125,50,0.2); color: #66bb6a; border: 1px solid rgba(76,175,80,0.25); border-radius: 10px; font-weight: 900; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 15px; transition: all 0.2s; }
+        .mod-btn-pos:hover { background: rgba(46,125,50,0.4); }
+        .mod-btn-neg { flex:1; padding: 9px; background: rgba(192,57,43,0.2); color: #ef5350; border: 1px solid rgba(231,76,60,0.25); border-radius: 10px; font-weight: 900; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 15px; transition: all 0.2s; }
+        .mod-btn-neg:hover { background: rgba(192,57,43,0.4); }
+        .btn-back { width: 100%; padding: 10px; background: transparent; color: #ffd700; border: 1px solid rgba(255,215,0,0.3); border-radius: 10px; font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; transition: all 0.2s; }
+        .btn-back:hover { background: rgba(255,180,0,0.08); }
+
+        /* ADMIN CONTROL BUTTONS */
+        .admin-ctrl-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .btn-admin-ctrl {
+            flex: 1; padding: 10px 6px;
+            font-family: 'Fredoka One', cursive; font-size: 13px; letter-spacing: 1px;
+            color: #fff; border: none; border-radius: 12px; cursor: pointer;
+            text-transform: uppercase; transition: all 0.2s;
+        }
+        .btn-ctrl-blue { background: linear-gradient(180deg, #1565c0, #0d47a1); box-shadow: 0 3px 0 #082788; }
+        .btn-ctrl-blue:hover { filter: brightness(1.15); }
+        .btn-ctrl-blue:active { transform: translateY(2px); box-shadow: 0 1px 0 #082788; }
+        .btn-ctrl-purple { background: linear-gradient(180deg, #7b1fa2, #4a148c); box-shadow: 0 3px 0 #2a0060; }
+        .btn-ctrl-purple:hover { filter: brightness(1.15); }
+        .btn-ctrl-purple:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a0060; }
+
+        /* CHANCE INDICATOR in profile */
+        .chance-indicator {
+            text-align: center; margin-bottom: 10px;
+            font-family: 'Fredoka One', cursive; font-size: 15px;
+            color: #ffd700; letter-spacing: 1px;
+        }
+        .chance-badge {
+            display: inline-block; padding: 3px 14px;
+            background: linear-gradient(135deg, #7b1fa2, #4a148c);
+            border-radius: 20px; font-size: 14px;
+            box-shadow: 0 2px 8px rgba(123,31,162,0.5);
+        }
+
+        /* CHANCE MODAL */
+        #chance-modal {
+            display: none; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(160deg, #180020, #0a0015);
+            border: 2px solid rgba(123,31,162,0.7);
+            padding: 22px 20px; z-index: 200; border-radius: 22px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.95), 0 0 30px rgba(123,31,162,0.3);
+            width: 260px; text-align: center;
+        }
+        .chance-modal-title { font-family: 'Fredoka One', cursive; font-size: 16px; color: #ce93d8; letter-spacing: 2px; margin-bottom: 14px; }
+        .chance-options { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; }
+        .btn-chance-opt {
+            padding: 10px 16px;
+            font-family: 'Fredoka One', cursive; font-size: 18px;
+            color: #fff; border: none; border-radius: 12px; cursor: pointer;
+            background: linear-gradient(180deg, #7b1fa2, #4a148c);
+            box-shadow: 0 3px 0 #2a0060; transition: all 0.15s;
+        }
+        .btn-chance-opt:hover { filter: brightness(1.2); }
+        .btn-chance-opt:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a0060; }
+        .btn-chance-opt.active-chance { background: linear-gradient(180deg, #ff8f00, #e65100); box-shadow: 0 3px 0 #8b2700; }
+
+
+        .prof-balance-text { font-family: 'Fredoka One', cursive; font-size: 24px; color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .gold-divider { width: 100%; height: 1px; margin: 12px 0; background: linear-gradient(90deg, transparent, rgba(255,180,0,0.3), transparent); }
+
+        /* AGE GATE */
+        #age-gate { position: fixed; inset: 0; background: radial-gradient(ellipse at center, #0d0010 0%, #000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; gap: 22px; }
+        .age-icon { font-size: 64px; animation: ageBounce 2s ease-in-out infinite; }
+        @keyframes ageBounce { 0%,100%{transform:scale(1) rotate(-3deg)} 50%{transform:scale(1.08) rotate(3deg)} }
+        .age-title { font-family: 'Fredoka One', cursive; font-size: 28px; letter-spacing: 4px; color: #fff; text-shadow: 0 0 20px #ff3300, 0 0 40px #ff0000; }
+        .age-divider { width: 100px; height: 2px; background: linear-gradient(90deg, transparent, #ffd700, transparent); }
+        .btn-age { padding: 16px 52px; font-family: 'Fredoka One', cursive; font-size: 18px; letter-spacing: 3px; color: #fff; background: linear-gradient(180deg, #ff3300, #8b0000); border: none; border-radius: 18px; cursor: pointer; text-transform: uppercase; box-shadow: 0 6px 0 #3a0000, 0 10px 30px rgba(200,0,0,0.5); transition: all 0.2s; }
+        .btn-age:hover { filter: brightness(1.12); }
+        .btn-age:active { transform: translateY(4px); }
+        .btn-age-decline { padding: 12px 40px; font-family: 'Fredoka One', cursive; font-size: 15px; letter-spacing: 2px; color: rgba(255,180,100,0.5); background: transparent; border: 1px solid rgba(255,100,0,0.25); border-radius: 14px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
+        .btn-age-decline:hover { color: rgba(255,180,100,0.8); border-color: rgba(255,100,0,0.5); }
+
+        /* WIN FLASH */
+        @keyframes winFlash {
+            0%  {box-shadow:0 0 0 2px #ffd700,0 0 0 4px #cc8800,0 6px 20px rgba(200,0,0,0.6)}
+            25% {box-shadow:0 0 0 2px #ffd700,0 0 0 6px #ffaa00,0 6px 60px rgba(255,215,0,0.9),0 0 80px rgba(255,215,0,0.5)}
+            75% {box-shadow:0 0 0 2px #ffd700,0 0 0 5px #ffaa00,0 6px 40px rgba(255,180,0,0.6)}
+            100%{box-shadow:0 0 0 2px #ffd700,0 0 0 4px #cc8800,0 6px 20px rgba(200,0,0,0.6)}
+        }
+        .win-flash { animation: winFlash 0.8s ease-out 3; }
     </style>
 </head>
 <body onclick="closePanels()">
 
-<div class="stars"></div>
+<div class="coin-bg" id="coin-bg"></div>
 
+<!-- AGE GATE -->
 <div id="age-gate">
-    <h1 style="font-size: 45px; color: white;">🔞 18+</h1>
-    <button class="btn-main" style="background: white; color: #000; width: 220px;" onclick="verifyAge()">МНЕ ЕСТЬ 18</button>
+    <div class="age-icon">馃敒</div>
+    <div class="age-title">孝袨袥鞋袣袨 18+</div>
+    <div class="age-divider"></div>
+    <p style="color:rgba(255,180,100,0.5);font-size:12px;letter-spacing:2px;font-weight:700;">袩袨袛孝袙袝袪袛袠 小袙袨袡 袙袨袟袪袗小孝</p>
+    <button class="btn-age" onclick="verifyAge()">袦袧袝 袝小孝鞋 18</button>
+    <button class="btn-age-decline" onclick="window.location.href='https://www.google.com'">袦袧袝 袧袝孝 18</button>
 </div>
 
+<!-- MAIN -->
 <div class="casino-machine" onclick="event.stopPropagation()">
+
+    <!-- AUTH -->
     <div id="auth-section">
-        <h1>🍓 БУРМАЛДА</h1>
-        <input type="text" id="username" placeholder="ЛОГИН">
-        <input type="password" id="password" placeholder="ПАРОЛЬ">
-        <button onclick="login()" class="btn-main" style="background: #333;">ЗАЙТИ</button>
+        <h1 class="casino-title">馃崜 袘校袪袦袗袥袛袗</h1>
+        <div class="title-lights">
+            <div class="light-dot"></div><div class="light-dot"></div>
+            <div class="light-dot"></div><div class="light-dot"></div>
+            <div class="light-dot"></div><div class="light-dot"></div>
+        </div>
+        <input type="text" id="username" placeholder="袥袨袚袠袧">
+        <input type="password" id="password" placeholder="袩袗袪袨袥鞋">
+        <button onclick="login()" class="btn-login">袙袨袡孝袠</button>
     </div>
 
+    <!-- GAME -->
     <div id="game-section" style="display:none;">
-        <div class="vip-access" onclick="toggleAdmin(event)">VIP</div>
-        <h1>🍓 БУРМАЛДА</h1>
+        <h1 class="casino-title">馃崜 袘校袪袦袗袥袛袗</h1>
+        <div class="title-lights">
+            <div class="light-dot"></div><div class="light-dot"></div>
+            <div class="light-dot"></div><div class="light-dot"></div>
+            <div class="light-dot"></div><div class="light-dot"></div>
+        </div>
+        <div class="vip-access" onclick="toggleAdmin(event)">馃憫 VIP</div>
 
         <div class="info-bar">
             <div>
-                <div id="display-name" style="color:white; font-size:16px; font-weight:900;">PLAYER</div>
-                <div class="balance-val">АР: <span id="balance">0</span></div>
+                <div class="player-name" id="display-name">PLAYER</div>
+                <div class="balance-val"><span id="balance">0</span> 袗袪</div>
             </div>
-            <div style="font-size: 28px; cursor: pointer;" onclick="toggleSettings(event)">⚙️</div>
+            <div class="settings-btn" onclick="toggleSettings(event)">鈿欙笍</div>
         </div>
 
-        <div class="slot-container">
-            <div class="slot-window"><div id="reel1" class="slot-reel"></div></div>
-            <div class="slot-window"><div id="reel2" class="slot-reel"></div></div>
-            <div class="slot-window"><div id="reel3" class="slot-reel"></div></div>
+        <div class="slot-frame" id="slot-frame">
+            <div class="slot-frame-lights" id="frame-lights"></div>
+            <div class="slot-container">
+                <div class="slot-window"><div id="reel1" class="slot-reel"></div></div>
+                <div class="slot-window"><div id="reel2" class="slot-reel"></div></div>
+                <div class="slot-window"><div id="reel3" class="slot-reel"></div></div>
+            </div>
         </div>
 
-        <button id="spin-btn" class="btn-main btn-spin" onclick="spin()">КРУТИТЬ</button>
-        <button class="promo-btn" onclick="promptPromo()">ПРОМОКОД</button>
-        
-        <div style="color:white; font-size:12px; margin-bottom:5px; font-weight:bold;">История:</div>
+        <button id="spin-btn" class="btn-spin" onclick="spin()">袣袪校孝袠孝鞋!</button>
+        <button class="promo-btn" onclick="promptPromo()">馃巵 袩袪袨袦袨袣袨袛</button>
+
+        <div class="history-label">懈褋褌芯褉懈褟</div>
         <div id="history" class="history-box"></div>
 
-        <div id="settings-panel">
-            <h3 style="color:white; margin:0 0 10px 0; text-align:center;">ПЛЕЙЛИСТ</h3>
+        <!-- SETTINGS PANEL -->
+        <div id="settings-panel" onclick="event.stopPropagation()">
+            <div class="panel-title">馃幍 袩袥袝袡袥袠小孝</div>
             <div class="music-list" id="music-playlist"></div>
-            <button id="m-toggle" class="mute-toggle on" onclick="toggleMute('music')">МУЗЫКА: ВКЛ</button>
+            <button id="m-toggle" class="mute-toggle on" onclick="toggleMute('music')">馃幍 袦校袟蝎袣袗: 袙袣袥</button>
             <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
-            <button id="s-toggle" class="mute-toggle on" onclick="toggleMute('sound')">ЗВУКИ: ВКЛ</button>
+            <button id="s-toggle" class="mute-toggle on" onclick="toggleMute('sound')">馃攰 袟袙校袣袠: 袙袣袥</button>
             <input type="range" id="sound-vol" min="0" max="1" step="0.1" value="0.7" oninput="applyVolumes()">
-            <button onclick="closePanels()" style="width:100%; padding:10px; margin-top:10px; border-radius:12px; background:#444; color:#fff; border:none; cursor:pointer; font-weight:bold;">ЗАКРЫТЬ</button>
+            <button onclick="closePanels()" class="btn-panel-close">鉁?袟袗袣袪蝎孝鞋</button>
         </div>
 
-        <div id="admin-panel">
-            <h3 style="color:gold; text-align:center;">АДМИН-ПАНЕЛЬ</h3>
-            <div id="users-list" style="max-height: 200px; overflow-y:auto; background:#000; border-radius:10px; padding:5px;"></div>
-            <button onclick="closePanels()" style="width:100%; padding:10px; margin-top:10px; border-radius:12px; background:#444; color:#fff; border:none; font-weight:bold;">ЗАКРЫТЬ</button>
+        <!-- ADMIN PANEL -->
+        <div id="admin-panel" onclick="event.stopPropagation()">
+            <div class="panel-title">馃憫 袗袛袦袠袧-袩袗袧袝袥鞋</div>
+            <div class="admin-ctrl-row">
+                <button class="btn-admin-ctrl btn-ctrl-blue" id="nodelay-btn" onclick="toggleNoDelay()">鈿?袘袝袟 袟袗袛袝袪袞袣袠: 袙蝎袣袥</button>
+            </div>
+            <div class="users-list-container">
+                <div id="users-list"></div>
+            </div>
+            <button onclick="closePanels()" class="btn-panel-close">鉁?袟袗袣袪蝎孝鞋</button>
         </div>
 
-        <div id="user-profile-panel">
-            <h3 id="prof-name" style="color:red; margin-top:0; text-align:center;"></h3>
-            <p style="color:white; text-align:center; font-size:18px;">АР: <span id="prof-balance" style="color:lime; font-weight:bold;"></span></p>
-            
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <button onclick="modBal(1)" style="flex:1; padding:10px; background:#2e7d32; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">+1</button>
-                <button onclick="modBal(10)" style="flex:1; padding:10px; background:#2e7d32; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">+10</button>
+        <!-- USER PROFILE PANEL -->
+        <div id="user-profile-panel" onclick="event.stopPropagation()">
+            <div id="prof-name" class="panel-title red"></div>
+            <div class="gold-divider"></div>
+            <p style="text-align:center;margin-bottom:12px;">
+                <span style="color:rgba(255,180,100,0.5);font-size:12px;font-weight:800;letter-spacing:2px;">袘袗袥袗袧小: </span>
+                <span id="prof-balance" class="prof-balance-text">0</span>
+                <span style="color:rgba(255,180,0,0.5);font-size:14px;font-weight:800;"> 袗袪</span>
+            </p>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <button onclick="modBal(1)" class="mod-btn-pos">+1</button>
+                <button onclick="modBal(10)" class="mod-btn-pos">+10</button>
             </div>
-            <div style="display:flex; gap:5px; margin-bottom:15px;">
-                <button onclick="modBal(-1)" style="flex:1; padding:10px; background:#c62828; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">-1</button>
-                <button onclick="modBal(-10)" style="flex:1; padding:10px; background:#c62828; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">-10</button>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <button onclick="modBal(-1)" class="mod-btn-neg">鈭?</button>
+                <button onclick="modBal(-10)" class="mod-btn-neg">鈭?0</button>
             </div>
-            
-            <div style="color:white; font-size:12px; margin-bottom:5px;">История игрока:</div>
-            <div id="prof-history" class="history-box" style="margin-bottom:10px;"></div>
+            <div class="chance-indicator">楔袗袧小: <span class="chance-badge" id="prof-chance-badge">褏1</span></div>
+            <button class="btn-admin-ctrl btn-ctrl-purple" style="width:100%;margin-bottom:12px;" onclick="openChanceModal()">馃幉 校袙袝袥袠效袠孝鞋 楔袗袧小</button>
+            <div class="history-label">懈褋褌芯褉懈褟 懈谐褉芯泻邪</div>
+            <div id="prof-history" class="history-box" style="margin-bottom:12px;"></div>
+            <button onclick="backToAdmin()" class="btn-back">鈫?袧袗袟袗袛</button>
+        </div>
 
-            <button onclick="backToAdmin()" style="width:100%; padding:10px; background:#444; color:#fff; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">НАЗАД</button>
+        <!-- CHANCE MODAL -->
+        <div id="chance-modal" onclick="event.stopPropagation()">
+            <div class="chance-modal-title">袦袧袨袞袠孝袝袥鞋 楔袗袧小袗</div>
+            <div class="chance-options">
+                <button class="btn-chance-opt" onclick="setChance(1)">褏1</button>
+                <button class="btn-chance-opt" onclick="setChance(2)">褏2</button>
+                <button class="btn-chance-opt" onclick="setChance(5)">褏5</button>
+            </div>
+            <button onclick="closeChanceModal()" class="btn-panel-close" style="margin-top:0;">鉁?袟袗袣袪蝎孝鞋</button>
         </div>
     </div>
 </div>
 
 <script>
+    // FALLING COINS
+    (function() {
+        const c = document.getElementById('coin-bg');
+        const emojis = ['馃獧','馃挵','猸?,'馃専','馃崚','馃幇'];
+        for (let i = 0; i < 20; i++) {
+            const el = document.createElement('div');
+            el.className = 'coin';
+            el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            el.style.left = Math.random() * 100 + '%';
+            el.style.animationDuration = (Math.random() * 10 + 8) + 's';
+            el.style.animationDelay = (Math.random() * 12) + 's';
+            el.style.fontSize = (Math.random() * 14 + 14) + 'px';
+            c.appendChild(el);
+        }
+    })();
+
+    // FRAME LIGHTS
+    (function() {
+        const fl = document.getElementById('frame-lights');
+        if (!fl) return;
+        for (let i = 0; i < 14; i++) {
+            const d = document.createElement('div');
+            d.className = 'frame-light';
+            d.style.animationDelay = (i * 0.06) + 's';
+            fl.appendChild(d);
+        }
+    })();
+
+    // FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s",
         databaseURL: "https://dima256-default-rtdb.europe-west1.firebasedatabase.app",
@@ -193,23 +496,23 @@
     const db = firebase.database();
 
     const playlist = [
-        { name: "Бэм Бэм Бэм", file: "bam_bam_bam_1.mp3" },
+        { name: "袘褝屑 袘褝屑 袘褝屑", file: "bam_bam_bam_1.mp3" },
         { name: "Nobody", file: "nobody.mp3" },
-        { name: "Баклажан", file: "baclachn.mp3" },
-        { name: "Пау Пау Пау", file: "pay_pay_pay.mp3" },
+        { name: "袘邪泻谢邪卸邪薪", file: "baclachn.mp3" },
+        { name: "袩邪褍 袩邪褍 袩邪褍", file: "pay_pay_pay.mp3" },
         { name: "Bad Piggies", file: "bad_piggies.mp3" },
-        { name: "Ананасовый сироп", file: "ananasevi_sirop_1.mp3" },
-        { name: "Концерт Артура №1", file: "consert_artyra№1.mp3" },
-        { name: "Концерт Артура №2", file: "consert_artyra№2.mp3" },
-        { name: "Концерт Артура №3", file: "consert_artyra№3.mp3" },
-        { name: "баблгам№1", file: "bablgam_1.mp3" },
-        { name: "баблгам№2", file: "bablgam_2.mp3" },
+        { name: "袗薪邪薪邪褋芯胁褘泄 褋懈褉芯锌", file: "ananasevi_sirop_1.mp3" },
+        { name: "袣芯薪褑械褉褌 袗褉褌褍褉邪 鈩?", file: "consert_artyra鈩?.mp3" },
+        { name: "袣芯薪褑械褉褌 袗褉褌褍褉邪 鈩?", file: "consert_artyra鈩?.mp3" },
+        { name: "袣芯薪褑械褉褌 袗褉褌褍褉邪 鈩?", file: "consert_artyra鈩?.mp3" },
+        { name: "斜邪斜谢谐邪屑 鈩?", file: "bablgam_1.mp3" },
+        { name: "斜邪斜谢谐邪屑 鈩?", file: "bablgam_2.mp3" },
         { name: "Angry Birds", file: "angry_birds.mp3" },
-        { name: "оркестр-БЭМ", file: "orcestr_BAM_1.mp3" },
-        { name: "птички", file: "ptichki_1.mp3" }
+        { name: "芯褉泻械褋褌褉-袘协袦", file: "orcestr_BAM_1.mp3" },
+        { name: "锌褌懈褔泻懈", file: "ptichki_1.mp3" }
     ];
 
-    const icons = ['🍏', '🍌', '🍓', '🍒', '🍋'];
+    const icons = ['馃崗', '馃崒', '馃崜', '馃崚', '馃崑'];
     const S = {
         win2: new Audio('vrode_da_vrode_net_1.mp3'),
         interpol: new Audio('zapert_na_ostrove_izza_interpola_1.mp3'),
@@ -217,174 +520,299 @@
         jps: [new Audio('o_mai_gad_1.mp3'), new Audio('nixya_ti_blat_1.mp3')]
     };
 
-    let user = ""; let selU = ""; let currentTrackIdx = 0; 
+    let user = "", selU = "", currentTrackIdx = 0;
     let bgMusic = new Audio(playlist[0].file);
-    bgMusic.loop = true; 
-    let mOn = true; let sOn = true; let milionPlayed = false;
+    bgMusic.loop = true;
+    let mOn = true, sOn = true, milionPlayed = false;
+    let noDelay = false; // 褉械卸懈屑 斜械蟹 蟹邪写械褉卸泻懈
 
     function renderPlaylist() {
-        const container = document.getElementById('music-playlist');
-        container.innerHTML = playlist.map((t, idx) => `
-            <div class="music-item ${idx === currentTrackIdx ? 'active' : ''}">
-                <label onclick="playTrack(${idx})">${t.name}</label>
-                <input type="checkbox" class="loop-checkbox" id="loop-${idx}" onclick="updateLoop(${idx})" ${idx === currentTrackIdx && bgMusic.loop ? 'checked' : ''}>
-            </div>
-        `).join('');
+        document.getElementById('music-playlist').innerHTML = playlist.map((t, i) => `
+            <div class="music-item ${i === currentTrackIdx ? 'active' : ''}">
+                <label onclick="playTrack(${i})">${t.name}</label>
+                <input type="checkbox" class="loop-checkbox" id="loop-${i}" onclick="updateLoop(${i})" ${i === currentTrackIdx && bgMusic.loop ? 'checked' : ''}>
+            </div>`).join('');
     }
 
-    function updateLoop(idx) {
-        if (idx === currentTrackIdx) bgMusic.loop = document.getElementById(`loop-${idx}`).checked;
+    function updateLoop(i) {
+        if (i === currentTrackIdx) bgMusic.loop = document.getElementById(`loop-${i}`).checked;
     }
 
-    function playTrack(idx) {
-        bgMusic.pause(); currentTrackIdx = idx;
-        bgMusic.src = playlist[idx].file;
-        bgMusic.loop = document.getElementById(`loop-${idx}`).checked;
-        if(mOn) bgMusic.play().catch(()=>{});
+    function playTrack(i) {
+        bgMusic.pause(); currentTrackIdx = i;
+        bgMusic.src = playlist[i].file;
+        bgMusic.loop = document.getElementById(`loop-${i}`)?.checked || false;
+        if (mOn) bgMusic.play().catch(() => {});
         renderPlaylist();
     }
 
-    bgMusic.onended = () => {
-        if (!bgMusic.loop) playTrack((currentTrackIdx + 1) % playlist.length);
-    };
+    bgMusic.onended = () => { if (!bgMusic.loop) playTrack((currentTrackIdx + 1) % playlist.length); };
 
     function login() {
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value;
-        if(!u || !p) return;
+        if (!u || !p) return;
         db.ref('players/' + u).once('value').then(s => {
-            if(!s.exists()) db.ref('players/' + u).set({balance: 5, password: p, history: ["Регистрация"]}).then(() => { user = u; go(); });
-            else if(s.val().password === p) { user = u; go(); }
-            else alert("Неверный пароль!");
+            if (!s.exists()) {
+                db.ref('players/' + u).set({ balance: 5, password: p, history: ["袪械谐懈褋褌褉邪褑懈褟"], usedPromos: {} })
+                    .then(() => { user = u; go(); });
+            } else if (s.val().password === p) { user = u; go(); }
+            else alert("袧械胁械褉薪褘泄 锌邪褉芯谢褜!");
         });
     }
 
     function go() {
-        document.getElementById('auth-section').style.display='none';
-        document.getElementById('game-section').style.display='block';
-        document.getElementById('display-name').innerText = user;
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('game-section').style.display = 'block';
+        document.getElementById('display-name').innerText = user.toUpperCase();
         fillReels(); applyVolumes(); renderPlaylist();
         db.ref('players/' + user).on('value', snap => {
-            const d = snap.val(); if(!d) return;
+            const d = snap.val(); if (!d) return;
             document.getElementById('balance').innerText = d.balance;
-            document.getElementById('history').innerHTML = (d.history || []).slice().reverse().map(h => `<div>> ${h}</div>`).join('');
-            if (d.balance >= 120 && !milionPlayed) { if(sOn) S.milion.play(); milionPlayed = true; }
-            else if (d.balance < 120) { milionPlayed = false; }
+            document.getElementById('history').innerHTML = (d.history || []).slice().reverse()
+                .map(h => `<div style="padding:2px 0;border-bottom:1px solid rgba(255,180,0,0.06);">> ${h}</div>`).join('');
+            if (d.balance >= 120 && !milionPlayed) { if (sOn) S.milion.play(); milionPlayed = true; }
+            else if (d.balance < 120) milionPlayed = false;
         });
     }
 
     function fillReels() {
-        [1,2,3].forEach(n => {
-            let h = ''; for(let i=0; i<30; i++) h += `<span>${icons[Math.floor(Math.random()*5)]}</span>`;
-            document.getElementById('reel'+n).innerHTML = h;
+        [1, 2, 3].forEach(n => {
+            let h = '';
+            for (let i = 0; i < 30; i++) h += `<span>${icons[Math.floor(Math.random() * 5)]}</span>`;
+            document.getElementById('reel' + n).innerHTML = h;
         });
     }
 
     async function spin() {
         const s = await db.ref('players/' + user).once('value');
-        const d = s.val(); if(d.balance < 1) { if(sOn) S.interpol.play(); return; }
-        const res = [icons[Math.floor(Math.random()*5)], icons[Math.floor(Math.random()*5)], icons[Math.floor(Math.random()*5)]];
+        const d = s.val();
+        if (d.balance < 1) { if (sOn) S.interpol.play(); return; }
+
+        // 效懈褌邪械屑 屑薪芯卸懈褌械谢褜 褕邪薪褋邪 懈谐褉芯泻邪 懈蟹 Firebase
+        const chanceMultiplier = d.chanceMultiplier || 1;
+
+        // 袚械薪械褉邪褑懈褟 褉械蟹褍谢褜褌邪褌邪 褋 褍褔褢褌芯屑 屑薪芯卸懈褌械谢褟
+        // 袘邪蟹芯胁褘泄 褕邪薪褋 3 芯写懈薪邪泻芯胁褘褏 ~4%, 2 芯写懈薪邪泻芯胁褘褏 ~48%
+        // 袩褉懈 褏2: 褍写胁邪懈胁邪械屑 胁械褉芯褟褌薪芯褋褌褜 胁褘懈谐褉褘褕邪; 锌褉懈 褏5: 胁锌褟褌械褉芯
+        let res;
+        const rand = Math.random();
+        const tripleChance = Math.min(0.04 * chanceMultiplier, 0.8);
+        const pairChance   = Math.min(0.48 * chanceMultiplier, 0.97);
+
+        if (rand < tripleChance) {
+            // 孝褉懈 芯写懈薪邪泻芯胁褘褏
+            const icon = icons[Math.floor(Math.random() * icons.length)];
+            res = [icon, icon, icon];
+        } else if (rand < tripleChance + pairChance) {
+            // 袛胁邪 芯写懈薪邪泻芯胁褘褏
+            const icon = icons[Math.floor(Math.random() * icons.length)];
+            const other = icons[Math.floor(Math.random() * icons.length)];
+            const pos = Math.floor(Math.random() * 3);
+            res = [icon, icon, icon];
+            res[pos] = other;
+        } else {
+            // 袙褋械 褉邪蟹薪褘械
+            do { res = [icons[Math.floor(Math.random()*5)], icons[Math.floor(Math.random()*5)], icons[Math.floor(Math.random()*5)]]; }
+            while (res[0]===res[1] || res[1]===res[2] || res[0]===res[2]);
+        }
+
         document.getElementById('spin-btn').disabled = true;
-        [1,2,3].forEach((n, i) => {
-            const r = document.getElementById('reel'+n);
-            r.style.transition = '0s'; r.style.transform = 'translateY(0)';
-            r.querySelector('span:last-child').innerText = res[i];
-            setTimeout(() => { r.style.transition = `transform ${2+i}s ease-in-out`; r.style.transform = 'translateY(-3190px)'; }, 50);
-        });
-        setTimeout(() => {
-            let win = (res[0]===res[1] && res[1]===res[2]) ? 5 : (res[0]===res[1] || res[1]===res[2] || res[0]===res[2] ? 2 : 0);
-            if(sOn && win > 0) { if(win===5) S.jps[Math.floor(Math.random()*2)].play(); else S.win2.play(); }
-            db.ref('players/' + user).update({ balance: d.balance - 1 + win, history: [...(d.history || []), `${res.join('')} | ${win-1>=0?'+':''}${win-1} АР`].slice(-15) });
-            document.getElementById('spin-btn').disabled = false;
-        }, 5000);
+
+        if (noDelay) {
+            // 袦谐薪芯胁械薪薪褘泄 褉械蟹褍谢褜褌邪褌 斜械蟹 邪薪懈屑邪褑懈懈
+            [1, 2, 3].forEach((n, i) => {
+                const r = document.getElementById('reel' + n);
+                r.style.transition = '0s'; r.style.transform = 'translateY(0)';
+                r.querySelector('span:last-child').innerText = res[i];
+                r.style.transform = 'translateY(-3190px)';
+            });
+            resolveSpinResult(res, d, chanceMultiplier);
+        } else {
+            // 袨斜褘褔薪邪褟 邪薪懈屑邪褑懈褟
+            [1, 2, 3].forEach((n, i) => {
+                const r = document.getElementById('reel' + n);
+                r.style.transition = '0s'; r.style.transform = 'translateY(0)';
+                r.querySelector('span:last-child').innerText = res[i];
+                setTimeout(() => { r.style.transition = `transform ${2 + i}s ease-in-out`; r.style.transform = 'translateY(-3190px)'; }, 50);
+            });
+            setTimeout(() => resolveSpinResult(res, d, chanceMultiplier), 5000);
+        }
     }
 
-    // ПРОМОКОДЫ: ТЕПЕРЬ ОДНОРАЗОВЫЕ ДЛЯ КАЖДОГО ИГРОКА
+    function resolveSpinResult(res, d, chanceMultiplier) {
+        // 袙褘懈谐褉褘褕 褍屑薪芯卸邪械褌褋褟 薪邪 multiplier
+        let baseWin = (res[0] === res[1] && res[1] === res[2]) ? 5
+                    : (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) ? 2 : 0;
+        let win = baseWin === 0 ? 0 : Math.round(baseWin * chanceMultiplier);
+
+        if (win > 0) {
+            const frame = document.getElementById('slot-frame');
+            frame.classList.add('win-flash');
+            setTimeout(() => frame.classList.remove('win-flash'), 2400);
+            if (sOn) { (res[0]===res[1]&&res[1]===res[2]) ? S.jps[Math.floor(Math.random()*2)].play() : S.win2.play(); }
+        }
+        const delta = win - 1;
+        db.ref('players/' + user).update({
+            balance: d.balance - 1 + win,
+            history: [...(d.history || []), `${res.join('')} ${delta >= 0 ? '+' : ''}${delta} 袗袪`].slice(-15)
+        });
+        document.getElementById('spin-btn').disabled = false;
+    }
+
+    // 鈹€鈹€ 袩袪袨袦袨袣袨袛 袠小袩袪袗袙袥袝袧: 褋褌褉芯谐邪褟 锌褉芯胁械褉泻邪 芯写薪芯褉邪蟹芯胁芯谐芯 懈褋锌芯谢褜蟹芯胁邪薪懈褟 鈹€鈹€
     function promptPromo() {
-        const input = prompt("Введи промокод:");
+        const input = prompt("袙胁械写懈 锌褉芯屑芯泻芯写:");
         if (!input) return;
         const code = input.trim().toLowerCase();
-        let reward = 0;
-        
-        if (code === "mell") reward = 3;
-        else if (code === "мелл") reward = 5;
-        else if (code === "меллстрой") reward = 5;
-        else { alert("Промокод не найден или уже истек!"); return; }
 
-        db.ref('players/' + user).once('value').then(s => {
-            let d = s.val();
-            
-            // Проверка: использовал ли игрок уже этот промокод?
-            let used = d.usedPromos || {};
-            if (used[code]) {
-                alert("Ты уже использовал этот промокод!");
+        const promoCodes = { "mell": 3, "屑械谢谢": 5, "屑械谢谢褋褌褉芯泄": 5 };
+        if (!(code in promoCodes)) { alert("鉂?袩褉芯屑芯泻芯写 薪械 薪邪泄写械薪!"); return; }
+
+        db.ref('players/' + user + '/usedPromos/' + code).once('value').then(snap => {
+            // 袩褉芯胁械褉褟械屑 薪邪锌褉褟屑褍褞 胁 Firebase 鈥?懈褋泻谢褞褔邪械褌 谢褞斜褘械 谢芯泻邪谢褜薪褘械 斜邪谐懈
+            if (snap.exists() && snap.val() === true) {
+                alert("鉀?孝褘 褍卸械 懈褋锌芯谢褜蟹芯胁邪谢 褝褌芯褌 锌褉芯屑芯泻芯写!");
                 return;
             }
-            
-            // Отмечаем промокод как использованный
-            used[code] = true;
-
-            db.ref('players/' + user).update({
-                balance: d.balance + reward,
-                usedPromos: used,
-                history: [...(d.history || []), `ПРОМО: ${code} | +${reward} АР`].slice(-15)
+            const reward = promoCodes[code];
+            // 袗褌芯屑邪褉薪芯械 芯斜薪芯胁谢械薪懈械
+            db.ref('players/' + user).once('value').then(s => {
+                const d = s.val();
+                db.ref('players/' + user).update({
+                    balance: (d.balance || 0) + reward,
+                    [`usedPromos/${code}`]: true,
+                    history: [...(d.history || []), `馃巵 袩袪袨袦袨 芦${code}禄 +${reward} 袗袪`].slice(-15)
+                });
+                alert(`鉁?袩褉芯屑芯泻芯写 邪泻褌懈胁懈褉芯胁邪薪! +${reward} 袗袪 薪邪褔懈褋谢械薪芯.`);
             });
-            alert(`Успешно! Начислено ${reward} АР.`);
         });
     }
 
-    function toggleAdmin(e) { e.stopPropagation(); if (prompt("Пароль:") === "1337") { document.getElementById('admin-panel').style.display = 'block'; loadUsers(); } }
-    
+    function toggleAdmin(e) {
+        e.stopPropagation();
+        if (prompt("袩邪褉芯谢褜:") === "1337") {
+            document.getElementById('admin-panel').style.display = 'block';
+            loadUsers();
+        }
+    }
+
     function loadUsers() {
         db.ref('players').on('value', s => {
-            const list = document.getElementById('users-list'); list.innerHTML = "";
+            const list = document.getElementById('users-list');
+            list.innerHTML = "";
             s.forEach(c => {
-                const div = document.createElement('div'); div.className = "user-row";
+                const div = document.createElement('div');
+                div.className = "user-row";
                 div.innerHTML = `
-                    <div style="display:flex; align-items:center;">
-                        <span onclick="delUserFromList(event, '${c.key}')" style="color:red; font-size:16px; margin-right:10px; font-weight:bold;">✖</span>
-                        <span onclick="openProfile('${c.key}')" style="flex-grow:1;">${c.key}</span>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span onclick="deleteUser(event,'${c.key}')" title="校写邪谢懈褌褜 邪泻泻邪褍薪褌"
+                            style="color:#ef5350;font-size:16px;cursor:pointer;padding:2px 5px;border-radius:4px;transition:background 0.2s;"
+                            onmouseover="this.style.background='rgba(255,60,60,0.18)'"
+                            onmouseout="this.style.background='transparent'">鉁?/span>
+                        <span onclick="openProfile('${c.key}')" style="cursor:pointer;">${c.key}</span>
                     </div>
-                    <span onclick="openProfile('${c.key}')">${c.val().balance} АР</span>
+                    <span onclick="openProfile('${c.key}')" style="color:rgba(255,200,0,0.5);cursor:pointer;">${c.val().balance} 袗袪</span>
                 `;
                 list.appendChild(div);
             });
         });
     }
-    
-    function delUserFromList(e, u) {
+
+    // 鈹€鈹€ 校袛袗袥袝袧袠袝 袗袣袣袗校袧孝袗 袠小袩袪袗袙袥袝袧袨: 褍写邪谢褟械褌 胁褋械 写邪薪薪褘械 懈谐褉芯泻邪 懈蟹 Firebase 鈹€鈹€
+    function deleteUser(e, u) {
         e.stopPropagation();
-        if(confirm(`Точно удалить игрока ${u}?`)) db.ref('players/'+u).remove();
+        if (confirm(`校写邪谢懈褌褜 邪泻泻邪褍薪褌 芦${u}禄 懈 胁褋械 械谐芯 写邪薪薪褘械 薪邪胁褋械谐写邪?`)) {
+            db.ref('players/' + u).remove().then(() => {
+                if (u === user) {
+                    // 袝褋谢懈 褍写邪谢懈谢懈 褋械斜褟 鈥?褉邪蟹谢芯谐懈薪懈褌褜褋褟
+                    user = "";
+                    db.ref('players/' + u).off(); // 芯褌锌懈褋褘胁邪械屑褋褟 芯褌 褋谢褍褕邪褌械谢褟
+                    document.getElementById('game-section').style.display = 'none';
+                    document.getElementById('auth-section').style.display = 'block';
+                    closePanels();
+                }
+            });
+        }
     }
 
-    function openProfile(u) { 
-        selU = u; 
-        document.getElementById('admin-panel').style.display='none'; 
-        document.getElementById('user-profile-panel').style.display='block'; 
-        document.getElementById('prof-name').innerText = u; 
-        db.ref('players/'+u).on('value', s => {
-            if(s.exists()) {
-                document.getElementById('prof-balance').innerText = s.val().balance;
-                document.getElementById('prof-history').innerHTML = (s.val().history || []).slice().reverse().map(h => `<div>> ${h}</div>`).join('');
+    function openProfile(u) {
+        selU = u;
+        document.getElementById('admin-panel').style.display = 'none';
+        document.getElementById('user-profile-panel').style.display = 'block';
+        document.getElementById('prof-name').innerText = u.toUpperCase();
+        db.ref('players/' + u).on('value', s => {
+            if (s.exists()) {
+                const d = s.val();
+                document.getElementById('prof-balance').innerText = d.balance;
+                document.getElementById('prof-history').innerHTML = (d.history || []).slice().reverse()
+                    .map(h => `<div style="padding:2px 0;">> ${h}</div>`).join('');
+                const mult = d.chanceMultiplier || 1;
+                document.getElementById('prof-chance-badge').textContent = '褏' + mult;
             }
-        }); 
+        });
     }
-    
-    function modBal(v) { db.ref('players/'+selU+'/balance').transaction(b => (b||0)+v); }
-    function backToAdmin() { document.getElementById('user-profile-panel').style.display='none'; document.getElementById('admin-panel').style.display='block'; }
 
-    function toggleSettings(e) { e.stopPropagation(); document.getElementById('settings-panel').style.display = 'block'; renderPlaylist(); }
-    function closePanels() { ['settings-panel', 'admin-panel', 'user-profile-panel'].forEach(p => document.getElementById(p).style.display = 'none'); }
-    
-    function applyVolumes() { 
-        const mVol = document.getElementById('music-vol').value; const sVol = document.getElementById('sound-vol').value;
-        bgMusic.volume = mOn ? mVol : 0; if(mOn) bgMusic.play().catch(()=>{}); else bgMusic.pause();
-        document.getElementById('m-toggle').className = mOn?"mute-toggle on":"mute-toggle off";
-        document.getElementById('s-toggle').className = sOn?"mute-toggle on":"mute-toggle off";
-        Object.values(S).flat().forEach(a => { if(a instanceof Audio) a.volume = sOn ? sVol : 0; });
+    // 鈹€鈹€ 袘袝袟 袟袗袛袝袪袞袣袠 鈹€鈹€
+    function toggleNoDelay() {
+        noDelay = !noDelay;
+        const btn = document.getElementById('nodelay-btn');
+        btn.textContent = noDelay ? '鈿?袘袝袟 袟袗袛袝袪袞袣袠: 袙袣袥' : '鈿?袘袝袟 袟袗袛袝袪袞袣袠: 袙蝎袣袥';
+        btn.style.background = noDelay
+            ? 'linear-gradient(180deg,#00897b,#00695c)'
+            : 'linear-gradient(180deg,#1565c0,#0d47a1)';
     }
-    function toggleMute(t) { if(t==='music') mOn=!mOn; else sOn=!sOn; applyVolumes(); }
-    
+
+    // 鈹€鈹€ 楔袗袧小 袦袨袛袗袥 鈹€鈹€
+    function openChanceModal() {
+        const modal = document.getElementById('chance-modal');
+        modal.style.display = 'block';
+        // 袩芯写褋胁械褌懈褌褜 褌械泻褍褖懈泄 邪泻褌懈胁薪褘泄 褕邪薪褋
+        db.ref('players/' + selU + '/chanceMultiplier').once('value').then(s => {
+            const current = s.val() || 1;
+            modal.querySelectorAll('.btn-chance-opt').forEach(btn => {
+                const v = parseInt(btn.textContent.replace('褏',''));
+                btn.classList.toggle('active-chance', v === current);
+            });
+        });
+    }
+
+    function closeChanceModal() {
+        document.getElementById('chance-modal').style.display = 'none';
+    }
+
+    function setChance(mult) {
+        db.ref('players/' + selU + '/chanceMultiplier').set(mult).then(() => {
+            document.getElementById('prof-chance-badge').textContent = '褏' + mult;
+            // 袨斜薪芯胁懈褌褜 锌芯写褋胁械褌泻褍 泻薪芯锌芯泻
+            document.querySelectorAll('.btn-chance-opt').forEach(btn => {
+                const v = parseInt(btn.textContent.replace('褏',''));
+                btn.classList.toggle('active-chance', v === mult);
+            });
+        });
+    }
+
+    function modBal(v) { db.ref('players/' + selU + '/balance').transaction(b => (b || 0) + v); }
+    function backToAdmin() { document.getElementById('user-profile-panel').style.display = 'none'; document.getElementById('admin-panel').style.display = 'block'; }
+    function toggleSettings(e) { e.stopPropagation(); document.getElementById('settings-panel').style.display = 'block'; renderPlaylist(); }
+    function closePanels() { ['settings-panel', 'admin-panel', 'user-profile-panel', 'chance-modal'].forEach(p => document.getElementById(p).style.display = 'none'); }
+
+    function applyVolumes() {
+        const mVol = document.getElementById('music-vol').value;
+        const sVol = document.getElementById('sound-vol').value;
+        bgMusic.volume = mOn ? mVol : 0;
+        if (mOn) bgMusic.play().catch(() => {}); else bgMusic.pause();
+        const mBtn = document.getElementById('m-toggle');
+        const sBtn = document.getElementById('s-toggle');
+        mBtn.className = mOn ? "mute-toggle on" : "mute-toggle off";
+        mBtn.textContent = mOn ? "馃幍 袦校袟蝎袣袗: 袙袣袥" : "馃幍 袦校袟蝎袣袗: 袙蝎袣袥";
+        sBtn.className = sOn ? "mute-toggle on" : "mute-toggle off";
+        sBtn.textContent = sOn ? "馃攰 袟袙校袣袠: 袙袣袥" : "馃攰 袟袙校袣袠: 袙蝎袣袥";
+        Object.values(S).flat().forEach(a => { if (a instanceof Audio) a.volume = sOn ? sVol : 0; });
+    }
+
+    function toggleMute(t) { if (t === 'music') mOn = !mOn; else sOn = !sOn; applyVolumes(); }
+
     function verifyAge() { localStorage.setItem('adult', 'true'); document.getElementById('age-gate').remove(); }
     if (localStorage.getItem('adult') === 'true') document.getElementById('age-gate')?.remove();
 </script>
