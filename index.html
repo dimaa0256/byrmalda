@@ -7,143 +7,182 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        * { box-sizing: border-box; }
-        body { background-color: #1a1a1a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        
-        /* ОКНО 18+ */
-        #age-gate {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #b71c1c; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 9999; 
-            text-align: center; padding: 20px;
+        :root {
+            --spin-red: linear-gradient(180deg, #ff0000 0%, #7a0000 100%);
+            --accent-red: #ff3c3c;
+            --vip-gold: #ffc107;
+            --panel-bg: rgba(17, 17, 17, 0.95);
         }
-        #age-gate h1 { font-size: 40px; margin-bottom: 20px; }
-        #age-gate p { font-size: 20px; margin-bottom: 30px; }
-        .age-btns { display: flex; gap: 20px; }
-        .btn-age { padding: 15px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; text-transform: uppercase; }
-        .btn-yes { background: white; color: #b71c1c; }
-        .btn-no { background: rgba(0,0,0,0.3); color: white; }
 
-        .container { width: 380px; background: #3c4043; border: 3px solid #5f6368; padding: 25px; border-radius: 15px; text-align: center; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 10; }
-        
-        .slot-machine { background: #202124; border: 4px solid #5f6368; display: flex; justify-content: center; gap: 10px; padding: 20px; margin: 20px 0; border-radius: 10px; overflow: hidden; }
-        .slot-window { width: 80px; height: 100px; background: #1a1a1a; border: 2px solid #5f6368; border-radius: 5px; position: relative; overflow: hidden; }
-        .slot-reel { position: absolute; top: 0; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; transition: transform 0s cubic-bezier(0.45, 0.05, 0.55, 0.95); }
-        .slot-reel span { height: 100px; font-size: 60px; line-height: 100px; display: block; }
+        /* АНИМИРОВАННЫЙ КОСМОС */
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: #000; overflow: hidden;
+        }
 
-        #settings-panel, #admin-panel, #user-profile-panel { display: none; position: absolute; top: 50px; left: 15px; right: 15px; background: #202124; border: 1px solid #5f6368; padding: 15px; text-align: left; z-index: 100; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
-        
-        .btn-main { width: 100%; padding: 15px; font-size: 18px; font-weight: bold; border: none; cursor: pointer; color: #fff; margin-bottom: 10px; text-transform: uppercase; border-radius: 8px; position: relative; z-index: 5; }
-        .btn-spin { background: #b71c1c; border-bottom: 4px solid #7f0000; }
-        .btn-spin:disabled { background: #555; border-bottom: none; opacity: 0.6; }
+        body {
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Arial Black', sans-serif;
+            /* Движущаяся туманность */
+            background: radial-gradient(circle at 50% 50%, #200505 0%, #050505 100%);
+            animation: space-glow 10s infinite alternate ease-in-out;
+        }
 
-        .setting-row { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
-        .mute-btn { width: 70px; padding: 5px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; }
-        .mute-on { background: #4caf50; color: white; }
-        .mute-off { background: #b71c1c; color: white; }
+        @keyframes space-glow {
+            0% { background-color: #000; }
+            100% { background-color: #1a0505; }
+        }
 
-        .logs-box { background: #1a1a1a; border: 1px solid #5f6368; height: 100px; overflow-y: auto; text-align: left; padding: 10px; font-size: 13px; color: #fdd835; border-radius: 5px; }
-        .user-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #333; }
-        .user-item span:first-child { cursor: pointer; flex-grow: 1; color: #bdc1c6; }
-        .ar-count { color: #81c995; font-weight: bold; }
-        .del-btn { color: #ff4444; font-weight: bold; padding: 5px; cursor: pointer; }
-        
-        #auth-section input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #5f6368; border-radius: 8px; background: #fff; display: block; color: black; position: relative; z-index: 5; }
-        .settings-icon { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 24px; opacity: 0.7; z-index: 11; }
-        .admin-btn-open { position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 12px; background: #555; padding: 5px 10px; border-radius: 5px; z-index: 11; }
-        
-        .btn-plus { background: #2e7d32 !important; }
-        .btn-minus { background: #c62828 !important; }
+        /* ЗВЕЗДЫ С МЕРЦАНИЕМ */
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; pointer-events: none;
+            background-image: 
+                radial-gradient(1.5px 1.5px at 20px 30px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 150px 50px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 100px 180px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 250px 250px, #fff, rgba(0,0,0,0));
+            background-size: 300px 300px;
+            animation: twinkle 4s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+
+        /* КОНТЕЙНЕР АВТОМАТА */
+        .casino-machine { 
+            width: 390px; 
+            background: var(--panel-bg); 
+            border-radius: 45px; 
+            padding: 35px 25px 25px 25px; 
+            position: relative; 
+            border: 2px solid #333; 
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.2), 0 40px 100px rgba(0,0,0,0.9); 
+            z-index: 10; 
+            backdrop-filter: blur(5px);
+        }
+
+        /* ОСТАЛЬНЫЕ СТИЛИ */
+        @keyframes glow-clean {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); }
+            50% { box-shadow: 0 0 35px rgba(255, 0, 0, 0.8); }
+        }
+        @keyframes vip-pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); text-shadow: 0 0 15px var(--vip-gold); }
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        #age-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; text-align: center; }
+        .vip-access { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--vip-gold); font-weight: 900; letter-spacing: 6px; cursor: pointer; animation: vip-pulse 2s infinite ease-in-out; z-index: 10; }
+        .header-logo { background: linear-gradient(180deg, #1a1a1a, #000); padding: 15px; border-radius: 20px; border: 1px solid #333; margin-bottom: 20px; text-align: center; }
+        h1 { font-size: 28px; margin: 0; color: var(--accent-red); text-shadow: 0 0 15px rgba(255, 0, 0, 0.6); }
+        .info-bar { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 10px 15px; border-radius: 15px; border: 1px solid #222; margin-bottom: 15px; }
+        .balance-val { color: #00ff00; font-size: 22px; font-weight: bold; }
+        .slot-container { background: #000; padding: 15px; border-radius: 20px; border: 2px solid #333; display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; box-shadow: inset 0 0 30px #000; }
+        .slot-window { width: 85px; height: 110px; background: #111; border-radius: 12px; position: relative; overflow: hidden; }
+        .slot-reel { position: absolute; top: 0; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .slot-reel span { height: 110px; font-size: 55px; line-height: 110px; display: block; }
+        .btn-main { width: 100%; padding: 20px; font-size: 24px; font-weight: 900; color: #fff; border: none; border-radius: 20px; cursor: pointer; text-transform: uppercase; transition: 0.1s; margin-bottom: 15px; }
+        .btn-spin { background: var(--spin-red); box-shadow: 0 8px 0 #500; animation: glow-clean 2.5s infinite; }
+        .btn-spin:active { transform: translateY(4px); box-shadow: 0 4px 0 #500; }
+        .btn-spin:disabled { filter: grayscale(1); cursor: not-allowed; animation: none; }
+        .promo-btn { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #444; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
+        #settings-panel, #admin-panel, #user-profile-panel { display: none; position: absolute; top: 10px; left: 10px; right: 10px; background: #1e1e1e; border: 2px solid #555; padding: 20px; z-index: 100; border-radius: 30px; box-shadow: 0 0 50px #000; }
+        .history-list { height: 65px; overflow-y: auto; font-size: 11px; color: #00ff00; font-family: monospace; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #444; border-radius: 12px; background: #2a2a2a; color: #fff; }
+        .mute-toggle { padding: 8px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 5px; }
+        .on { background: #2e7d32; color: white; }
+        .off { background: #c62828; color: white; }
+        .btn-plus { background: #2e7d32; color: white; border: none; border-radius: 10px; padding: 10px; font-weight: bold; }
+        .btn-minus { background: #c62828; color: white; border: none; border-radius: 10px; padding: 10px; font-weight: bold; }
+        .user-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; color: #fff; }
+        .del-x { color: #ff3c3c; cursor: pointer; font-weight: bold; font-size: 18px; padding-left: 10px; }
     </style>
 </head>
-<body onclick="closePanels(event)">
+<body onclick="closePanels()">
+
+<div class="stars"></div>
 
 <div id="age-gate">
-    <h1>🔞 ВНИМАНИЕ</h1>
-    <p>Тебе уже есть 18 лет?</p>
-    <div class="age-btns">
-        <button class="btn-age btn-yes" onclick="verifyAge()">ДА</button>
-        <button class="btn-age btn-no" onclick="window.location.href='https://google.com'">НЕТ</button>
-    </div>
+    <h1 style="font-size: 45px; color: white;">🔞 18+</h1>
+    <button class="btn-main" style="background: white; color: #000; width: 220px;" onclick="verifyAge()">МНЕ ЕСТЬ 18</button>
 </div>
 
-<div class="container" onclick="event.stopPropagation()">
+<div class="casino-machine" onclick="event.stopPropagation()">
     <div id="auth-section">
-        <h1 style="color:#b71c1c">🍓 БУРМАЛДА</h1>
+        <h1>🍓 БУРМАЛДА</h1>
         <input type="text" id="username" placeholder="Логин">
         <input type="password" id="password" placeholder="Пароль">
-        <button id="login-btn" onclick="login()" class="btn-main" style="background:#5f6368">ЗАЙТИ</button>
+        <button onclick="login()" class="btn-main" style="background: #333;">ЗАЙТИ</button>
     </div>
 
     <div id="game-section" style="display:none;">
-        <div class="admin-btn-open" onclick="toggleAdmin(event)">АДМИН</div>
-        <div class="settings-icon" onclick="toggleSettings(event)">⚙️</div>
-        
-        <div id="settings-panel">
-            <div class="setting-row">
-                <button id="m-mute" class="mute-btn mute-on" onclick="toggleMute('music')">(ВКЛ)</button>
-                <span>Музыка:</span>
-                <select id="bg-music-select" onchange="changeMusic()" style="width:100%; padding:5px;">
-                    <option value="bam_bam_bam_1.mp3">Бам Бам Бам</option>
-                    <option value="ananasevi_sirop_1.mp3">Ананасовый сироп</option>
-                    <option value="baclachn.mp3">Баклажан</option>
-                    <option value="bad_piggies.mp3">Bad Piggies</option>
-                    <option value="nobody.mp3">Возьми телефон</option>
-                    <option value="pay_pay_pay.mp3">Ам Ам Ам</option>
-                </select>
-                <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
+        <div class="vip-access" onclick="toggleAdmin(event)">VIP</div>
+        <div class="header-logo"><h1>🍓 БУРМАЛДА</h1></div>
+
+        <div class="info-bar">
+            <div>
+                <div id="display-name" style="font-size: 10px; color: #666;">PLAYER</div>
+                <div class="balance-val">АР: <span id="balance">0</span></div>
             </div>
-            <div class="setting-row">
-                <button id="s-mute" class="mute-btn mute-on" onclick="toggleMute('sound')">(ВКЛ)</button>
-                <span>Звуки:</span>
-                <input type="range" id="sound-vol" min="0" max="1" step="0.1" value="0.7" oninput="applyVolumes()">
-            </div>
+            <div style="font-size: 28px; cursor: pointer;" onclick="toggleSettings(event)">⚙️</div>
         </div>
 
-        <div id="admin-panel">
-            <h3 style="color: #fdd835;">ИГРОКИ</h3>
-            <div id="users-list"></div>
-        </div>
-
-        <div id="user-profile-panel">
-            <h3 id="prof-name" style="color:#bdc1c6"></h3>
-            <p style="color:#bdc1c6">Баланс: <span id="prof-balance" class="ar-count"></span> <span class="ar-count">АР</span></p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-                <button class="btn-main btn-plus" onclick="modBal(1)">+1</button>
-                <button class="btn-main btn-plus" onclick="modBal(10)">+10</button>
-                <button class="btn-main btn-minus" onclick="modBal(-1)">-1</button>
-                <button class="btn-main btn-minus" onclick="modBal(-10)">-10</button>
-            </div>
-            <div id="prof-history" class="logs-box" style="height:120px; margin-top:10px;"></div>
-            <button class="btn-main" style="background:#555; font-size:12px; margin-top:10px;" onclick="backToAdmin()">НАЗАД</button>
-        </div>
-
-        <h2 id="display-name" style="margin:0; color:#bdc1c6">---</h2>
-        <h3 style="color:#81c995">АР: <span id="balance">0</span></h3>
-
-        <div class="slot-machine">
+        <div class="slot-container">
             <div class="slot-window"><div id="reel1" class="slot-reel"></div></div>
             <div class="slot-window"><div id="reel2" class="slot-reel"></div></div>
             <div class="slot-window"><div id="reel3" class="slot-reel"></div></div>
         </div>
 
-        <button id="spin-btn" class="btn-main btn-spin" onclick="spin()">КРУТИТЬ (1 АР)</button>
-        <button class="btn-main" style="background:#b8860b; border-bottom:4px solid #8b4513;" onclick="promptPromo()">ПРОМОКОД</button>
-        <div id="history" class="logs-box"></div>
+        <button id="spin-btn" class="btn-main btn-spin" onclick="spin()">КРУТИТЬ</button>
+        <button class="promo-btn" onclick="promptPromo()">ПРОМОКОД</button>
+
+        <div style="background: #080808; padding: 10px; border-radius: 15px;">
+            <div id="history" class="history-list"></div>
+        </div>
+
+        <div id="settings-panel" onclick="event.stopPropagation()">
+            <h3 style="color:white">НАСТРОЙКИ</h3>
+            <select id="music-select" onchange="changeMusic()">
+                <option value="bam_bam_bam_1.mp3">Бам Бам Бам</option>
+                <option value="ananasevi_sirop_1.mp3">Ананасовый сироп</option>
+                <option value="baclachn.mp3">Баклажан</option>
+                <option value="bad_piggies.mp3">Bad Piggies</option>
+                <option value="zapert_na_ostrove_izza_interpola_1.mp3">Интерпол</option>
+            </select>
+            <button id="m-toggle" class="mute-toggle on" onclick="toggleMute('music')">МУЗЫКА: ВКЛ</button>
+            <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
+            <button id="s-toggle" class="mute-toggle on" onclick="toggleMute('sound')">ЗВУКИ: ВКЛ</button>
+            <input type="range" id="sound-vol" min="0" max="1" step="0.1" value="0.7" oninput="applyVolumes()">
+            <button onclick="closePanels()" style="width:100%; padding:10px; margin-top:10px; border-radius:12px; background:#444; color:#fff; border:none;">ЗАКРЫТЬ</button>
+        </div>
+
+        <div id="admin-panel" onclick="event.stopPropagation()">
+            <h3 style="color:gold">АДМИН-ПАНЕЛЬ</h3>
+            <button id="fast-toggle" class="mute-toggle off" onclick="toggleFastMode()">БЕЗ ЗАДЕРЖКИ: ВЫКЛ</button>
+            <div id="users-list" style="max-height: 200px; overflow-y:auto; margin-top:10px;"></div>
+            <button onclick="closePanels()" style="width:100%; padding:10px; margin-top:10px; border-radius:12px; background:#444; color:#fff; border:none;">ЗАКРЫТЬ</button>
+        </div>
+
+        <div id="user-profile-panel" onclick="event.stopPropagation()">
+            <h3 id="prof-name" style="color:red"></h3>
+            <p style="color:white">Баланс: <span id="prof-balance" style="color:lime"></span> АР</p>
+            <div style="display:flex; gap:5px">
+                <button onclick="modBal(1)" class="btn-plus">+1</button>
+                <button onclick="modBal(10)" class="btn-plus">+10</button>
+                <button onclick="modBal(-1)" class="btn-minus">-1</button>
+                <button onclick="modBal(-10)" class="btn-minus">-10</button>
+            </div>
+            <div id="prof-history" style="height:120px; overflow-y:auto; background:#000; margin-top:10px; padding:5px; border-radius:10px;"></div>
+            <button onclick="backToAdmin()" style="width:100%; margin-top:10px; padding:10px; background:#333; color:#fff; border-radius:10px;">НАЗАД</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // ПРОВЕРКА ВОЗРАСТА ПРИ ЗАГРУЗКЕ
-    if (localStorage.getItem('adult') === 'true') {
-        document.getElementById('age-gate').style.display = 'none';
-    }
-
-    function verifyAge() {
-        localStorage.setItem('adult', 'true');
-        document.getElementById('age-gate').style.display = 'none';
-    }
-
     const firebaseConfig = {
         apiKey: "AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s",
         authDomain: "dima256.firebaseapp.com",
@@ -158,75 +197,39 @@
 
     const icons = ['🍏', '🍌', '🍓', '🍒', '🍋'];
     const S = {
-        fail: new Audio('ti_blat_dolbaub_naxyi_1.mp3'),
-        win2: new Audio('vrode_da_vrode_net_1.mp3'),
-        stay: new Audio('echo_posedim_1.mp3'),
-        interpol: new Audio('zapert_na_ostrove_izza_interpola_1.mp3'),
-        cry: new Audio('dai_cledychi_spin_1.mp3'),
-        normal: new Audio('nu_normalno_blyat.mp3'),
+        fail: new Audio('ti_blat_dolbaub_naxyi_1.mp3'), win2: new Audio('vrode_da_vrode_net_1.mp3'),
+        stay: new Audio('echo_posedim_1.mp3'), interpol: new Audio('zapert_na_ostrove_izza_interpola_1.mp3'),
+        cry: new Audio('dai_cledychi_spin_1.mp3'), normal: new Audio('nu_normalno_blyat.mp3'),
         jps: [new Audio('o_mai_gad_1.mp3'), new Audio('nixya_ti_blat_1.mp3'), new Audio('oi_oi_oi_oi_1.mp3')]
     };
 
-    let bgMusic = new Audio(); bgMusic.loop = true;
-    let user = ""; let selectedUser = "";
-    let mOn = true; let sOn = true;
+    let user = ""; let selectedUser = ""; let bgMusic = new Audio('bam_bam_bam_1.mp3'); bgMusic.loop = true;
+    let mOn = true; let sOn = true; let fastMode = false;
 
-    function fillReels() {
-        [1,2,3].forEach(n => {
-            const r = document.getElementById('reel'+n);
-            if(!r) return;
-            let h = ''; for(let i=0; i<30; i++) h += `<span>${icons[Math.floor(Math.random()*5)]}</span>`;
-            r.innerHTML = h;
-        });
-    }
-    fillReels();
-
-    function applyVolumes() {
-        if(mOn) bgMusic.volume = document.getElementById('music-vol').value;
-        if(sOn) {
-            const v = document.getElementById('sound-vol').value;
-            Object.values(S).flat().forEach(a => { if(a instanceof Audio) a.volume = v; });
-        }
-    }
-
-    function toggleMute(type) {
-        if(type === 'music') {
-            mOn = !mOn;
-            bgMusic.volume = mOn ? document.getElementById('music-vol').value : 0;
-            document.getElementById('m-mute').innerText = mOn ? '(ВКЛ)' : '(ВЫКЛ)';
-            document.getElementById('m-mute').className = mOn ? 'mute-btn mute-on' : 'mute-btn mute-off';
-        } else {
-            sOn = !sOn;
-            const v = sOn ? document.getElementById('sound-vol').value : 0;
-            Object.values(S).flat().forEach(a => { if(a instanceof Audio) a.volume = v; });
-            document.getElementById('s-mute').innerText = sOn ? '(ВКЛ)' : '(ВЫКЛ)';
-            document.getElementById('s-mute').className = sOn ? 'mute-btn mute-on' : 'mute-btn mute-off';
-        }
-    }
+    function verifyAge() { localStorage.setItem('adult', 'true'); document.getElementById('age-gate').remove(); }
+    if (localStorage.getItem('adult') === 'true') document.getElementById('age-gate')?.remove();
 
     function login() {
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value;
-        if(!u || !p) { alert("Введите логин и пароль!"); return; }
-        const btn = document.getElementById('login-btn');
-        btn.disabled = true;
+        if(!u || !p) return alert("Введите данные!");
         db.ref('players/' + u).once('value').then(s => {
-            if(!s.exists()) {
-                db.ref('players/' + u).set({balance: 5, password: p, history: ["Регистрация +5 АР"]}).then(() => { user = u; go(); });
-            } else {
-                if(s.val().password === p) { user = u; go(); }
-                else { alert("НЕВЕРНЫЙ ПАРОЛЬ!"); btn.disabled = false; }
-            }
-        }).catch(err => { alert("Ошибка!"); btn.disabled = false; });
+            if(!s.exists()) db.ref('players/' + u).set({balance: 5, password: p, history: ["Регистрация +5 АР"], usedPromos: []}).then(() => { user = u; go(); });
+            else if(s.val().password === p) { user = u; go(); }
+            else alert("Пароль не тот!");
+        });
     }
 
     function go() {
         document.getElementById('auth-section').style.display='none';
         document.getElementById('game-section').style.display='block';
         document.getElementById('display-name').innerText = user;
-        bgMusic.src = document.getElementById('bg-music-select').value;
+        
+        // ПРИМЕНЯЕМ ГРОМКОСТЬ ПРИ ВХОДЕ
+        applyVolumes(); 
+        
         if(mOn) bgMusic.play().catch(()=>{});
-        applyVolumes();
+        fillReels();
         db.ref('players/' + user).on('value', snap => {
             const d = snap.val();
             if(d) {
@@ -236,99 +239,106 @@
         });
     }
 
+    function fillReels() {
+        [1,2,3].forEach(n => {
+            let h = ''; for(let i=0; i<30; i++) h += `<span>${icons[Math.floor(Math.random()*5)]}</span>`;
+            document.getElementById('reel'+n).innerHTML = h;
+        });
+    }
+
     async function spin() {
         const btn = document.getElementById('spin-btn');
         const s = await db.ref('players/' + user).once('value');
         const d = s.val();
         if(d.balance < 1) { if(sOn) S.interpol.play(); return alert("АР закончились!"); }
-        btn.disabled = true;
+        
         const res = [icons[Math.floor(Math.random()*5)], icons[Math.floor(Math.random()*5)], icons[Math.floor(Math.random()*5)]];
-        [1,2,3].forEach((n, i) => {
-            const r = document.getElementById('reel'+n);
-            r.style.transition = '0s'; r.style.transform = 'translateY(0)';
-            r.querySelector('span:last-child').innerText = res[i];
-            setTimeout(() => {
-                r.style.transition = `transform ${2 + i}s cubic-bezier(0.45, 0.05, 0.55, 0.95)`;
-                r.style.transform = 'translateY(-2900px)';
-            }, 50);
-        });
-        setTimeout(() => {
-            let win = 0;
-            let isWin = false;
-            if(res[0]===res[1] && res[1]===res[2]) { win = 5; isWin = true; }
-            else if(res[0]===res[1] || res[1]===res[2] || res[0]===res[2]) { win = 2; isWin = true; }
-
-            if(isWin && sOn) {
-                if(win === 5) { S.jps[Math.floor(Math.random()*3)].play(); }
-                else { if(Math.random() < 0.5) S.win2.play(); }
-            } else if(!isWin && sOn) {
-                if(Math.random() < 0.3) { S.normal.play(); }
-                else if(Math.random() < 0.4) S.stay.play(); 
-                else if(Math.random() < 0.3) S.cry.play();
-            }
-            
-            db.ref('players/' + user).update({
-                balance: d.balance - 1 + win,
-                history: [...(d.history || []), `${res.join('')} | ${win-1>=0 ? '+'+(win-1) : '-1'} АР`].slice(-10)
+        if(!fastMode) {
+            btn.disabled = true;
+            [1,2,3].forEach((n, i) => {
+                const r = document.getElementById('reel'+n);
+                r.style.transition = '0s'; r.style.transform = 'translateY(0)';
+                r.querySelector('span:last-child').innerText = res[i];
+                setTimeout(() => {
+                    r.style.transition = `transform ${2 + i}s cubic-bezier(0.45, 0.05, 0.55, 0.95)`;
+                    r.style.transform = 'translateY(-3190px)';
+                }, 50);
             });
-            btn.disabled = false;
-        }, 5000);
+            setTimeout(() => finalizeSpin(res, d, btn), 5000);
+        } else finalizeSpin(res, d, null);
     }
 
-    function closePanels(e) {
-        document.getElementById('settings-panel').style.display = 'none';
-        document.getElementById('admin-panel').style.display = 'none';
-        document.getElementById('user-profile-panel').style.display = 'none';
+    function finalizeSpin(res, d, btn) {
+        let win = (res[0]===res[1] && res[1]===res[2]) ? 5 : (res[0]===res[1] || res[1]===res[2] || res[0]===res[2] ? 2 : 0);
+        if(sOn) {
+            if(win > 0) { if(win===5) S.jps[Math.floor(Math.random()*3)].play(); else S.win2.play(); }
+            else if(Math.random()<0.1) S.normal.play();
+        }
+        db.ref('players/' + user).update({
+            balance: d.balance - 1 + win,
+            history: [...(d.history || []), `${res.join('')} | ${win-1>=0 ? '+'+(win-1) : '-1'} АР`].slice(-15)
+        });
+        if(btn) btn.disabled = false;
     }
-    function toggleSettings(e) { e.stopPropagation(); document.getElementById('settings-panel').style.display = 'block'; }
-    function toggleAdmin(e) { e.stopPropagation(); if (prompt("Пароль:") === "1337") { document.getElementById('admin-panel').style.display = 'block'; loadUsers(); } }
+
+    function promptPromo() {
+        const c = prompt("Код:").toUpperCase().trim();
+        db.ref('players/'+user).once('value').then(s => {
+            const d = s.val(); const used = d.usedPromos || [];
+            if(used.includes(c)) return alert("Уже вводил!");
+            let bonus = (c === "МЕЛЛ" || c === "МЕЛЛСТРОЙ") ? 5 : (c === "MELL" ? 3 : 0);
+            if(bonus > 0) {
+                db.ref('players/'+user).update({ balance: d.balance + bonus, usedPromos: [...used, c], history: [...(d.history || []), `promo | +${bonus} АР`].slice(-15) });
+                alert("ЗАНОС +" + bonus + " АР!");
+            } else alert("Неверный код");
+        });
+    }
+
+    function toggleAdmin(e) { e.stopPropagation(); if (prompt("пароль:") === "1337") { document.getElementById('admin-panel').style.display = 'block'; loadUsers(); } }
     function loadUsers() {
         db.ref('players').on('value', s => {
             const list = document.getElementById('users-list'); list.innerHTML = "";
-            s.forEach(child => {
-                const u = child.key;
+            s.forEach(c => {
+                const u = c.key;
                 const div = document.createElement('div'); div.className = 'user-item';
-                div.innerHTML = `<span onclick="openProfile('${u}')">${u} <span class="ar-count">(${child.val().balance} АР)</span></span><span class="del-btn" onclick="delUser('${u}')">✖</span>`;
+                div.innerHTML = `<span style="color:cyan; cursor:pointer" onclick="openProfile('${u}')">${u} (${c.val().balance})</span><span onclick="delUser('${u}')">❌</span>`;
                 list.appendChild(div);
             });
         });
     }
     function openProfile(u) {
-        selectedUser = u;
-        document.getElementById('admin-panel').style.display = 'none';
-        document.getElementById('user-profile-panel').style.display = 'block';
+        selectedUser = u; document.getElementById('admin-panel').style.display='none'; document.getElementById('user-profile-panel').style.display='block';
         document.getElementById('prof-name').innerText = u;
-        db.ref('players/' + u).on('value', s => {
-            const d = s.val(); if(!d || selectedUser !== u) return;
+        db.ref('players/'+u).on('value', s => {
+            if(selectedUser !== u) return;
+            const d = s.val(); if(!d) return;
             document.getElementById('prof-balance').innerText = d.balance;
             const h = d.history || [];
-            document.getElementById('prof-history').innerHTML = h.slice().reverse().map((txt, i) => {
-                const realIdx = h.length - 1 - i;
-                return `<div class="hist-item-admin"><span>> ${txt}</span><span style="color:red;cursor:pointer;padding:5px" onclick="delHist(${realIdx})">✖</span></div>`;
+            document.getElementById('prof-history').innerHTML = h.slice().reverse().map((text, idx) => {
+                const realIdx = h.length - 1 - idx;
+                return `<div style="display:flex; justify-content:space-between; color:#bbb; border-bottom:1px solid #222; margin-top:5px;"><span>${text}</span><span class="del-x" onclick="delHist(${realIdx})">×</span></div>`;
             }).join('');
         });
     }
     function delHist(idx) {
-        db.ref('players/' + selectedUser + '/history').once('value', s => {
+        db.ref('players/'+selectedUser+'/history').once('value', s => {
             let h = s.val() || []; h.splice(idx, 1);
-            db.ref('players/' + selectedUser).update({ history: h });
+            db.ref('players/'+selectedUser).update({ history: h });
         });
     }
-    function modBal(amt) {
-        db.ref('players/' + selectedUser).once('value', s => {
-            const cur = s.val().balance || 0;
-            db.ref('players/' + selectedUser).update({ balance: cur + amt });
-        });
-    }
-    function backToAdmin() { document.getElementById('user-profile-panel').style.display = 'none'; document.getElementById('admin-panel').style.display = 'block'; }
-    function delUser(u) { if(confirm("Удалить?")) db.ref('players/' + u).remove(); }
-    function changeMusic() { bgMusic.src = document.getElementById('bg-music-select').value; if(mOn) bgMusic.play(); }
-    function promptPromo() {
-        const c = prompt("Промокод:"); if(!c) return;
-        const code = c.trim().toUpperCase();
-        let b = (code === "MELL") ? 3 : (code === "МЕЛЛ" || code === "МЕЛЛСТРОЙ") ? 5 : 0;
-        if(b > 0) { db.ref('players/' + user + '/balance').transaction(v => (v || 0) + b); alert("Бонус получен!"); }
-        else alert("Неверный код");
+    function modBal(v) { db.ref('players/'+selectedUser+'/balance').transaction(b => (b||0)+v); }
+    function delUser(u) { if(confirm("Удалить игрока?")) db.ref('players/'+u).remove(); }
+    function backToAdmin() { document.getElementById('user-profile-panel').style.display='none'; document.getElementById('admin-panel').style.display='block'; }
+    function toggleSettings(e) { e.stopPropagation(); document.getElementById('settings-panel').style.display = 'block'; }
+    function closePanels() { ['settings-panel', 'admin-panel', 'user-profile-panel'].forEach(p => document.getElementById(p).style.display = 'none'); }
+    function toggleFastMode() { fastMode = !fastMode; document.getElementById('fast-toggle').innerText = fastMode ? "БЕЗ ЗАДЕРЖКИ: ВКЛ" : "БЕЗ ЗАДЕРЖКИ: ВЫКЛ"; document.getElementById('fast-toggle').className = fastMode ? "mute-toggle on" : "mute-toggle off"; }
+    function changeMusic() { bgMusic.pause(); bgMusic.src = document.getElementById('music-select').value; if(mOn) bgMusic.play(); }
+    function toggleMute(t) { if(t==='music') { mOn=!mOn; if(mOn) { bgMusic.play(); } else { bgMusic.pause(); } document.getElementById('m-toggle').className = mOn?"mute-toggle on":"mute-toggle off"; } else { sOn=!sOn; document.getElementById('s-toggle').className = sOn?"mute-toggle on":"mute-toggle off"; } applyVolumes(); }
+    function applyVolumes() { 
+        const mVol = document.getElementById('music-vol').value;
+        const sVol = document.getElementById('sound-vol').value;
+        bgMusic.volume = mOn ? mVol : 0; 
+        Object.values(S).flat().forEach(a => { if(a instanceof Audio) a.volume = sOn ? sVol : 0; }); 
     }
 </script>
 </body>
