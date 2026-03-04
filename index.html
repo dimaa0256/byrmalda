@@ -13,7 +13,6 @@
         .settings-icon { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 24px; z-index: 10; opacity: 0.7; }
         .admin-btn-open { position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 12px; background: #555; padding: 5px; border-radius: 3px; z-index: 10; }
         
-        /* Панели */
         #settings-panel, #admin-panel, #user-profile-panel { display: none; position: absolute; top: 50px; left: 15px; right: 15px; background: #202124; border: 1px solid #5f6368; padding: 15px; text-align: left; z-index: 20; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
         
         .slot-machine { background: #202124; border: 2px solid #5f6368; display: flex; justify-content: center; gap: 10px; padding: 20px; margin: 20px 0; }
@@ -23,12 +22,15 @@
         .btn-promo { background: #b8860b; border-bottom: 4px solid #8b4513; }
         .logs-box { background: #1a1a1a; border: 1px solid #5f6368; height: 100px; overflow-y: auto; text-align: left; padding: 10px; font-size: 13px; color: #fdd835; }
         
-        /* Стили админки */
         .user-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #333; cursor: pointer; }
         .user-item:hover { background: #333; }
         .del-btn { color: #ff4444; font-weight: bold; padding: 5px 10px; cursor: pointer; }
         .profile-btn { background: #444; color: white; border: none; padding: 10px; margin: 5px; cursor: pointer; width: 45%; font-size: 16px; }
         #auth-section input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #5f6368; border-radius: 3px; background: #fff; display: block; }
+        
+        /* Стиль для истории в админке с крестиком */
+        .hist-item-admin { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid #2a2a2a; }
+        .hist-del { color: #ff4444; cursor: pointer; padding: 0 5px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -72,7 +74,7 @@
                 <option value="bad_piggies.mp3">Bad Piggies</option>
                 <option value="bam_bam_bam_1.mp3">Бам Бам Бам</option>
                 <option value="nobody.mp3">Возьми телефон</option>
-                <option value="pay_pay_pay.mp3">Пай Пай Пай</option>
+                <option value="pay_pay_pay.mp3">Ам Ам Ам</option>
             </select>
             <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
             <input type="range" id="sound-vol" min="0" max="1" step="0.1" value="0.7" oninput="applyVolumes()">
@@ -117,10 +119,8 @@
         jps: [new Audio('o_mai_gad_1.mp3'), new Audio('nixya_ti_blat_1.mp3'), new Audio('oi_oi_oi_oi_1.mp3')]
     };
 
-    let bgMusic = new Audio();
-    bgMusic.loop = true;
-    let user = "";
-    let selectedUser = "";
+    let bgMusic = new Audio(); bgMusic.loop = true;
+    let user = ""; let selectedUser = "";
 
     function applyVolumes() {
         bgMusic.volume = document.getElementById('music-vol').value;
@@ -130,8 +130,7 @@
 
     function playSnd(aud) {
         if (!document.getElementById('sounds-on').checked) return;
-        aud.currentTime = 0;
-        aud.play().catch(()=>{});
+        aud.currentTime = 0; aud.play().catch(()=>{});
     }
 
     function login() {
@@ -167,17 +166,11 @@
         const d = s.val();
         if(d.balance < 1) { playSnd(S.interpol); return alert("АР закончились!"); }
         btn.disabled = true;
-        
-        // Звук Бэм
-        if (document.getElementById('sounds-on').checked) {
-            S.bam.currentTime = 0; S.bam.play(); setTimeout(()=>S.bam.pause(), 400);
-        }
-
+        if (document.getElementById('sounds-on').checked) { S.bam.currentTime = 0; S.bam.play(); setTimeout(()=>S.bam.pause(), 400); }
         const ic = ['🍏', '🍌', '🍓', '🍒', '🍋'];
         const r = [ic[Math.floor(Math.random()*5)], ic[Math.floor(Math.random()*5)], ic[Math.floor(Math.random()*5)]];
         const el = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
         el.forEach(e => e.innerText = "?");
-        
         setTimeout(() => el[0].innerText = r[0], 1600);
         setTimeout(() => el[1].innerText = r[1], 3200);
         setTimeout(() => {
@@ -215,22 +208,30 @@
         });
     }
 
-    function delUser(u) {
-        if(confirm("Удалить " + u + "?")) db.ref('players/' + u).remove();
-    }
-
     function openProfile(u) {
         selectedUser = u;
         document.getElementById('admin-panel').style.display = 'none';
         document.getElementById('user-profile-panel').style.display = 'block';
         document.getElementById('prof-name').innerText = u;
-        
         db.ref('players/' + u).on('value', s => {
             const d = s.val();
             if(d) {
                 document.getElementById('prof-balance').innerText = d.balance;
-                document.getElementById('prof-history').innerHTML = (d.history || []).slice().reverse().map(h => `<div>> ${h}</div>`).join('');
+                const histArr = d.history || [];
+                document.getElementById('prof-history').innerHTML = histArr.slice().reverse().map((h, i) => {
+                    // Оригинальный индекс в массиве (так как мы сделали reverse)
+                    const realIdx = histArr.length - 1 - i;
+                    return `<div class="hist-item-admin"><span>> ${h}</span><span class="hist-del" onclick="deleteHistoryItem(${realIdx})">✖</span></div>`;
+                }).join('');
             }
+        });
+    }
+
+    function deleteHistoryItem(idx) {
+        db.ref('players/' + selectedUser + '/history').once('value', s => {
+            let h = s.val() || [];
+            h.splice(idx, 1); // Удаляем конкретную запись по индексу
+            db.ref('players/' + selectedUser).update({ history: h });
         });
     }
 
@@ -239,35 +240,17 @@
         db.ref('players/' + selectedUser + '/history').transaction(h => [...(h || []), `АДМИН: ${amt > 0 ? '+'+amt : amt} АР`].slice(-10));
     }
 
-    function backToAdmin() {
-        document.getElementById('user-profile-panel').style.display = 'none';
-        document.getElementById('admin-panel').style.display = 'block';
-    }
-
-    function closePanels() {
-        document.getElementById('admin-panel').style.display = 'none';
-        document.getElementById('settings-panel').style.display = 'none';
-    }
-
-    function toggleSettings() {
-        const p = document.getElementById('settings-panel');
-        p.style.display = (p.style.display === 'block') ? 'none' : 'block';
-    }
-
-    function changeMusic() {
-        bgMusic.src = document.getElementById('bg-music-select').value;
-        bgMusic.play();
-    }
-
+    function delUser(u) { if(confirm("Удалить " + u + "?")) db.ref('players/' + u).remove(); }
+    function backToAdmin() { document.getElementById('user-profile-panel').style.display = 'none'; document.getElementById('admin-panel').style.display = 'block'; }
+    function closePanels() { document.getElementById('admin-panel').style.display = 'none'; document.getElementById('settings-panel').style.display = 'none'; }
+    function toggleSettings() { const p = document.getElementById('settings-panel'); p.style.display = (p.style.display === 'block') ? 'none' : 'block'; }
+    function changeMusic() { bgMusic.src = document.getElementById('bg-music-select').value; bgMusic.play(); }
     function promptPromo() {
-        const code = prompt("Промокод:");
-        if(!code) return;
+        const code = prompt("Промокод:"); if(!code) return;
         const c = code.trim().toUpperCase();
         let b = (c === "MELL") ? 3 : (c === "МЕЛЛ" || c === "МЕЛЛСТРОЙ") ? 5 : 0;
-        if(b > 0) {
-            db.ref('players/' + user + '/balance').transaction(v => (v || 0) + b);
-            alert("Бонус зачислен!");
-        } else alert("Неверный код");
+        if(b > 0) { db.ref('players/' + user + '/balance').transaction(v => (v || 0) + b); alert("Бонус зачислен!"); }
+        else alert("Неверный код");
     }
 </script>
 </body>
