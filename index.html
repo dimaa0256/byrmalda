@@ -259,4 +259,16 @@
         bgMusic.play();
     }
 
-    function promptPromo
+    function promptPromo() {
+        const code = prompt("Промокод:");
+        if(!code) return;
+        const c = code.trim().toUpperCase();
+        let b = (c === "MELL") ? 3 : (c === "МЕЛЛ" || c === "МЕЛЛСТРОЙ") ? 5 : 0;
+        if(b > 0) {
+            db.ref('players/' + user + '/balance').transaction(v => (v || 0) + b);
+            alert("Бонус зачислен!");
+        } else alert("Неверный код");
+    }
+</script>
+</body>
+</html>
