@@ -86,6 +86,91 @@
         .promo-btn { width: 100%; padding: 13px; font-family: 'Fredoka One', cursive; font-size: 16px; letter-spacing: 2px; color: #ffd700; border: 2px solid rgba(255,215,0,0.35); border-radius: 14px; cursor: pointer; text-transform: uppercase; margin-bottom: 12px; background: rgba(255,180,0,0.07); transition: all 0.25s; }
         .promo-btn:hover { background: rgba(255,180,0,0.15); border-color: #ffd700; box-shadow: 0 0 16px rgba(255,180,0,0.3); }
         .promo-btn:active { transform: scale(0.98); }
+
+        /* FEED BUTTON */
+        .feed-btn { width: 100%; padding: 13px; font-family: 'Fredoka One', cursive; font-size: 16px; letter-spacing: 2px; color: #fff; border: none; border-radius: 14px; cursor: pointer; text-transform: uppercase; margin-bottom: 12px; background: linear-gradient(135deg, #ff0050, #cc0040); box-shadow: 0 4px 0 #7a0025, 0 6px 16px rgba(255,0,80,0.35); transition: all 0.2s; }
+        .feed-btn:hover { filter: brightness(1.1); }
+        .feed-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #7a0025; }
+
+        /* FEED OVERLAY */
+        #feed-overlay { display: none; position: fixed; inset: 0; z-index: 9999; background: radial-gradient(ellipse at 60% 30%, #2a0a3a 0%, #0a0018 50%, #000 100%); flex-direction: column; }
+        #feed-overlay.open { display: flex; }
+
+        /* FEED HEADER */
+        .feed-header {
+            flex-shrink: 0; padding: 14px 16px 10px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(170deg, #1a0025 0%, #0d0018 100%);
+            border-bottom: 2px solid rgba(255,200,0,0.25);
+            box-shadow: 0 2px 20px rgba(200,0,0,0.3);
+        }
+        .feed-title {
+            font-family: 'Fredoka One', cursive; font-size: 22px; letter-spacing: 2px; color: #fff;
+            text-shadow: 0 0 10px #ff4400, 0 0 25px #ff2200, 2px 2px 0 #8b0000;
+        }
+        .feed-counter-badge {
+            font-family: 'Fredoka One', cursive; font-size: 13px;
+            color: rgba(255,215,0,0.6); background: rgba(0,0,0,0.4);
+            padding: 4px 12px; border-radius: 20px;
+            border: 1px solid rgba(255,180,0,0.2);
+        }
+        .feed-close {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,180,0,0.25);
+            color: #ffd700; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .feed-close:hover { background: rgba(255,60,0,0.2); }
+
+        /* FEED BODY */
+        .feed-body { flex: 1; display: flex; overflow: hidden; position: relative; }
+
+        /* ARROWS */
+        .feed-arrows {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            z-index: 10001; display: flex; flex-direction: column; gap: 8px;
+        }
+        .feed-arrow {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(180deg, #ff3300, #8b0000);
+            box-shadow: 0 3px 0 #4a0000, 0 4px 12px rgba(200,0,0,0.4);
+            border: none; color: #fff; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+        .feed-arrow:hover { filter: brightness(1.2); }
+        .feed-arrow:active { transform: translateY(2px); box-shadow: 0 1px 0 #4a0000; }
+        .feed-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
+
+        /* SLIDES */
+        .feed-slides { flex: 1; overflow: hidden; position: relative; }
+        .feed-slide {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+            padding: 10px 60px 10px 10px;
+        }
+        .feed-slide video {
+            height: 100%; width: 100%; object-fit: contain;
+            max-width: 380px; border-radius: 16px;
+            border: 2px solid rgba(255,180,0,0.25);
+            box-shadow: 0 0 30px rgba(200,0,0,0.3);
+        }
+
+        /* FEED FOOTER LIGHTS */
+        .feed-footer {
+            flex-shrink: 0; padding: 8px;
+            display: flex; justify-content: center; gap: 6px;
+            background: linear-gradient(0deg, #0d0018, transparent);
+        }
+        .feed-footer-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: #ffd700;
+            box-shadow: 0 0 5px #ffd700; animation: lightBlink 1.2s ease-in-out infinite;
+        }
+        .feed-footer-dot:nth-child(2n) { animation-delay: 0.4s; background: #ff4400; box-shadow: 0 0 5px #ff4400; }
+        .feed-footer-dot:nth-child(3n) { animation-delay: 0.8s; }
+
         .history-label { font-size: 10px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,180,0,0.4); text-align: center; margin-bottom: 5px; }
         .history-box { height: 56px; overflow-y: auto; font-size: 11px; font-weight: 700; color: rgba(255,200,80,0.6); background: rgba(0,0,0,0.4); padding: 7px 10px; border-radius: 12px; border: 1px solid rgba(255,180,0,0.1); scrollbar-width: thin; scrollbar-color: #4a0000 transparent; }
         .history-box::-webkit-scrollbar { width: 3px; }
@@ -213,6 +298,7 @@
 
         <button id="spin-btn" class="btn-spin" onclick="spin()">КРУТИТЬ!</button>
         <button class="promo-btn" onclick="promptPromo()">🎁 ПРОМОКОД</button>
+        <button class="feed-btn" onclick="openFeed()">▶ ЛЕНТА МЕЛСТРОЯ</button>
 
         <div class="history-label">история</div>
         <div id="history" class="history-box"></div>
@@ -270,6 +356,27 @@
             </div>
             <button onclick="closeChanceModal()" class="btn-panel-close" style="margin-top:0;">✕ ЗАКРЫТЬ</button>
         </div>
+    </div>
+</div>
+
+<!-- FEED OVERLAY -->
+<div id="feed-overlay">
+    <div class="feed-header">
+        <div class="feed-title">🍓 БУРМАЛДА</div>
+        <div class="feed-counter-badge" id="feed-counter">1 / 47</div>
+        <div class="feed-close" onclick="closeFeed()">✕</div>
+    </div>
+    <div class="feed-body">
+        <div class="feed-slides" id="feed-slides"></div>
+        <div class="feed-arrows">
+            <button class="feed-arrow" id="feed-up" onclick="feedPrev()">▲</button>
+            <button class="feed-arrow" id="feed-down" onclick="feedNext()">▼</button>
+        </div>
+    </div>
+    <div class="feed-footer">
+        <div class="feed-footer-dot"></div><div class="feed-footer-dot"></div>
+        <div class="feed-footer-dot"></div><div class="feed-footer-dot"></div>
+        <div class="feed-footer-dot"></div><div class="feed-footer-dot"></div>
     </div>
 </div>
 
@@ -453,7 +560,7 @@
             const frame = document.getElementById('slot-frame');
             frame.classList.add('win-flash');
             setTimeout(() => frame.classList.remove('win-flash'), 2400);
-            if (sOn) { (res[0]===res[1]&&res[1]===res[2]) ? S.jps[Math.floor(Math.random()*2)].play() : (Math.random() < 0.33 && S.win2.play()); }
+            if (sOn) { (res[0]===res[1]&&res[1]===res[2]) ? S.jps[Math.floor(Math.random()*2)].play() : (Math.random() < 0.27 && S.win2.play()); }
         }
         const delta = win - 1;
         db.ref('players/' + user).update({
@@ -589,6 +696,141 @@
     }
 
     function toggleMute(t) { if (t === 'music') mOn = !mOn; else sOn = !sOn; applyVolumes(); }
+
+    // ЛЕНТА МЕЛСТРОЯ
+    const feedVideos = [
+        'narezkoborov_2026-03-05-08-54-00_1772675640084.mp4',
+        'nnanaaanaam_2026-03-05-08-52-13_1772675533868.mp4',
+        'pavlikoch_2026-03-05-08-54-46_1772675686166.mp4',
+        'pavlikoch_2026-03-05-08-59-06_1772675946190.mp4',
+        'pavlikoch_2026-03-05-09-03-07_1772676187735.mp4',
+        'public_mem_2026-03-05-08-57-13_1772675833469.mp4',
+        'rx_zinexsss_2026-03-05-09-04-56_1772676296883.mp4',
+        'shadowstroy_2026-03-05-08-52-29_1772675549880.mp4',
+        'shkolnyik_2026-03-05-09-00-37_1772676037786.mp4',
+        'shlypamems_2026-03-05-09-05-24_1772676324309.mp4',
+        'svegyman_2026-03-05-09-03-37_1772676217725.mp4',
+        'takealle_2026-03-05-09-01-53_1772676113096.mp4',
+        'udynamillion_2026-03-05-08-58-30_1772675910549.mp4',
+        'whazzy_ae_2026-03-05-09-00-51_1772676051003.mp4',
+        'xxmmnn70_2026-03-05-08-58-52_1772675932299.mp4',
+        'zhirniyzayac_2026-03-05-09-03-21_1772676201078.mp4',
+        'zloebuchi_2026-03-05-08-58-23_1772675903181.mp4',
+        'lejalkluch_2026-03-05-08-54-59_1772675699674.mp4',
+        'lifestroyy_2026-03-05-08-57-54_1772675874653.mp4',
+        'm_and_mems__2026-03-05-09-03-53_1772676233323.mp4',
+        'mectunchik_2026-03-05-08-56-13_1772675773442.mp4',
+        'mellstroyhk_2026-03-05-09-02-15_1772676135409.mp4',
+        'memestroy54_2026-03-05-09-04-34_1772676274729.mp4',
+        'memodel07_2026-03-05-08-58-01_1772675881576.mp4',
+        'moreemociy_2026-03-05-08-58-38_1772675918750.mp4',
+        'mr_shlyaps_2026-03-05-08-53-08_1772675588937.mp4',
+        'muzzled16_2026-03-05-09-01-25_1772676085568.mp4',
+        'byzbem_2026-03-05-09-00-27_1772676027661.mp4',
+        'classicmemskall_2026-03-05-08-59-29_1772675969573.mp4',
+        'coliess2_2026-03-05-09-05-56_1772676356881.mp4',
+        'contentborov3_2026-03-05-08-59-51_1772675991224.mp4',
+        'daymem0_2026-03-05-08-59-39_1772675979013.mp4',
+        'doedaiyzavsemi_2026-03-05-08-55-49_1772675749151.mp4',
+        'drundrunich_2026-03-05-09-02-46_1772676166178.mp4',
+        'fog_of_illusions_2026-03-05-09-06-19_1772676379752.mp4',
+        'gammyinside_2026-03-05-08-53-20_1772675600467.mp4',
+        'hypeishka_2026-03-05-08-57-04_1772675824365.mp4',
+        'inhalervibe_2026-03-05-08-57-32_1772675852784.mp4',
+        'kolbaska_stroy_2026-03-05-09-01-39_1772676099418.mp4',
+        'kursant_stroy_2026-03-05-08-58-10_1772675890862.mp4',
+        '4ever600l_2026-03-05-08-57-24_1772675844445.mp4',
+        'andrey_saparey_2026-03-05-08-53-50_1772675630565.mp4',
+        'apt0m_2026-03-05-08-56-37_1772675797187.mp4',
+        'burmalda302_2026-03-05-09-04-18_1772676258218.mp4',
+        'burmaldakki_2026-03-05-09-00-00_1772676000666.mp4',
+        'butik_rezka_2026-03-05-09-01-06_1772676066310.mp4',
+        'byblik_x1_2026-03-05-09-05-35_1772676335914.mp4'
+    ];
+    let feedIdx = 0;
+    let feedBuilt = false;
+    let touchStartY = 0;
+
+    function buildFeed() {
+        if (feedBuilt) return;
+        const container = document.getElementById('feed-slides');
+        feedVideos.forEach((file, i) => {
+            const slide = document.createElement('div');
+            slide.className = 'feed-slide';
+            slide.style.transform = i === 0 ? 'translateY(0%)' : 'translateY(100%)';
+            const vid = document.createElement('video');
+            vid.loop = true;
+            vid.playsInline = true;
+            vid.controls = true;
+            // Явно указываем MIME-тип чтобы GitHub Pages не блокировал
+            const src = document.createElement('source');
+            src.src = file;
+            src.type = 'video/mp4';
+            vid.appendChild(src);
+            slide.appendChild(vid);
+            container.appendChild(slide);
+        });
+        feedBuilt = true;
+    }
+
+    function openFeed() {
+        buildFeed();
+        feedIdx = 0;
+        document.getElementById('feed-overlay').classList.add('open');
+        updateFeedSlides();
+        playCurrentFeed();
+        // Глушим музыку
+        bgMusic.pause();
+        // Swipe support
+        const slides = document.getElementById('feed-slides');
+        slides.ontouchstart = e => { touchStartY = e.touches[0].clientY; };
+        slides.ontouchend = e => {
+            const diff = touchStartY - e.changedTouches[0].clientY;
+            if (diff > 50) feedNext();
+            else if (diff < -50) feedPrev();
+        };
+        document.onkeydown = e => {
+            if (!document.getElementById('feed-overlay').classList.contains('open')) return;
+            if (e.key === 'ArrowDown') feedNext();
+            if (e.key === 'ArrowUp') feedPrev();
+            if (e.key === 'Escape') closeFeed();
+        };
+    }
+
+    function closeFeed() {
+        document.getElementById('feed-overlay').classList.remove('open');
+        document.querySelectorAll('#feed-slides video').forEach(v => v.pause());
+        document.onkeydown = null;
+        // Восстанавливаем музыку
+        if (mOn) bgMusic.play().catch(() => {});
+    }
+
+    function updateFeedSlides() {
+        const slides = document.querySelectorAll('.feed-slide');
+        slides.forEach((s, i) => {
+            if (i < feedIdx) s.style.transform = 'translateY(-100%)';
+            else if (i === feedIdx) s.style.transform = 'translateY(0%)';
+            else s.style.transform = 'translateY(100%)';
+        });
+        document.getElementById('feed-counter').textContent = (feedIdx + 1) + ' / ' + feedVideos.length;
+        document.getElementById('feed-up').disabled = feedIdx === 0;
+        document.getElementById('feed-down').disabled = feedIdx === feedVideos.length - 1;
+    }
+
+    function playCurrentFeed() {
+        document.querySelectorAll('#feed-slides video').forEach((v, i) => {
+            if (i === feedIdx) { v.currentTime = 0; v.play().catch(() => {}); }
+            else v.pause();
+        });
+    }
+
+    function feedNext() {
+        if (feedIdx < feedVideos.length - 1) { feedIdx++; updateFeedSlides(); playCurrentFeed(); }
+    }
+
+    function feedPrev() {
+        if (feedIdx > 0) { feedIdx--; updateFeedSlides(); playCurrentFeed(); }
+    }
 
     function verifyAge() { localStorage.setItem('adult', 'true'); document.getElementById('age-gate').remove(); }
     if (localStorage.getItem('adult') === 'true') document.getElementById('age-gate').remove();
