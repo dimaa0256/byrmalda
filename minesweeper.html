@@ -243,8 +243,7 @@
             <div class="music-list" id="music-playlist"></div>
             <button id="m-toggle" class="mute-toggle on" onclick="toggleMute('music')">🎵 МУЗЫКА: ВКЛ</button>
             <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
-            <button id="s-toggle" class="mute-toggle on" onclick="toggleMute('sound')">🔊 ЗВУКИ: ВКЛ</button>
-            <input type="range" id="sound-vol" min="0" max="1" step="0.1" value="0.7" oninput="applyVolumes()">
+
             <button onclick="closePanels()" class="btn-panel-close">✕ ЗАКРЫТЬ</button>
         </div>
 
@@ -313,7 +312,7 @@
         projectId: "dima256",
         appId: "1:208400853144:web:78eb608f5aacd57e8848ed"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     const playlist = [
@@ -336,7 +335,7 @@
     let user = "", selU = "", currentTrackIdx = 0;
     let bgMusic = new Audio(playlist[0].file);
     bgMusic.loop = true;
-    let mOn = true, sOn = true;
+    let mOn = true, sOn = false;
 
     // GAME STATE
     const GRID_SIZE = 5;
@@ -353,9 +352,7 @@
     let currentBalance = 0;
 
     // SOUNDS
-    const sndBomb = new Audio('vrode_da_vrode_net_1.mp3');
-    const sndCoin = new Audio('o_mai_gad_1.mp3');
-    const sndCashout = new Audio('milion_dvesti_na_balance_1.mp3');
+
 
     function renderPlaylist() {
         document.getElementById('music-playlist').innerHTML = playlist.map((t, i) => `
@@ -478,7 +475,6 @@
         if (type === 'bomb') {
             cell.classList.add('bomb-cell');
             cell.textContent = '💥';
-            if (sOn) sndBomb.play().catch(() => {});
             gameActive = false;
             // Reveal all bombs
             board.forEach((v, i) => {
@@ -492,7 +488,6 @@
             cell.classList.add('coin-cell');
             cell.textContent = '🪙';
             sessionCoins += COIN_REWARD;
-            if (sOn) sndCoin.play().catch(() => {});
         } else {
             cell.classList.add('empty');
             cell.textContent = '·';
@@ -524,7 +519,6 @@
     async function cashout() {
         if (!gameActive || openedCount < UNLOCK_AT) return;
         gameActive = false;
-        if (sOn) sndCashout.play().catch(() => {});
         const snap = await db.ref('players/' + user).once('value');
         const d = snap.val();
         const won = sessionCoins;
@@ -641,16 +635,14 @@
 
     function applyVolumes() {
         const mVol = document.getElementById('music-vol').value;
-        const sVol = document.getElementById('sound-vol').value;
         bgMusic.volume = mOn ? mVol : 0;
         if (mOn) bgMusic.play().catch(() => {}); else bgMusic.pause();
         document.getElementById('m-toggle').className = mOn ? "mute-toggle on" : "mute-toggle off";
         document.getElementById('m-toggle').textContent = mOn ? "🎵 МУЗЫКА: ВКЛ" : "🎵 МУЗЫКА: ВЫКЛ";
-        document.getElementById('s-toggle').className = sOn ? "mute-toggle on" : "mute-toggle off";
-        document.getElementById('s-toggle').textContent = sOn ? "🔊 ЗВУКИ: ВКЛ" : "🔊 ЗВУКИ: ВЫКЛ";
-        [sndBomb, sndCoin, sndCashout].forEach(a => a.volume = sOn ? sVol : 0);
+        document.getElementById('m-toggle').className = mOn ? "mute-toggle on" : "mute-toggle off";
+        document.getElementById('m-toggle').textContent = mOn ? "🎵 МУЗЫКА: ВКЛ" : "🎵 МУЗЫКА: ВЫКЛ";
     }
-    function toggleMute(t) { if (t === 'music') mOn = !mOn; else sOn = !sOn; applyVolumes(); }
+    function toggleMute(t) { if (t === 'music') mOn = !mOn; applyVolumes(); }
 
     // Автовход если вошли через лобби
     const _lu = localStorage.getItem('lobbyUser');

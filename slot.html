@@ -304,7 +304,7 @@
         projectId: "dima256",
         appId: "1:208400853144:web:78eb608f5aacd57e8848ed"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     const playlist = [

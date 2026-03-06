@@ -219,7 +219,14 @@
         document.getElementById('age-gate').remove();
         if (mOn) bgMusic.play().catch(() => {});
     }
-    if (localStorage.getItem('adult') === 'true') document.getElementById('age-gate').remove();
+    if (localStorage.getItem('adult') === 'true') {
+        document.getElementById('age-gate').remove();
+        // Запустить музыку при первом клике
+        document.addEventListener('click', function startMusic() {
+            if (mOn) bgMusic.play().catch(() => {});
+            document.removeEventListener('click', startMusic);
+        });
+    }
 
     // AUTH
     let currentUser = localStorage.getItem('lobbyUser') || '';
