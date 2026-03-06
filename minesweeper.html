@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>💣 САПЁР — БУРМАЛДА</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Nunito', sans-serif; }
+        body { display: flex; justify-content: center; align-items: center; background: radial-gradient(ellipse at 60% 30%, #2a0a3a 0%, #0a0018 50%, #000 100%); }
+        .coin-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .coin { position: absolute; top: -40px; font-size: 20px; animation: coinFall linear infinite; opacity: 0; filter: drop-shadow(0 0 4px #ffd700); }
+        @keyframes coinFall {
+            0% { transform: translateY(-40px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.16; } 90% { opacity: 0.1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+        .machine {
+            width: 400px; max-height: 96vh; overflow-y: auto; overflow-x: hidden;
+            position: relative; z-index: 10; border-radius: 28px; padding: 20px 20px 20px;
+            background: linear-gradient(170deg, #1a0025 0%, #0d0018 60%, #1a0008 100%);
+            border: 2px solid rgba(255,200,0,0.35);
+            box-shadow: 0 0 0 1px rgba(255,180,0,0.1), 0 0 40px rgba(200,0,0,0.4), 0 0 80px rgba(255,140,0,0.1), inset 0 1px 0 rgba(255,220,0,0.2);
+            scrollbar-width: thin; scrollbar-color: #8b0000 transparent;
+        }
+        .back-link { display: block; text-align: center; font-family: 'Fredoka One', cursive; font-size: 11px; letter-spacing: 2px; color: rgba(255,180,0,0.45); text-decoration: none; margin-bottom: 8px; transition: color 0.2s; }
+        .back-link:hover { color: #ffd700; }
+        .casino-title {
+            font-family: 'Fredoka One', cursive; font-size: 28px; text-align: center;
+            margin-bottom: 6px; letter-spacing: 2px; color: #fff;
+            text-shadow: 0 0 10px #ff4400, 0 0 30px #ff2200, 2px 2px 0 #8b0000, 4px 4px 0 #5a0000;
+            animation: titlePop 3s ease-in-out infinite;
+        }
+        @keyframes titlePop {
+            0%,100% { text-shadow: 0 0 10px #ff4400, 0 0 30px #ff2200, 2px 2px 0 #8b0000, 4px 4px 0 #5a0000; transform: scale(1); }
+            50% { text-shadow: 0 0 20px #ff6600, 0 0 50px #ff4400, 2px 2px 0 #8b0000, 4px 4px 0 #5a0000; transform: scale(1.02); }
+        }
+        .title-lights { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
+        .light-dot { width: 8px; height: 8px; border-radius: 50%; background: #ffd700; box-shadow: 0 0 6px #ffd700; animation: lightBlink 1.2s ease-in-out infinite; }
+        .light-dot:nth-child(2n) { animation-delay: 0.4s; background: #ff4400; box-shadow: 0 0 6px #ff4400; }
+        .light-dot:nth-child(3n) { animation-delay: 0.8s; }
+        @keyframes lightBlink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
+        .vip-access { display: block; text-align: center; font-family: 'Fredoka One', cursive; font-size: 13px; letter-spacing: 3px; color: #111; cursor: pointer; padding: 5px 20px; margin: 0 auto 14px; width: fit-content; background: linear-gradient(135deg, #ffd700, #ff8c00); border-radius: 20px; box-shadow: 0 2px 0 #8b4500, 0 4px 12px rgba(255,180,0,0.5); font-weight: 900; animation: vipPulse 2s ease-in-out infinite; }
+        @keyframes vipPulse { 0%,100%{box-shadow:0 2px 0 #8b4500,0 4px 12px rgba(255,180,0,0.5)} 50%{box-shadow:0 2px 0 #8b4500,0 4px 22px rgba(255,180,0,0.9)} }
+        .info-bar { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.45); padding: 10px 14px; border-radius: 16px; border: 1px solid rgba(255,180,0,0.2); margin-bottom: 14px; }
+        .player-name { font-size: 12px; font-weight: 800; color: rgba(255,220,100,0.65); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 3px; }
+        .balance-val { font-family: 'Fredoka One', cursive; font-size: 22px; color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.7); }
+        .settings-btn { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,180,0,0.25); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.3s; }
+        .settings-btn:hover { background: rgba(255,180,0,0.15); transform: rotate(45deg); }
+
+        /* MINE FIELD */
+        .mine-frame {
+            background: linear-gradient(180deg, #8b0000 0%, #6b0000 40%, #3d0000 100%);
+            border-radius: 22px; padding: 4px; margin-bottom: 14px;
+            box-shadow: 0 0 0 2px #ffd700, 0 0 0 4px #cc8800, 0 6px 20px rgba(200,0,0,0.6);
+        }
+        .mine-inner { background: linear-gradient(180deg, #1a0000, #0a0010); padding: 14px 12px; border-radius: 18px; }
+        .mine-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .cell {
+            aspect-ratio: 1; border-radius: 10px; cursor: pointer;
+            background: linear-gradient(180deg, #3a0050, #1a0030);
+            border: 2px solid rgba(255,180,0,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; transition: all 0.15s; position: relative; overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .cell:hover:not(.revealed) { border-color: rgba(255,215,0,0.5); background: linear-gradient(180deg, #550070, #2a0050); transform: scale(1.05); }
+        .cell:active:not(.revealed) { transform: scale(0.95); }
+        .cell.revealed { cursor: default; transform: none !important; }
+        .cell.empty { background: linear-gradient(180deg, #1a1a2e, #0d0d1a); border-color: rgba(255,255,255,0.08); }
+        .cell.coin-cell { background: linear-gradient(180deg, #2a1a00, #1a0d00); border-color: rgba(255,180,0,0.4); box-shadow: 0 0 10px rgba(255,180,0,0.2); }
+        .cell.bomb-cell { background: linear-gradient(180deg, #3a0000, #1a0000); border-color: rgba(255,0,0,0.5); box-shadow: 0 0 10px rgba(255,0,0,0.3); animation: bombShake 0.4s ease; }
+        @keyframes bombShake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
+
+        /* STATUS */
+        .mine-status {
+            text-align: center; margin-bottom: 10px;
+            font-family: 'Fredoka One', cursive; font-size: 13px; letter-spacing: 1px;
+            color: rgba(255,200,100,0.6);
+        }
+        .mine-status span { color: #ffd700; }
+        .progress-bar-wrap { background: rgba(0,0,0,0.4); border-radius: 8px; height: 6px; margin-bottom: 12px; overflow: hidden; border: 1px solid rgba(255,180,0,0.15); }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #ff3300, #ffd700); border-radius: 8px; transition: width 0.3s; }
+
+        /* BUTTONS */
+        .btn-start {
+            width: 100%; padding: 16px;
+            font-family: 'Fredoka One', cursive; font-size: 20px; letter-spacing: 3px;
+            color: #fff; border: none; border-radius: 16px; cursor: pointer;
+            background: linear-gradient(180deg, #ff3300 0%, #cc0000 50%, #8b0000 100%);
+            box-shadow: 0 5px 0 #4a0000, 0 8px 18px rgba(200,0,0,0.4);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: all 0.12s; margin-bottom: 10px;
+            animation: spinBtnGlow 2.5s ease-in-out infinite;
+        }
+        @keyframes spinBtnGlow {
+            0%,100%{box-shadow:0 5px 0 #4a0000,0 8px 18px rgba(200,0,0,0.4)}
+            50%{box-shadow:0 5px 0 #4a0000,0 8px 30px rgba(255,60,0,0.7)}
+        }
+        .btn-start:active { transform: translateY(4px); box-shadow: 0 1px 0 #4a0000; }
+        .btn-start:disabled { filter: grayscale(0.7) brightness(0.5); animation: none; cursor: not-allowed; }
+        .btn-cashout {
+            width: 100%; padding: 14px;
+            font-family: 'Fredoka One', cursive; font-size: 18px; letter-spacing: 2px;
+            color: #111; border: none; border-radius: 16px; cursor: pointer;
+            background: linear-gradient(180deg, #ffd700, #ff8c00);
+            box-shadow: 0 4px 0 #8b4500, 0 6px 16px rgba(255,180,0,0.4);
+            transition: all 0.12s; margin-bottom: 10px; display: none;
+        }
+        .btn-cashout:hover { filter: brightness(1.1); }
+        .btn-cashout:active { transform: translateY(3px); box-shadow: 0 1px 0 #8b4500; }
+        .btn-cashout.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.5); }
+
+        .promo-btn { width: 100%; padding: 11px; font-family: 'Fredoka One', cursive; font-size: 14px; letter-spacing: 2px; color: #ffd700; border: 2px solid rgba(255,215,0,0.35); border-radius: 14px; cursor: pointer; text-transform: uppercase; margin-bottom: 10px; background: rgba(255,180,0,0.07); transition: all 0.25s; }
+        .promo-btn:hover { background: rgba(255,180,0,0.15); border-color: #ffd700; }
+
+        .history-label { font-size: 10px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,180,0,0.4); text-align: center; margin-bottom: 5px; }
+        .history-box { height: 50px; overflow-y: auto; font-size: 11px; font-weight: 700; color: rgba(255,200,80,0.6); background: rgba(0,0,0,0.4); padding: 7px 10px; border-radius: 12px; border: 1px solid rgba(255,180,0,0.1); scrollbar-width: thin; scrollbar-color: #4a0000 transparent; }
+
+        /* PANELS */
+        #settings-panel, #admin-panel, #user-profile-panel {
+            display: none; position: absolute; top: 8px; left: 8px; right: 8px;
+            background: linear-gradient(160deg, #180020, #0a0015);
+            border: 2px solid rgba(255,200,0,0.4); padding: 20px 18px; z-index: 100;
+            border-radius: 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.95);
+        }
+        .panel-title { font-family: 'Fredoka One', cursive; font-size: 18px; letter-spacing: 2px; text-align: center; margin-bottom: 14px; color: #ffd700; }
+        .panel-title.red { color: #ff5555; }
+        input[type="text"], input[type="password"] { width: 100%; display: block; margin: 0 0 12px; padding: 14px 18px; border-radius: 14px; background: rgba(0,0,0,0.55); color: #fff; border: 2px solid rgba(255,100,0,0.3); text-align: center; font-size: 15px; font-family: 'Nunito', sans-serif; font-weight: 800; letter-spacing: 2px; outline: none; }
+        input[type="text"]::placeholder, input[type="password"]::placeholder { color: rgba(255,180,100,0.35); letter-spacing: 2px; font-size: 13px; }
+        input[type="range"] { width: 85%; display: block; margin: 0 auto 10px; accent-color: #ff3300; }
+        .btn-login { width: 100%; padding: 15px; font-family: 'Fredoka One', cursive; font-size: 18px; letter-spacing: 4px; color: #fff; background: linear-gradient(180deg, #ff3300, #8b0000); border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 5px 0 #3a0000; transition: all 0.15s; }
+        .btn-login:active { transform: translateY(4px); box-shadow: 0 1px 0 #3a0000; }
+        .mute-toggle { padding: 10px 14px; border-radius: 10px; width: 100%; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 1px; cursor: pointer; border: 1px solid; margin-bottom: 5px; transition: all 0.2s; }
+        .on { background: rgba(46,125,50,0.2); color: #66bb6a; border-color: rgba(76,175,80,0.3); }
+        .off { background: rgba(192,57,43,0.2); color: #ef5350; border-color: rgba(231,76,60,0.3); }
+        .music-list { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,180,0,0.15); border-radius: 12px; padding: 4px; max-height: 130px; overflow-y: auto; margin-bottom: 10px; scrollbar-width: thin; }
+        .music-item { display: flex; align-items: center; padding: 7px 10px; font-size: 12px; font-weight: 700; color: rgba(255,220,150,0.55); border-radius: 8px; }
+        .music-item:hover { background: rgba(255,100,0,0.07); }
+        .music-item.active { color: #ffd700; background: rgba(255,100,0,0.12); }
+        .music-item label { flex-grow: 1; cursor: pointer; }
+        .loop-checkbox { width: 16px; height: 16px; margin-left: 8px; cursor: pointer; accent-color: #ff3300; }
+        .btn-panel-close { width: 100%; padding: 10px; margin-top: 10px; border-radius: 12px; background: transparent; color: rgba(255,180,0,0.45); border: 1px solid rgba(255,180,0,0.2); cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; transition: all 0.2s; }
+        .btn-panel-close:hover { border-color: #ffd700; color: #ffd700; }
+        .users-list-container { max-height: 170px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 12px; border: 1px solid rgba(255,180,0,0.15); padding: 4px; margin-bottom: 4px; scrollbar-width: thin; }
+        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-bottom: 1px solid rgba(255,180,0,0.07); color: rgba(255,220,150,0.8); font-size: 13px; font-weight: 700; border-radius: 8px; }
+        .user-row:hover { background: rgba(255,100,0,0.07); }
+        .mod-btn-pos { flex:1; padding: 9px; background: rgba(46,125,50,0.2); color: #66bb6a; border: 1px solid rgba(76,175,80,0.25); border-radius: 10px; font-weight: 900; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 15px; }
+        .mod-btn-neg { flex:1; padding: 9px; background: rgba(192,57,43,0.2); color: #ef5350; border: 1px solid rgba(231,76,60,0.25); border-radius: 10px; font-weight: 900; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 15px; }
+        .btn-back { width: 100%; padding: 10px; background: transparent; color: #ffd700; border: 1px solid rgba(255,215,0,0.3); border-radius: 10px; font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; }
+        .prof-balance-text { font-family: 'Fredoka One', cursive; font-size: 24px; color: #ffd700; }
+        .gold-divider { width: 100%; height: 1px; margin: 12px 0; background: linear-gradient(90deg, transparent, rgba(255,180,0,0.3), transparent); }
+        .admin-ctrl-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .btn-admin-ctrl { flex: 1; padding: 10px 6px; font-family: 'Fredoka One', cursive; font-size: 13px; letter-spacing: 1px; color: #fff; border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase; }
+        .btn-ctrl-blue { background: linear-gradient(180deg, #1565c0, #0d47a1); box-shadow: 0 3px 0 #082788; }
+        .btn-ctrl-purple { background: linear-gradient(180deg, #7b1fa2, #4a148c); box-shadow: 0 3px 0 #2a0060; }
+        .chance-indicator { text-align: center; margin-bottom: 10px; font-family: 'Fredoka One', cursive; font-size: 15px; color: #ffd700; }
+        .chance-badge { display: inline-block; padding: 3px 14px; background: linear-gradient(135deg, #7b1fa2, #4a148c); border-radius: 20px; font-size: 14px; }
+        #chance-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: linear-gradient(160deg, #180020, #0a0015); border: 2px solid rgba(123,31,162,0.7); padding: 22px 20px; z-index: 200; border-radius: 22px; width: 260px; text-align: center; }
+        .chance-modal-title { font-family: 'Fredoka One', cursive; font-size: 16px; color: #ce93d8; letter-spacing: 2px; margin-bottom: 14px; }
+        .chance-options { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; }
+        .btn-chance-opt { padding: 10px 16px; font-family: 'Fredoka One', cursive; font-size: 18px; color: #fff; border: none; border-radius: 12px; cursor: pointer; background: linear-gradient(180deg, #7b1fa2, #4a148c); box-shadow: 0 3px 0 #2a0060; }
+        .btn-chance-opt.active-chance { background: linear-gradient(180deg, #ff8f00, #e65100); box-shadow: 0 3px 0 #8b2700; }
+
+        /* RESULT OVERLAY */
+        #result-overlay { display: none; position: absolute; inset: 0; z-index: 50; background: rgba(0,0,0,0.85); border-radius: 26px; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+        #result-overlay.show { display: flex; }
+        .result-icon { font-size: 64px; animation: resultPop 0.5s ease; }
+        @keyframes resultPop { 0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+        .result-text { font-family: 'Fredoka One', cursive; font-size: 26px; color: #fff; text-align: center; letter-spacing: 2px; }
+        .result-sub { font-size: 14px; font-weight: 800; color: rgba(255,200,100,0.7); letter-spacing: 1px; }
+        .btn-result { padding: 14px 36px; font-family: 'Fredoka One', cursive; font-size: 18px; color: #fff; border: none; border-radius: 14px; cursor: pointer; background: linear-gradient(180deg, #ff3300, #8b0000); box-shadow: 0 4px 0 #4a0000; transition: all 0.15s; }
+        .btn-result:active { transform: translateY(3px); }
+    </style>
+</head>
+<body onclick="closePanels()">
+<div class="coin-bg" id="coin-bg"></div>
+
+<div class="machine" onclick="event.stopPropagation()">
+
+    <!-- AUTH -->
+    <div id="auth-section">
+        <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
+        <h1 class="casino-title">💣 САПЁР</h1>
+        <div class="title-lights">
+            <div class="light-dot"></div><div class="light-dot"></div>
+            <div class="light-dot"></div><div class="light-dot"></div>
+            <div class="light-dot"></div><div class="light-dot"></div>
+        </div>
+        <input type="text" id="username" placeholder="ЛОГИН">
+        <input type="password" id="password" placeholder="ПАРОЛЬ">
+        <button onclick="login()" class="btn-login">ВОЙТИ</button>
+    </div>
+
+    <!-- GAME -->
+    <div id="game-section" style="display:none; position:relative;">
+        <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
+        <h1 class="casino-title">💣 САПЁР</h1>
+        <div class="title-lights">
+            <div class="light-dot"></div><div class="light-dot"></div>
+            <div class="light-dot"></div><div class="light-dot"></div>
+            <div class="light-dot"></div><div class="light-dot"></div>
+        </div>
+        <div class="vip-access" onclick="toggleAdmin(event)">👑 VIP</div>
+
+        <div class="info-bar">
+            <div>
+                <div class="player-name" id="display-name">PLAYER</div>
+                <div class="balance-val"><span id="balance">0</span> АР</div>
+            </div>
+            <div class="settings-btn" onclick="toggleSettings(event)">⚙️</div>
+        </div>
+
+        <!-- MINE FIELD -->
+        <div class="mine-frame">
+            <div class="mine-inner">
+                <div class="mine-status" id="mine-status">Нажми НАЧАТЬ чтобы играть</div>
+                <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+                <div class="mine-grid" id="mine-grid"></div>
+            </div>
+        </div>
+
+        <button id="start-btn" class="btn-start" onclick="startGame()">💣 НАЧАТЬ (5 АР)</button>
+        <button id="cashout-btn" class="btn-cashout" onclick="cashout()">💰 ВЫВЕСТИ</button>
+        <button class="promo-btn" onclick="promptPromo()">🎁 ПРОМОКОД</button>
+
+        <div class="history-label">история</div>
+        <div id="history" class="history-box"></div>
+
+        <!-- RESULT OVERLAY -->
+        <div id="result-overlay">
+            <div class="result-icon" id="result-icon">💥</div>
+            <div class="result-text" id="result-text">БОМБА!</div>
+            <div class="result-sub" id="result-sub">Ты потерял 5 АР</div>
+            <button class="btn-result" onclick="hideResult()">ПОПРОБОВАТЬ СНОВА</button>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="settings-panel" onclick="event.stopPropagation()">
+            <div class="panel-title">🎵 ПЛЕЙЛИСТ</div>
+            <div class="music-list" id="music-playlist"></div>
+            <button id="m-toggle" class="mute-toggle on" onclick="toggleMute('music')">🎵 МУЗЫКА: ВКЛ</button>
+            <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
+            <button id="s-toggle" class="mute-toggle on" onclick="toggleMute('sound')">🔊 ЗВУКИ: ВКЛ</button>
+            <input type="range" id="sound-vol" min="0" max="1" step="0.1" value="0.7" oninput="applyVolumes()">
+            <button onclick="closePanels()" class="btn-panel-close">✕ ЗАКРЫТЬ</button>
+        </div>
+
+        <!-- ADMIN -->
+        <div id="admin-panel" onclick="event.stopPropagation()">
+            <div class="panel-title">👑 АДМИН-ПАНЕЛЬ</div>
+            <div class="users-list-container"><div id="users-list"></div></div>
+            <button onclick="closePanels()" class="btn-panel-close">✕ ЗАКРЫТЬ</button>
+        </div>
+
+        <!-- PROFILE -->
+        <div id="user-profile-panel" onclick="event.stopPropagation()">
+            <div id="prof-name" class="panel-title red"></div>
+            <div class="gold-divider"></div>
+            <p style="text-align:center;margin-bottom:12px;">
+                <span style="color:rgba(255,180,100,0.5);font-size:12px;font-weight:800;letter-spacing:2px;">БАЛАНС: </span>
+                <span id="prof-balance" class="prof-balance-text">0</span>
+                <span style="color:rgba(255,180,0,0.5);font-size:14px;font-weight:800;"> АР</span>
+            </p>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <button onclick="modBal(1)" class="mod-btn-pos">+1</button>
+                <button onclick="modBal(10)" class="mod-btn-pos">+10</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <button onclick="modBal(-1)" class="mod-btn-neg">−1</button>
+                <button onclick="modBal(-10)" class="mod-btn-neg">−10</button>
+            </div>
+            <div class="history-label">история игрока</div>
+            <div id="prof-history" class="history-box" style="margin-bottom:12px;"></div>
+            <button onclick="backToAdmin()" class="btn-back">← НАЗАД</button>
+        </div>
+
+        <div id="chance-modal" onclick="event.stopPropagation()">
+            <div class="chance-modal-title">МНОЖИТЕЛЬ ШАНСА</div>
+            <div class="chance-options">
+                <button class="btn-chance-opt" onclick="setChance(1)">х1</button>
+                <button class="btn-chance-opt" onclick="setChance(2)">х2</button>
+                <button class="btn-chance-opt" onclick="setChance(5)">х5</button>
+            </div>
+            <button onclick="closeChanceModal()" class="btn-panel-close" style="margin-top:0;">✕ ЗАКРЫТЬ</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // COINS
+    (function() {
+        const c = document.getElementById('coin-bg');
+        const emojis = ['🪙','💰','⭐','🌟','💣','🎰'];
+        for (let i = 0; i < 20; i++) {
+            const el = document.createElement('div');
+            el.className = 'coin';
+            el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            el.style.left = Math.random() * 100 + '%';
+            el.style.animationDuration = (Math.random() * 10 + 8) + 's';
+            el.style.animationDelay = (Math.random() * 12) + 's';
+            el.style.fontSize = (Math.random() * 14 + 14) + 'px';
+            c.appendChild(el);
+        }
+    })();
+
+    // FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s",
+        databaseURL: "https://dima256-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "dima256",
+        appId: "1:208400853144:web:78eb608f5aacd57e8848ed"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const playlist = [
+        { name: "Бэм Бэм Бэм", file: "bam_bam_bam_1.mp3" },
+        { name: "Nobody", file: "nobody.mp3" },
+        { name: "Баклажан", file: "baclachn.mp3" },
+        { name: "Пау Пау Пау", file: "pay_pay_pay.mp3" },
+        { name: "Bad Piggies", file: "bad_piggies.mp3" },
+        { name: "Ананасовый сироп", file: "ananasevi_sirop_1.mp3" },
+        { name: "Концерт Артура №1", file: "consert_artyra№1.mp3" },
+        { name: "Концерт Артура №2", file: "consert_artyra№2.mp3" },
+        { name: "Концерт Артура №3", file: "consert_artyra№3.mp3" },
+        { name: "баблгам №1", file: "bablgam_1.mp3" },
+        { name: "баблгам №2", file: "bablgam_2.mp3" },
+        { name: "Angry Birds", file: "angry_birds.mp3" },
+        { name: "оркестр-БЭМ", file: "orcestr_BAM_1.mp3" },
+        { name: "птички", file: "ptichki_1.mp3" }
+    ];
+
+    let user = "", selU = "", currentTrackIdx = 0;
+    let bgMusic = new Audio(playlist[0].file);
+    bgMusic.loop = true;
+    let mOn = true, sOn = true;
+
+    // GAME STATE
+    const GRID_SIZE = 5;
+    const COST = 5;
+    const UNLOCK_AT = 3; // ячеек для разблокировки вывода
+    const BOMBS = 5;
+    const COIN_REWARD = 2; // АР за монету
+
+    let gameActive = false;
+    let board = []; // 'empty' | 'coin' | 'bomb'
+    let revealed = [];
+    let sessionCoins = 0;
+    let openedCount = 0;
+    let currentBalance = 0;
+
+    // SOUNDS
+    const sndBomb = new Audio('vrode_da_vrode_net_1.mp3');
+    const sndCoin = new Audio('o_mai_gad_1.mp3');
+    const sndCashout = new Audio('milion_dvesti_na_balance_1.mp3');
+
+    function renderPlaylist() {
+        document.getElementById('music-playlist').innerHTML = playlist.map((t, i) => `
+            <div class="music-item ${i === currentTrackIdx ? 'active' : ''}">
+                <label onclick="playTrack(${i})">${t.name}</label>
+                <input type="checkbox" class="loop-checkbox" id="loop-${i}" onclick="updateLoop(${i})" ${i === currentTrackIdx && bgMusic.loop ? 'checked' : ''}>
+            </div>`).join('');
+    }
+    function updateLoop(i) { if (i === currentTrackIdx) bgMusic.loop = document.getElementById('loop-' + i).checked; }
+    function playTrack(i) {
+        bgMusic.pause(); currentTrackIdx = i;
+        bgMusic.src = playlist[i].file;
+        bgMusic.loop = document.getElementById('loop-' + i) ? document.getElementById('loop-' + i).checked : false;
+        if (mOn) bgMusic.play().catch(() => {});
+        renderPlaylist();
+    }
+    bgMusic.onended = () => { if (!bgMusic.loop) playTrack((currentTrackIdx + 1) % playlist.length); };
+
+    function login() {
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value;
+        if (!u || !p) return;
+        db.ref('players/' + u).once('value').then(s => {
+            if (!s.exists()) {
+                db.ref('players/' + u).set({ balance: 5, password: p, history: ["Регистрация"], usedPromos: {} })
+                    .then(() => { user = u; go(); });
+            } else if (s.val().password === p) { user = u; go(); }
+            else alert("Неверный пароль!");
+        });
+    }
+
+    function go() {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('game-section').style.display = 'block';
+        document.getElementById('display-name').innerText = user.toUpperCase();
+        applyVolumes(); renderPlaylist(); buildGrid();
+        db.ref('players/' + user).on('value', snap => {
+            const d = snap.val(); if (!d) return;
+            currentBalance = d.balance;
+            document.getElementById('balance').innerText = d.balance;
+            document.getElementById('history').innerHTML = (d.history || []).slice().reverse()
+                .map(h => '<div style="padding:2px 0;border-bottom:1px solid rgba(255,180,0,0.06);">> ' + h + '</div>').join('');
+        });
+    }
+
+    function buildGrid() {
+        const grid = document.getElementById('mine-grid');
+        grid.innerHTML = '';
+        for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.idx = i;
+            cell.onclick = () => revealCell(i);
+            grid.appendChild(cell);
+        }
+    }
+
+    function generateBoard() {
+        const total = GRID_SIZE * GRID_SIZE;
+        board = Array(total).fill('empty');
+        // Place bombs
+        let placed = 0;
+        while (placed < BOMBS) {
+            const idx = Math.floor(Math.random() * total);
+            if (board[idx] !== 'bomb') { board[idx] = 'bomb'; placed++; }
+        }
+        // Place coins (fill ~60% of remaining)
+        const coinCount = Math.floor((total - BOMBS) * 0.6);
+        let coins = 0;
+        const indices = board.map((v,i) => v === 'empty' ? i : -1).filter(i => i >= 0);
+        indices.sort(() => Math.random() - 0.5);
+        for (let i = 0; i < coinCount; i++) { board[indices[i]] = 'coin'; coins++; }
+        revealed = Array(total).fill(false);
+    }
+
+    async function startGame() {
+        const snap = await db.ref('players/' + user).once('value');
+        const d = snap.val();
+        if (d.balance < COST) { alert('Недостаточно АР! Нужно ' + COST + ' АР.'); return; }
+
+        // Списываем стоимость
+        await db.ref('players/' + user + '/balance').set(d.balance - COST);
+
+        generateBoard();
+        sessionCoins = 0;
+        openedCount = 0;
+        gameActive = true;
+
+        // UI
+        document.getElementById('start-btn').style.display = 'none';
+        const cashout = document.getElementById('cashout-btn');
+        cashout.style.display = 'block';
+        cashout.classList.add('locked');
+        cashout.textContent = '🔒 ВЫВЕСТИ (открой ещё ' + (UNLOCK_AT - openedCount) + ')';
+
+        updateStatus();
+        resetCellsUI();
+    }
+
+    function resetCellsUI() {
+        document.querySelectorAll('.cell').forEach(c => {
+            c.className = 'cell';
+            c.textContent = '';
+        });
+        document.getElementById('progress-bar').style.width = '0%';
+    }
+
+    function revealCell(idx) {
+        if (!gameActive || revealed[idx]) return;
+        revealed[idx] = true;
+        openedCount++;
+
+        const cell = document.querySelector('.cell[data-idx="' + idx + '"]');
+        const type = board[idx];
+
+        cell.classList.add('revealed');
+
+        if (type === 'bomb') {
+            cell.classList.add('bomb-cell');
+            cell.textContent = '💥';
+            if (sOn) sndBomb.play().catch(() => {});
+            gameActive = false;
+            // Reveal all bombs
+            board.forEach((v, i) => {
+                if (v === 'bomb' && !revealed[i]) {
+                    document.querySelector('.cell[data-idx="' + i + '"]').textContent = '💣';
+                    document.querySelector('.cell[data-idx="' + i + '"]').classList.add('revealed', 'bomb-cell');
+                }
+            });
+            setTimeout(() => showResult(false), 600);
+        } else if (type === 'coin') {
+            cell.classList.add('coin-cell');
+            cell.textContent = '🪙';
+            sessionCoins += COIN_REWARD;
+            if (sOn) sndCoin.play().catch(() => {});
+        } else {
+            cell.classList.add('empty');
+            cell.textContent = '·';
+        }
+
+        updateStatus();
+        updateCashout();
+    }
+
+    function updateStatus() {
+        const safe = GRID_SIZE * GRID_SIZE - BOMBS;
+        const progress = Math.min(openedCount / safe * 100, 100);
+        document.getElementById('progress-bar').style.width = progress + '%';
+        document.getElementById('mine-status').innerHTML =
+            'Открыто: <span>' + openedCount + '</span> | Собрано: <span>' + sessionCoins + ' АР</span>';
+    }
+
+    function updateCashout() {
+        const cashout = document.getElementById('cashout-btn');
+        if (openedCount >= UNLOCK_AT) {
+            cashout.classList.remove('locked');
+            cashout.textContent = '💰 ВЫВЕСТИ ' + sessionCoins + ' АР';
+        } else {
+            cashout.classList.add('locked');
+            cashout.textContent = '🔒 ВЫВЕСТИ (ещё ' + (UNLOCK_AT - openedCount) + ' ячейки)';
+        }
+    }
+
+    async function cashout() {
+        if (!gameActive || openedCount < UNLOCK_AT) return;
+        gameActive = false;
+        if (sOn) sndCashout.play().catch(() => {});
+        const snap = await db.ref('players/' + user).once('value');
+        const d = snap.val();
+        const won = sessionCoins;
+        await db.ref('players/' + user).update({
+            balance: d.balance + won,
+            history: (d.history || []).concat(['💰 САПЁР: вывод +' + won + ' АР']).slice(-15)
+        });
+        showResult(true, won);
+    }
+
+    function showResult(win, amount) {
+        const overlay = document.getElementById('result-overlay');
+        overlay.classList.add('show');
+        if (win) {
+            document.getElementById('result-icon').textContent = '🏆';
+            document.getElementById('result-text').textContent = 'ВЫВОД!';
+            document.getElementById('result-sub').textContent = 'Ты забрал ' + amount + ' АР!';
+        } else {
+            document.getElementById('result-icon').textContent = '💥';
+            document.getElementById('result-text').textContent = 'БОМБА!';
+            document.getElementById('result-sub').textContent = 'Ты потерял ' + COST + ' АР';
+            // Запись в историю
+            db.ref('players/' + user).once('value').then(s => {
+                const d = s.val();
+                db.ref('players/' + user + '/history').set(
+                    (d.history || []).concat(['💥 САПЁР: бомба −' + COST + ' АР']).slice(-15)
+                );
+            });
+        }
+    }
+
+    function hideResult() {
+        document.getElementById('result-overlay').classList.remove('show');
+        document.getElementById('start-btn').style.display = 'block';
+        document.getElementById('cashout-btn').style.display = 'none';
+        document.getElementById('mine-status').textContent = 'Нажми НАЧАТЬ чтобы играть';
+        document.getElementById('progress-bar').style.width = '0%';
+        sessionCoins = 0; openedCount = 0;
+        buildGrid();
+    }
+
+    function promptPromo() {
+        const input = prompt("Введи промокод:");
+        if (!input) return;
+        const code = input.trim().toLowerCase();
+        const promoCodes = { "mell": 3, "мелл": 5, "меллстрой": 5 };
+        if (!(code in promoCodes)) { alert("❌ Промокод не найден!"); return; }
+        db.ref('players/' + user + '/usedPromos/' + code).once('value').then(snap => {
+            if (snap.exists() && snap.val() === true) { alert("⛔ Ты уже использовал этот промокод!"); return; }
+            const reward = promoCodes[code];
+            db.ref('players/' + user).once('value').then(s => {
+                const d = s.val();
+                db.ref('players/' + user).update({
+                    balance: (d.balance || 0) + reward,
+                    ['usedPromos/' + code]: true,
+                    history: (d.history || []).concat(['🎁 ПРОМО «' + code + '» +' + reward + ' АР']).slice(-15)
+                });
+                alert("✅ Промокод активирован! +" + reward + " АР начислено.");
+            });
+        });
+    }
+
+    function toggleAdmin(e) {
+        e.stopPropagation();
+        if (prompt("Пароль:") === "1337") { document.getElementById('admin-panel').style.display = 'block'; loadUsers(); }
+    }
+
+    function loadUsers() {
+        db.ref('players').on('value', s => {
+            const list = document.getElementById('users-list');
+            list.innerHTML = "";
+            s.forEach(c => {
+                const div = document.createElement('div');
+                div.className = "user-row";
+                div.innerHTML =
+                    '<div style="display:flex;align-items:center;gap:8px;">' +
+                    '<span onclick="deleteUser(event,\'' + c.key + '\')" style="color:#ef5350;font-size:16px;cursor:pointer;padding:2px 5px;border-radius:4px;" onmouseover="this.style.background=\'rgba(255,60,60,0.18)\'" onmouseout="this.style.background=\'transparent\'">✖</span>' +
+                    '<span onclick="openProfile(\'' + c.key + '\')" style="cursor:pointer;">' + c.key + '</span></div>' +
+                    '<span onclick="openProfile(\'' + c.key + '\')" style="color:rgba(255,200,0,0.5);cursor:pointer;">' + c.val().balance + ' АР</span>';
+                list.appendChild(div);
+            });
+        });
+    }
+
+    function deleteUser(e, u) {
+        e.stopPropagation();
+        if (confirm("Удалить аккаунт «" + u + "»?")) {
+            db.ref('players/' + u).remove().then(() => {
+                if (u === user) { user = ""; document.getElementById('game-section').style.display = 'none'; document.getElementById('auth-section').style.display = 'block'; closePanels(); }
+            });
+        }
+    }
+
+    function openProfile(u) {
+        selU = u;
+        document.getElementById('admin-panel').style.display = 'none';
+        document.getElementById('user-profile-panel').style.display = 'block';
+        document.getElementById('prof-name').innerText = u.toUpperCase();
+        db.ref('players/' + u).on('value', s => {
+            if (s.exists()) {
+                document.getElementById('prof-balance').innerText = s.val().balance;
+                document.getElementById('prof-history').innerHTML = (s.val().history || []).slice().reverse()
+                    .map(h => '<div style="padding:2px 0;">> ' + h + '</div>').join('');
+            }
+        });
+    }
+
+    function modBal(v) { db.ref('players/' + selU + '/balance').transaction(b => (b || 0) + v); }
+    function backToAdmin() { document.getElementById('user-profile-panel').style.display = 'none'; document.getElementById('admin-panel').style.display = 'block'; }
+    function toggleSettings(e) { e.stopPropagation(); document.getElementById('settings-panel').style.display = 'block'; renderPlaylist(); }
+    function closePanels() { ['settings-panel', 'admin-panel', 'user-profile-panel', 'chance-modal'].forEach(p => document.getElementById(p).style.display = 'none'); }
+    function closeChanceModal() { document.getElementById('chance-modal').style.display = 'none'; }
+    function setChance(mult) { db.ref('players/' + selU + '/chanceMultiplier').set(mult); closeChanceModal(); }
+
+    function applyVolumes() {
+        const mVol = document.getElementById('music-vol').value;
+        const sVol = document.getElementById('sound-vol').value;
+        bgMusic.volume = mOn ? mVol : 0;
+        if (mOn) bgMusic.play().catch(() => {}); else bgMusic.pause();
+        document.getElementById('m-toggle').className = mOn ? "mute-toggle on" : "mute-toggle off";
+        document.getElementById('m-toggle').textContent = mOn ? "🎵 МУЗЫКА: ВКЛ" : "🎵 МУЗЫКА: ВЫКЛ";
+        document.getElementById('s-toggle').className = sOn ? "mute-toggle on" : "mute-toggle off";
+        document.getElementById('s-toggle').textContent = sOn ? "🔊 ЗВУКИ: ВКЛ" : "🔊 ЗВУКИ: ВЫКЛ";
+        [sndBomb, sndCoin, sndCashout].forEach(a => a.volume = sOn ? sVol : 0);
+    }
+    function toggleMute(t) { if (t === 'music') mOn = !mOn; else sOn = !sOn; applyVolumes(); }
+</script>
+</body>
+</html>
