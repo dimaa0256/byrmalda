@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>✈️ ПОЛЁТ — БУРМАЛДА</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        :root { --gold:#ffd700; --blue:#0088ff; --red:#ff3300; --green:#00e676; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        html,body { width:100%; height:100%; overflow:hidden; font-family:'Nunito',sans-serif; background:#000; }
+        body { display:flex; justify-content:center; align-items:center; }
+        .machine {
+            width:400px; max-height:96vh; overflow-y:auto; overflow-x:hidden;
+            position:relative; z-index:10; border-radius:28px; padding:14px 14px 18px;
+            background:linear-gradient(170deg,#1a0025 0%,#0d0018 60%,#001020 100%);
+            border:2px solid rgba(255,200,0,0.35);
+            box-shadow:0 0 40px rgba(0,100,200,0.25),inset 0 1px 0 rgba(255,220,0,0.2);
+            scrollbar-width:thin; scrollbar-color:#8b0000 transparent;
+        }
+        .back-link { display:block; text-align:center; font-family:'Fredoka One',cursive; font-size:11px; letter-spacing:2px; color:rgba(255,180,0,0.45); text-decoration:none; margin-bottom:5px; }
+        .back-link:hover { color:var(--gold); }
+        .casino-title { font-family:'Fredoka One',cursive; font-size:26px; text-align:center; margin-bottom:3px; color:#fff; text-shadow:0 0 10px #0088ff,0 0 30px #0044cc,2px 2px 0 #003399; }
+        .title-lights { display:flex; justify-content:center; gap:7px; margin-bottom:9px; }
+        .light-dot { width:7px; height:7px; border-radius:50%; background:var(--gold); box-shadow:0 0 5px var(--gold); animation:lb 1.2s ease-in-out infinite; }
+        .light-dot:nth-child(2n){animation-delay:.4s;background:#0088ff;box-shadow:0 0 5px #0088ff;}
+        .light-dot:nth-child(3n){animation-delay:.8s;}
+        @keyframes lb{0%,100%{opacity:1}50%{opacity:.25}}
+        .info-bar { display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:7px 12px; border-radius:14px; border:1px solid rgba(255,180,0,0.2); margin-bottom:9px; }
+        .player-name { font-size:10px; font-weight:800; color:rgba(255,220,100,0.55); letter-spacing:2px; text-transform:uppercase; }
+        .balance-val { font-family:'Fredoka One',cursive; font-size:20px; color:var(--gold); text-shadow:0 0 8px rgba(255,215,0,0.6); }
+        .settings-btn { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,180,0,0.2); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; transition:all .3s; }
+        .settings-btn:hover{transform:rotate(45deg);}
+
+        /* SKY */
+        .sky-frame { border-radius:16px; overflow:hidden; position:relative; height:210px; margin-bottom:8px; background:linear-gradient(180deg,#060d1a 0%,#0a1e3a 60%,#0d2a52 100%); border:2px solid rgba(0,100,200,0.35); box-shadow:0 0 18px rgba(0,100,255,0.1),inset 0 0 30px rgba(0,0,50,0.4); }
+        canvas#sky { position:absolute; inset:0; width:100%; height:100%; }
+
+        /* WIN */
+        .win-display { text-align:center; margin-bottom:6px; }
+        .win-label { font-size:10px; font-weight:800; letter-spacing:3px; color:rgba(255,180,0,0.4); text-transform:uppercase; margin-bottom:1px; }
+        .win-val { font-family:'Fredoka One',cursive; font-size:26px; color:var(--gold); text-shadow:0 0 12px rgba(255,215,0,0.6); transition:all .2s; }
+        .win-val.bump{animation:wb .3s ease;}
+        @keyframes wb{0%{transform:scale(1)}50%{transform:scale(1.14)}100%{transform:scale(1)}}
+        .win-val.drop{color:#ff4444;text-shadow:0 0 12px rgba(255,0,0,0.5);}
+
+        /* BET */
+        .bet-row { margin-bottom:8px; }
+        .bet-input { width:100%; padding:11px 16px; border-radius:12px; background:rgba(0,0,0,0.55); color:#fff; border:2px solid rgba(0,150,255,0.3); text-align:center; font-size:16px; font-family:'Fredoka One',cursive; outline:none; letter-spacing:2px; }
+        .bet-input:focus{border-color:rgba(0,180,255,0.6);}
+
+        /* SPEED SLIDER */
+        .speed-section { margin-bottom:10px; }
+        .speed-label-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+        .speed-label { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(100,180,255,0.5); text-transform:uppercase; }
+        .speed-val { font-family:'Fredoka One',cursive; font-size:13px; color:#88ccff; }
+        .speed-track-wrap { position:relative; height:36px; background:rgba(0,0,50,0.5); border-radius:18px; border:1px solid rgba(0,100,200,0.35); overflow:hidden; cursor:pointer; user-select:none; }
+        .speed-fill { position:absolute; left:0; top:0; bottom:0; border-radius:18px; transition:width .05s; }
+        .speed-cursor { position:absolute; top:50%; transform:translateY(-50%); width:28px; height:28px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 10px currentColor; transition:left .05s; display:flex; align-items:center; justify-content:center; font-size:12px; }
+        .speed-hint { font-size:9px; font-weight:800; color:rgba(100,180,255,0.35); text-align:center; letter-spacing:1px; margin-top:3px; }
+
+        /* BUTTONS */
+        .btn-start { width:100%; padding:14px; font-family:'Fredoka One',cursive; font-size:18px; letter-spacing:3px; color:#fff; border:none; border-radius:16px; cursor:pointer; background:linear-gradient(180deg,#0088ff 0%,#0044cc 50%,#002288 100%); box-shadow:0 5px 0 #001166,0 8px 16px rgba(0,100,255,0.35); text-shadow:0 2px 4px rgba(0,0,0,0.5); transition:all .12s; margin-bottom:8px; animation:bg 2.5s ease-in-out infinite; }
+        @keyframes bg{0%,100%{box-shadow:0 5px 0 #001166,0 8px 16px rgba(0,100,255,0.35)}50%{box-shadow:0 5px 0 #001166,0 8px 28px rgba(0,180,255,0.6)}}
+        .btn-start:active{transform:translateY(4px);box-shadow:0 1px 0 #001166;}
+        .btn-start:disabled{filter:grayscale(.7) brightness(.5);animation:none;cursor:not-allowed;}
+        .btn-dive { width:100%; padding:12px; font-family:'Fredoka One',cursive; font-size:16px; letter-spacing:2px; color:#111; border:none; border-radius:16px; cursor:pointer; background:linear-gradient(180deg,var(--gold),#ff8c00); box-shadow:0 4px 0 #8b4500; transition:all .12s; margin-bottom:8px; display:none; }
+        .btn-dive:active{transform:translateY(3px);box-shadow:0 1px 0 #8b4500;}
+        .promo-btn { width:100%; padding:9px; font-family:'Fredoka One',cursive; font-size:13px; letter-spacing:2px; color:var(--gold); border:2px solid rgba(255,215,0,0.3); border-radius:13px; cursor:pointer; background:rgba(255,180,0,0.07); transition:all .25s; margin-bottom:8px; }
+        .promo-btn:hover{background:rgba(255,180,0,0.14);border-color:var(--gold);}
+        .history-label{font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,180,0,0.35);text-align:center;margin-bottom:3px;}
+        .history-box{height:44px;overflow-y:auto;font-size:11px;font-weight:700;color:rgba(255,200,80,0.55);background:rgba(0,0,0,0.4);padding:5px 10px;border-radius:12px;border:1px solid rgba(255,180,0,0.1);scrollbar-width:thin;}
+
+        /* PANELS */
+        #settings-panel{display:none;position:absolute;top:8px;left:8px;right:8px;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:16px;z-index:100;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,0.95);}
+        .panel-title{font-family:'Fredoka One',cursive;font-size:16px;letter-spacing:2px;text-align:center;margin-bottom:11px;color:var(--gold);}
+        .music-list{background:rgba(0,0,0,0.45);border:1px solid rgba(255,180,0,0.15);border-radius:12px;padding:4px;max-height:140px;overflow-y:auto;margin-bottom:9px;scrollbar-width:thin;}
+        .music-item{display:flex;align-items:center;padding:6px 10px;font-size:12px;font-weight:700;color:rgba(255,220,150,0.55);border-radius:8px;}
+        .music-item:hover{background:rgba(255,100,0,0.07);}
+        .music-item.active{color:var(--gold);background:rgba(255,100,0,0.12);}
+        .loop-checkbox{width:15px;height:15px;margin-left:8px;cursor:pointer;accent-color:#ff3300;flex-shrink:0;}
+        .mute-toggle{padding:7px 14px;border-radius:10px;width:100%;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;border:1px solid;margin-bottom:6px;transition:all .2s;}
+        .on{background:rgba(46,125,50,0.2);color:#66bb6a;border-color:rgba(76,175,80,0.3);}
+        .off{background:rgba(192,57,43,0.2);color:#ef5350;border-color:rgba(231,76,60,0.3);}
+        input[type="range"]{width:85%;display:block;margin:0 auto 7px;accent-color:#ff3300;}
+        .btn-panel-close{width:100%;padding:7px;border-radius:10px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;transition:all .2s;}
+        .btn-panel-close:hover{border-color:var(--gold);color:var(--gold);}
+
+        /* RESULT */
+        #result-overlay{display:none;position:absolute;inset:0;z-index:50;background:rgba(0,0,0,0.88);border-radius:26px;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+        #result-overlay.show{display:flex;}
+        .result-icon{font-size:58px;animation:rp .5s ease;}
+        @keyframes rp{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+        .result-text{font-family:'Fredoka One',cursive;font-size:24px;color:#fff;text-align:center;letter-spacing:2px;}
+        .result-sub{font-size:13px;font-weight:800;color:rgba(255,200,100,0.7);letter-spacing:1px;}
+        .btn-result{padding:12px 32px;font-family:'Fredoka One',cursive;font-size:16px;color:#fff;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(180deg,#0088ff,#002288);box-shadow:0 4px 0 #001166;transition:all .15s;}
+        .btn-result:active{transform:translateY(3px);}
+
+        /* AUTH inputs */
+        .auth-input{width:100%;display:block;margin:0 0 10px;padding:13px 18px;border-radius:14px;background:rgba(0,0,0,0.55);color:#fff;border:2px solid rgba(0,150,255,0.3);text-align:center;font-size:15px;font-family:'Fredoka One',cursive;outline:none;letter-spacing:2px;}
+        .auth-input::placeholder{color:rgba(100,180,255,0.35);font-size:13px;}
+        .btn-login{width:100%;padding:14px;font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:4px;color:#fff;background:linear-gradient(180deg,#0088ff,#002288);border:none;border-radius:14px;cursor:pointer;box-shadow:0 5px 0 #001166;}
+    </style>
+</head>
+<body onclick="closePanels()">
+<div class="machine" onclick="event.stopPropagation()">
+
+    <!-- AUTH -->
+    <div id="auth-section">
+        <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
+        <div class="casino-title">✈️ ПОЛЁТ</div>
+        <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
+        <input type="text" id="username" class="auth-input" placeholder="ЛОГИН">
+        <input type="password" id="password" class="auth-input" placeholder="ПАРОЛЬ">
+        <button onclick="login()" class="btn-login">ВОЙТИ</button>
+    </div>
+
+    <!-- GAME -->
+    <div id="game-section" style="display:none;position:relative;">
+        <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
+        <div class="casino-title">✈️ ПОЛЁТ</div>
+        <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
+        <div style="text-align:center;margin-bottom:8px;">
+            <button onclick="openAdmin(event)" style="padding:5px 22px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ffd700;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:20px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'">👑 ВИП</button>
+        </div>
+
+        <div class="info-bar">
+            <div>
+                <div class="player-name" id="display-name">PLAYER</div>
+                <div class="balance-val"><span id="balance">0</span> АР</div>
+            </div>
+            <div class="settings-btn" onclick="toggleSettings(event)">⚙️</div>
+        </div>
+
+        <div class="sky-frame"><canvas id="sky"></canvas></div>
+
+        <div class="win-display">
+            <div class="win-label">собрано</div>
+            <div class="win-val" id="win-val">0 АР</div>
+        </div>
+
+        <!-- BET -->
+        <div class="bet-row">
+            <input type="number" id="bet-input" class="bet-input" value="5" min="5" placeholder="СТАВКА (мин. 5 АР)">
+        </div>
+
+        <!-- SPEED SLIDER -->
+        <div class="speed-section">
+            <div class="speed-label-row">
+                <div class="speed-label">⚡ скорость</div>
+                <div class="speed-val" id="speed-val-label">СРЕДНЯЯ</div>
+            </div>
+            <div class="speed-track-wrap" id="speed-track">
+                <div class="speed-fill" id="speed-fill"></div>
+                <div class="speed-cursor" id="speed-cursor">✈</div>
+            </div>
+            <div class="speed-hint">ЗАЖМИ И ТЯНИ → ЧТОБЫ ВЫБРАТЬ СКОРОСТЬ</div>
+        </div>
+
+        <button id="start-btn" class="btn-start" onclick="startGame()">✈️ ВЗЛЕТАТЬ</button>
+        <button id="dive-btn" class="btn-dive" id="dive-btn">⬇️ НЫРНУТЬ НА ОСТРОВ</button>
+        <button class="promo-btn" onclick="promptPromo()">🎁 ПРОМОКОД</button>
+        <div class="history-label">история</div>
+        <div id="history" class="history-box"></div>
+
+        <!-- RESULT -->
+        <div id="result-overlay">
+            <div class="result-icon" id="result-icon">💦</div>
+            <div class="result-text" id="result-text">УПАЛ В ВОДУ!</div>
+            <div class="result-sub" id="result-sub">Ты потерял ставку</div>
+            <button class="btn-result" onclick="hideResult()">ЕЩЁ РАЗ</button>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="settings-panel" onclick="event.stopPropagation()">
+            <div class="panel-title">🎵 ПЛЕЙЛИСТ</div>
+            <div class="music-list" id="music-playlist"></div>
+            <button id="m-toggle" class="mute-toggle on" onclick="toggleMute()">🎵 МУЗЫКА: ВКЛ</button>
+            <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
+            <button onclick="closePanels()" class="btn-panel-close">✕ ЗАКРЫТЬ</button>
+        </div>
+
+        <!-- ADMIN -->
+        <div id="admin-panel" onclick="event.stopPropagation()" style="display:none;position:absolute;top:8px;left:8px;right:8px;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:20px 18px;z-index:100;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,0.95);">
+            <div style="font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:2px;text-align:center;margin-bottom:14px;color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,0.4);">👑 АДМИН-ПАНЕЛЬ</div>
+            <div style="max-height:170px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:12px;border:1px solid rgba(255,180,0,0.15);padding:4px;margin-bottom:4px;scrollbar-width:thin;"><div id="admin-users-list"></div></div>
+            <button onclick="closePanels()" style="width:100%;padding:10px;margin-top:10px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">✕ ЗАКРЫТЬ</button>
+        </div>
+
+        <!-- ADMIN PROFILE -->
+        <div id="admin-profile-panel" onclick="event.stopPropagation()" style="display:none;position:absolute;top:8px;left:8px;right:8px;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:20px 18px;z-index:101;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,0.95);">
+            <div id="ap-name" style="font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:2px;text-align:center;margin-bottom:8px;color:#ff5555;text-shadow:0 0 10px rgba(255,60,60,0.4);">ИГРОК</div>
+            <div style="width:100%;height:1px;margin:0 0 12px;background:linear-gradient(90deg,transparent,rgba(255,180,0,0.3),transparent);"></div>
+            <p style="text-align:center;margin-bottom:12px;">
+                <span style="color:rgba(255,180,100,0.5);font-size:12px;font-weight:800;letter-spacing:2px;">БАЛАНС: </span>
+                <span id="ap-bal" style="font-family:'Fredoka One',cursive;font-size:24px;color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,0.5);">0</span>
+                <span style="color:rgba(255,180,0,0.5);font-size:14px;font-weight:800;"> АР</span>
+            </p>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <button onclick="apMod(1)" style="flex:1;padding:9px;background:rgba(46,125,50,0.2);color:#66bb6a;border:1px solid rgba(76,175,80,0.25);border-radius:10px;font-weight:900;cursor:pointer;font-family:'Fredoka One',cursive;font-size:15px;">+1</button>
+                <button onclick="apMod(10)" style="flex:1;padding:9px;background:rgba(46,125,50,0.2);color:#66bb6a;border:1px solid rgba(76,175,80,0.25);border-radius:10px;font-weight:900;cursor:pointer;font-family:'Fredoka One',cursive;font-size:15px;">+10</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <button onclick="apMod(-1)" style="flex:1;padding:9px;background:rgba(192,57,43,0.2);color:#ef5350;border:1px solid rgba(231,76,60,0.25);border-radius:10px;font-weight:900;cursor:pointer;font-family:'Fredoka One',cursive;font-size:15px;">−1</button>
+                <button onclick="apMod(-10)" style="flex:1;padding:9px;background:rgba(192,57,43,0.2);color:#ef5350;border:1px solid rgba(231,76,60,0.25);border-radius:10px;font-weight:900;cursor:pointer;font-family:'Fredoka One',cursive;font-size:15px;">−10</button>
+            </div>
+            <div style="font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,180,0,0.35);text-align:center;margin-bottom:4px;">история игрока</div>
+            <div id="ap-history" style="height:48px;overflow-y:auto;font-size:11px;font-weight:700;color:rgba(255,200,80,0.55);background:rgba(0,0,0,0.4);padding:5px 10px;border-radius:12px;border:1px solid rgba(255,180,0,0.1);margin-bottom:12px;scrollbar-width:thin;"></div>
+            <div style="display:flex;gap:8px;">
+                <button onclick="apDelete()" style="flex:1;padding:9px;background:rgba(192,57,43,0.15);color:#ef5350;border:1px solid rgba(231,76,60,0.2);border-radius:10px;font-family:'Fredoka One',cursive;font-size:13px;cursor:pointer;">🗑 УДАЛИТЬ</button>
+                <button onclick="document.getElementById('admin-profile-panel').style.display='none';document.getElementById('admin-panel').style.display='block';" style="flex:1;padding:9px;background:transparent;color:#ffd700;border:1px solid rgba(255,215,0,0.3);border-radius:10px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;letter-spacing:2px;">← НАЗАД</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// ── FIREBASE ──
+const firebaseConfig = { apiKey:"AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s", databaseURL:"https://dima256-default-rtdb.europe-west1.firebasedatabase.app", projectId:"dima256", appId:"1:208400853144:web:78eb608f5aacd57e8848ed" };
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ── AUTH ──
+let user = '';
+function login() {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    if (!u||!p) return;
+    db.ref('players/'+u).once('value').then(s=>{
+        if (!s.exists()) db.ref('players/'+u).set({balance:5,password:p,history:['Регистрация'],usedPromos:{}}).then(()=>{user=u;go();});
+        else if (s.val().password===p){user=u;go();}
+        else alert('Неверный пароль!');
+    });
+}
+function go(){
+    localStorage.setItem('lobbyUser',user); localStorage.setItem('lastUser',user);
+    document.getElementById('auth-section').style.display='none';
+    document.getElementById('game-section').style.display='block';
+    document.getElementById('display-name').innerText=user.toUpperCase();
+    initCanvas(); initSpeedSlider(); applyVolumes(); renderPlaylist();
+    db.ref('players/'+user).on('value',snap=>{
+        const d=snap.val(); if(!d)return;
+        document.getElementById('balance').innerText=d.balance;
+        document.getElementById('history').innerHTML=(d.history||[]).slice().reverse().map(h=>'<div style="padding:2px 0;border-bottom:1px solid rgba(255,180,0,0.06);">> '+h+'</div>').join('');
+    });
+}
+const _lu=localStorage.getItem('lobbyUser');
+if(_lu){user=_lu;setTimeout(go,50);}
+
+// ── SPEED SLIDER ──
+let speedRatio = 0.5; // 0=slow, 1=fast
+const speedNames = ['ЧЕРЕПАХА','ТИХО','СРЕДНЯЯ','БЫСТРО','ТУРБО'];
+
+function initSpeedSlider(){
+    const track = document.getElementById('speed-track');
+    updateSpeedVisual();
+
+    function getR(e){
+        const rect=track.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        return Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+    }
+    function onMove(e){ e.preventDefault(); speedRatio=getR(e); updateSpeedVisual(); }
+    function onUp(){ track.removeEventListener('mousemove',onMove); track.removeEventListener('touchmove',onMove); }
+
+    track.addEventListener('mousedown',e=>{ speedRatio=getR(e); updateSpeedVisual(); track.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp,{once:true}); });
+    track.addEventListener('touchstart',e=>{ speedRatio=getR(e); updateSpeedVisual(); track.addEventListener('touchmove',onMove,{passive:false}); document.addEventListener('touchend',onUp,{once:true}); },{passive:false});
+}
+
+function updateSpeedVisual(){
+    const fill=document.getElementById('speed-fill');
+    const cursor=document.getElementById('speed-cursor');
+    const label=document.getElementById('speed-val-label');
+    const pct=speedRatio*100;
+    // Color: green→yellow→red
+    const r=Math.round(speedRatio*255);
+    const g=Math.round((1-speedRatio)*200+55);
+    const color=`rgb(${r},${g},40)`;
+    fill.style.width=pct+'%';
+    fill.style.background=`linear-gradient(90deg,#00c853,${color})`;
+    cursor.style.left=`calc(${pct}% - 14px)`;
+    cursor.style.background=color;
+    cursor.style.color='#fff';
+    cursor.style.boxShadow=`0 0 10px ${color}`;
+    const idx=Math.floor(speedRatio*4.99);
+    label.textContent=speedNames[Math.max(0,Math.min(4,idx))];
+    label.style.color=color;
+}
+
+// ── CANVAS ──
+const canvas=document.getElementById('sky');
+const ctx=canvas.getContext('2d');
+let gameRunning=false, animId=null;
+let planeY, planeVY;
+let winnings=0, bet=5;
+let distance=0;
+let islandSafeZone=false;
+let tokens=[], islands=[], particles=[], clouds=[];
+let bgOffset=0, frameCount=0;
+let tokenSpawnTimer=0, islandSpawnTimer=0;
+let takeoffPhase=false, takeoffProgress=0; // for takeoff animation
+const PLANE_X_RATIO=0.22;
+
+function initCanvas(){
+    canvas.width=canvas.offsetWidth;
+    canvas.height=canvas.offsetHeight;
+    spawnClouds();
+    drawIdle();
+}
+
+function spawnClouds(){
+    clouds=[];
+    for(let i=0;i<6;i++) clouds.push({x:Math.random()*canvas.width,y:20+Math.random()*canvas.height*0.55,w:35+Math.random()*55,spd:0.15+Math.random()*0.25,a:0.08+Math.random()*0.12});
+}
+
+// ── DRAW FUNCTIONS ──
+function drawBg(off){
+    const g=ctx.createLinearGradient(0,0,0,canvas.height);
+    g.addColorStop(0,'#040b14'); g.addColorStop(0.55,'#08182e'); g.addColorStop(1,'#0b2244');
+    ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+    // stars
+    ctx.fillStyle='rgba(255,255,255,0.55)';
+    for(let i=0;i<35;i++){
+        const sx=((i*137+off*0.08)%(canvas.width+10)+canvas.width+10)%(canvas.width+10);
+        const sy=(i*71)%(canvas.height*0.65);
+        ctx.beginPath(); ctx.arc(sx,sy,i%4===0?1.4:0.7,0,Math.PI*2); ctx.fill();
+    }
+}
+
+function drawClouds(par){
+    clouds.forEach(c=>{
+        const x=((c.x-bgOffset*par)%(canvas.width+c.w)+canvas.width+c.w)%(canvas.width+c.w)-c.w;
+        ctx.save(); ctx.globalAlpha=c.a; ctx.fillStyle='#7a9abf';
+        ctx.beginPath();
+        ctx.arc(x,c.y,c.w*0.32,0,Math.PI*2); ctx.arc(x+c.w*0.28,c.y-c.w*0.09,c.w*0.25,0,Math.PI*2); ctx.arc(x+c.w*0.55,c.y,c.w*0.28,0,Math.PI*2);
+        ctx.fill(); ctx.restore();
+    });
+}
+
+function drawGround(yPos){
+    // Ground strip (shown during takeoff)
+    const gg=ctx.createLinearGradient(0,yPos,0,canvas.height);
+    gg.addColorStop(0,'#1a4a1a'); gg.addColorStop(0.3,'#2d6b2d'); gg.addColorStop(1,'#0a200a');
+    ctx.fillStyle=gg; ctx.fillRect(0,yPos,canvas.width,canvas.height-yPos);
+    // Runway
+    ctx.fillStyle='#444'; ctx.fillRect(0,yPos,canvas.width,6);
+    ctx.strokeStyle='rgba(255,255,0,0.4)'; ctx.lineWidth=2; ctx.setLineDash([20,15]);
+    ctx.beginPath(); ctx.moveTo(0,yPos+3); ctx.lineTo(canvas.width,yPos+3); ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function drawWater(){
+    const wy=canvas.height-16;
+    const wg=ctx.createLinearGradient(0,wy-8,0,canvas.height);
+    wg.addColorStop(0,'#0a4a8a'); wg.addColorStop(1,'#051530');
+    ctx.save(); ctx.globalAlpha=0.75; ctx.fillStyle=wg;
+    ctx.beginPath(); ctx.moveTo(0,wy);
+    for(let x=0;x<=canvas.width;x+=18){
+        ctx.lineTo(x,wy+Math.sin((x+frameCount*1.8)*0.09)*3.5);
+    }
+    ctx.lineTo(canvas.width,canvas.height); ctx.lineTo(0,canvas.height); ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+function drawIslands(){
+    islandSafeZone=false;
+    islands.forEach(isl=>{
+        if(!isl.visible)return;
+        const ix=((isl.x-bgOffset)%(canvas.width*5)+canvas.width*5)%(canvas.width*5);
+        if(ix<-isl.w||ix>canvas.width+isl.w)return;
+        const iy=canvas.height-24;
+        ctx.save(); ctx.globalAlpha=isl.a||1;
+        // Shadow
+        ctx.fillStyle='rgba(0,80,150,0.5)';
+        ctx.beginPath(); ctx.ellipse(ix,iy+10,isl.w*0.65,8,0,0,Math.PI*2); ctx.fill();
+        // Sand
+        const sg=ctx.createRadialGradient(ix,iy+5,0,ix,iy+5,isl.w*0.5);
+        sg.addColorStop(0,'#d4a843'); sg.addColorStop(1,'#7a540f');
+        ctx.fillStyle=sg;
+        ctx.beginPath(); ctx.ellipse(ix,iy+6,isl.w/2,9,0,0,Math.PI*2); ctx.fill();
+        // Grass
+        ctx.fillStyle='#2a7a2a';
+        ctx.beginPath(); ctx.ellipse(ix,iy+2,isl.w*0.3,6,0,0,Math.PI*2); ctx.fill();
+        // Palm trunk
+        ctx.strokeStyle='#5a3a00'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(ix+2,iy+2); ctx.bezierCurveTo(ix,iy-6,ix-6,iy-10,ix-5,iy-16); ctx.stroke();
+        // Palm leaves
+        ctx.fillStyle='#1a6b1a';
+        [[-10,-2],[0,-6],[8,-1],[-6,-6],[4,-6]].forEach(([dx,dy])=>{
+            ctx.beginPath(); ctx.ellipse(ix-5+dx,iy-16+dy,6,3,Math.atan2(dy,dx),0,Math.PI*2); ctx.fill();
+        });
+        ctx.restore();
+        // Safe zone check
+        const px=canvas.width*PLANE_X_RATIO;
+        if(Math.abs(px-ix)<isl.w/2+12&&planeY>iy-28) islandSafeZone=true;
+    });
+}
+
+function drawTokens(){
+    tokens.forEach(t=>{
+        if(t.collected)return;
+        const tx=((t.x-bgOffset)%(canvas.width*5)+canvas.width*5)%(canvas.width*5);
+        if(tx<-40||tx>canvas.width+40)return;
+        ctx.save(); ctx.globalAlpha=t.a||1;
+        const pos=t.value>0||(t.type==='mult'&&t.value>1);
+        const col=pos?'#00e676':'#ff4444';
+        // Glow
+        ctx.shadowColor=col; ctx.shadowBlur=14;
+        if(t.type==='mult'){
+            ctx.fillStyle=col+'30'; ctx.strokeStyle=col; ctx.lineWidth=2;
+            ctx.beginPath(); ctx.arc(tx,t.y,17,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        } else {
+            ctx.fillStyle=col+'30'; ctx.strokeStyle=col; ctx.lineWidth=1.5;
+            ctx.beginPath();
+            ctx.moveTo(tx,t.y-15); ctx.lineTo(tx+12,t.y); ctx.lineTo(tx,t.y+15); ctx.lineTo(tx-12,t.y);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+        }
+        ctx.shadowBlur=0; ctx.fillStyle=col;
+        ctx.font='bold 11px Fredoka One,cursive'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(t.label,tx,t.y);
+        ctx.restore();
+        // Collect check
+        const px=canvas.width*PLANE_X_RATIO;
+        if(Math.abs(px-tx)<22&&Math.abs(planeY-t.y)<22) collectToken(t);
+    });
+}
+
+function collectToken(t){
+    t.collected=true;
+    // Определяем направление ДО изменения winnings
+    let isPositive;
+    if(t.type==='mult') isPositive = t.value >= 1.0;
+    else isPositive = t.value > 0;
+
+    if(t.type==='mult') winnings=Math.max(0,Math.round(winnings*t.value*10)/10);
+    else winnings=Math.max(0,winnings+t.value);
+
+    spawnParticles(canvas.width*PLANE_X_RATIO,planeY,isPositive);
+    updateWinDisplay(winnings,isPositive);
+    // Подъём или опускание
+    if(isPositive) planeVY=Math.min(planeVY,-1.8); // подбрасываем вверх
+    else planeVY+=1.6;                              // тянем вниз
+}
+
+function updateWinDisplay(v,up){
+    const el=document.getElementById('win-val');
+    el.textContent=v.toFixed(1)+' АР';
+    el.className='win-val '+(up?'bump':'drop');
+    setTimeout(()=>el.className='win-val',400);
+}
+
+function spawnParticles(x,y,pos){
+    const col=pos?'#ffd700':'#ff4444';
+    for(let i=0;i<7;i++) particles.push({x,y,vx:(Math.random()-.5)*3,vy:-1-Math.random()*2,a:1,col,life:40});
+}
+
+function drawParticles(){
+    particles=particles.filter(p=>p.life>0);
+    particles.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy; p.vy+=0.06; p.life--; p.a=p.life/40;
+        ctx.save(); ctx.globalAlpha=p.a; ctx.fillStyle=p.col;
+        ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2); ctx.fill(); ctx.restore();
+    });
+}
+
+// ── PLANE - proper airplane shape ──
+function drawPlane(x,y,tilt){
+    ctx.save(); ctx.translate(x,y); ctx.rotate(tilt);
+    // Body
+    ctx.fillStyle='#d0d8f0';
+    ctx.beginPath();
+    ctx.moveTo(-28,0); ctx.bezierCurveTo(-20,-6,10,-7,28,-2); ctx.bezierCurveTo(32,0,28,2,10,3); ctx.bezierCurveTo(-2,4,-20,5,-28,0); ctx.closePath(); ctx.fill();
+    // Cockpit
+    ctx.fillStyle='#88bbee';
+    ctx.beginPath();
+    ctx.moveTo(18,-2); ctx.bezierCurveTo(26,-2,30,0,28,-2); ctx.bezierCurveTo(24,-5,12,-5,10,-3); ctx.closePath(); ctx.fill();
+    // Nose
+    ctx.fillStyle='#e8ecf8';
+    ctx.beginPath();
+    ctx.moveTo(28,-2); ctx.bezierCurveTo(32,-1,34,0,32,1); ctx.bezierCurveTo(30,2,26,2,24,1); ctx.closePath(); ctx.fill();
+    // Main wings
+    ctx.fillStyle='#8899cc';
+    ctx.beginPath();
+    ctx.moveTo(4,0); ctx.lineTo(-8,-22); ctx.lineTo(-16,-22); ctx.lineTo(-12,0); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(4,0); ctx.lineTo(-8,22); ctx.lineTo(-16,22); ctx.lineTo(-12,0); ctx.closePath(); ctx.fill();
+    // Wing tips (angled up)
+    ctx.fillStyle='#aabbdd';
+    ctx.beginPath(); ctx.moveTo(-16,-22); ctx.lineTo(-14,-28); ctx.lineTo(-20,-22); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-16,22); ctx.lineTo(-14,28); ctx.lineTo(-20,22); ctx.closePath(); ctx.fill();
+    // Tail fin
+    ctx.fillStyle='#6677aa';
+    ctx.beginPath();
+    ctx.moveTo(-24,0); ctx.lineTo(-32,-12); ctx.lineTo(-28,0); ctx.closePath(); ctx.fill();
+    // Horizontal stabilizers
+    ctx.fillStyle='#7788bb';
+    ctx.beginPath(); ctx.moveTo(-22,0); ctx.lineTo(-30,-8); ctx.lineTo(-28,0); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-22,0); ctx.lineTo(-30,8); ctx.lineTo(-28,0); ctx.closePath(); ctx.fill();
+    // Windows
+    ctx.fillStyle='#bbddff';
+    for(let i=0;i<4;i++){ ctx.beginPath(); ctx.ellipse(14-i*7,-2,2.5,3.5,0,0,Math.PI*2); ctx.fill(); }
+    // Engine
+    ctx.shadowColor='#4488ff'; ctx.shadowBlur=8;
+    ctx.fillStyle='#1a55cc';
+    ctx.beginPath(); ctx.ellipse(-4,12,4,2.5,0.2,0,Math.PI*2); ctx.fill();
+    // Engine exhaust
+    ctx.shadowColor='#ff8800'; ctx.shadowBlur=10;
+    ctx.fillStyle='rgba(255,120,0,0.7)';
+    ctx.beginPath(); ctx.ellipse(-8,12,3,1.5,0.2,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+}
+
+function drawIdle(){
+    if(gameRunning)return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawBg(0); drawClouds(0.5);
+    drawGround(canvas.height*0.72);
+    drawWater();
+    drawPlane(canvas.width*PLANE_X_RATIO,canvas.height*0.65,0);
+    ctx.fillStyle='rgba(100,180,255,0.45)';
+    ctx.font='bold 11px Nunito'; ctx.textAlign='center';
+    ctx.fillText('Выбери ставку и скорость',canvas.width/2,canvas.height-8);
+}
+
+// ── TOKEN SPAWNING ──
+function spawnToken(){
+    const rf=Math.min(distance/900,0.82);
+    const isNeg=Math.random()<(0.08+rf*0.48);
+    const isMult=Math.random()<0.38;
+    let value,label,type;
+    if(isMult){
+        type='mult';
+        if(isNeg){ value=0.3+Math.random()*0.4; label='×'+value.toFixed(1); }
+        else {
+            const opts=rf>0.5?[1.3,1.5,1.8,2]:[1.5,2,2.5,3,4,5];
+            value=opts[Math.floor(Math.random()*opts.length)];
+            label='×'+value;
+        }
+    } else {
+        type='ar';
+        if(isNeg){ value=-(1+Math.floor(Math.random()*Math.max(1,bet*0.35))); label=value+' АР'; }
+        else {
+            const base=Math.ceil(bet*(0.25+Math.random()*0.55));
+            value=rf>0.5?Math.ceil(base*(1+Math.random()*1.5)):base;
+            label='+'+value+' АР';
+        }
+    }
+    tokens.push({x:bgOffset+canvas.width+20+Math.random()*60,y:18+Math.random()*(canvas.height-70),type,value,label,collected:false,a:1});
+}
+
+function spawnIsland(){
+    const rf=Math.min(distance/900,0.82);
+    const visible=Math.random()<(0.72-rf*0.58);
+    islands.push({x:bgOffset+canvas.width+70+Math.random()*60,w:45+Math.random()*30,visible,a:1});
+}
+
+// ── GAME LOOP ──
+function gameLoop(){
+    if(!gameRunning)return;
+    frameCount++;
+    const spd=0.5+speedRatio*1.8;
+    bgOffset+=spd;
+    distance+=spd;
+
+    const minY=12, maxY=canvas.height-30;
+
+    if(takeoffPhase){
+        // Взлёт: плавно поднимаемся до пика, гравитация выключена
+        takeoffProgress += 0.005 + speedRatio*0.007;
+        const topY = canvas.height * (0.58 - speedRatio * 0.44); // медленно=58%, быстро=14%
+        const startY = canvas.height * 0.82;
+        // Плавная кривая взлёта
+        const t = Math.min(1, takeoffProgress);
+        planeY = startY + (topY - startY) * (t < 0.5 ? 2*t*t : -1+(4-2*t)*t);
+        planeVY = 0;
+        if(takeoffProgress >= 1){
+            takeoffPhase = false;
+            planeVY = 0; // начинаем с нулевой скорости на пике
+        }
+    } else {
+        // После взлёта — гравитация
+        const gravity = 0.014 + speedRatio * 0.016;
+        planeVY += gravity;
+        planeY += planeVY;
+    }
+
+    if(planeY<minY){planeY=minY;planeVY=0;}
+
+    if(planeY>=maxY){
+        if(islandSafeZone) endGame(true);
+        else endGame(false);
+        return;
+    }
+
+    // Spawn tokens — часто и близко
+    if(!takeoffPhase){
+        tokenSpawnTimer++;
+        const rate = Math.max(20, 55 - distance/30);
+        if(tokenSpawnTimer>=rate){spawnToken();tokenSpawnTimer=0;}
+        islandSpawnTimer++;
+        const irate = Math.max(80, 200 - distance/12);
+        if(islandSpawnTimer>=irate){spawnIsland();islandSpawnTimer=0;}
+    }
+
+    // DRAW
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawBg(bgOffset);
+    drawClouds(0.28);
+
+    // Show ground during takeoff
+    // Земля только во время взлёта — уезжает вниз
+    if(takeoffPhase){
+        const groundY = canvas.height * 0.72 + takeoffProgress * canvas.height * 0.6;
+        drawGround(groundY);
+    }
+
+    drawIslands();
+    if(!takeoffPhase) drawTokens();
+    drawWater();
+    drawParticles();
+
+    const tilt=Math.max(-0.35,Math.min(0.25,planeVY*0.07));
+    drawPlane(canvas.width*PLANE_X_RATIO,planeY,tilt);
+
+    ctx.fillStyle='rgba(150,200,255,0.22)';
+    ctx.font='10px Nunito'; ctx.textAlign='right';
+    ctx.fillText('📏 '+Math.floor(distance)+'м',canvas.width-8,14);
+
+    animId=requestAnimationFrame(gameLoop);
+}
+
+// ── CONTROLS ──
+async function startGame(){
+    bet=parseInt(document.getElementById('bet-input').value)||5;
+    if(bet<5){alert('Минимальная ставка 5 АР!');return;}
+    const snap=await db.ref('players/'+user).once('value');
+    const d=snap.val();
+    if(d.balance<bet){alert('Недостаточно АР!');return;}
+    await db.ref('players/'+user+'/balance').set(d.balance-bet);
+
+    gameRunning=true; winnings=0; distance=0; bgOffset=0; frameCount=0;
+    tokens=[]; islands=[]; particles=[]; tokenSpawnTimer=0; islandSpawnTimer=0;
+    islandSafeZone=false; takeoffPhase=true; takeoffProgress=0;
+
+    // Старт внизу, плавный взлёт
+    planeY=canvas.height*0.82;
+    planeVY=-1.2; // медленный плавный подъём
+
+    updateWinDisplay(0,true);
+    document.getElementById('start-btn').style.display='none';
+    document.getElementById('dive-btn').style.display='block';
+    document.getElementById('bet-input').disabled=true;
+
+    gameLoop();
+}
+
+// Dive button - hold to dive
+const diveBtn=document.getElementById('dive-btn');
+let diveInterval=null;
+function startDive(){if(!gameRunning)return;diveInterval=setInterval(()=>{if(gameRunning)planeVY+=0.6;},50);}
+function stopDive(){clearInterval(diveInterval);diveInterval=null;}
+diveBtn.addEventListener('mousedown',startDive);
+diveBtn.addEventListener('touchstart',e=>{e.preventDefault();startDive();},{passive:false});
+document.addEventListener('mouseup',stopDive);
+document.addEventListener('touchend',stopDive);
+
+async function endGame(landed){
+    gameRunning=false; cancelAnimationFrame(animId);
+    document.getElementById('start-btn').style.display='block';
+    document.getElementById('dive-btn').style.display='none';
+    document.getElementById('bet-input').disabled=false;
+
+    const snap=await db.ref('players/'+user).once('value');
+    const d=snap.val();
+
+    if(landed&&winnings>0){
+        await db.ref('players/'+user).update({balance:d.balance+Math.round(winnings),history:(d.history||[]).concat(['✈️ ПОЛЁТ: +'+Math.round(winnings)+' АР']).slice(-15)});
+        document.getElementById('result-icon').textContent='🏝️';
+        document.getElementById('result-text').textContent='ПОСАДКА!';
+        document.getElementById('result-sub').textContent='Ты забрал '+Math.round(winnings)+' АР!';
+    } else if(landed){
+        await db.ref('players/'+user+'/history').set((d.history||[]).concat(['✈️ ПОЛЁТ: посадка 0 АР']).slice(-15));
+        document.getElementById('result-icon').textContent='🏝️';
+        document.getElementById('result-text').textContent='ПОСАДКА!';
+        document.getElementById('result-sub').textContent='Собранного нет';
+    } else {
+        await db.ref('players/'+user+'/history').set((d.history||[]).concat(['✈️ ПОЛЁТ: утонул −'+bet+' АР']).slice(-15));
+        document.getElementById('result-icon').textContent='💦';
+        document.getElementById('result-text').textContent='УПАЛ В ВОДУ!';
+        document.getElementById('result-sub').textContent='Потеря: '+bet+' АР';
+    }
+    document.getElementById('result-overlay').classList.add('show');
+    drawIdle();
+}
+
+function hideResult(){document.getElementById('result-overlay').classList.remove('show');drawIdle();}
+
+// ── MUSIC ──
+const playlist=[
+    {name:"Бэм Бэм Бэм",file:"bam_bam_bam_1.mp3"},{name:"Nobody",file:"nobody.mp3"},
+    {name:"Баклажан",file:"baclachn.mp3"},{name:"Пау Пау Пау",file:"pay_pay_pay.mp3"},
+    {name:"Bad Piggies",file:"bad_piggies.mp3"},{name:"Ананасовый сироп",file:"ananasevi_sirop_1.mp3"},
+    {name:"Концерт Артура №1",file:"consert_artyra№1.mp3"},{name:"Концерт Артура №2",file:"consert_artyra№2.mp3"},
+    {name:"Концерт Артура №3",file:"consert_artyra№3.mp3"},{name:"баблгам №1",file:"bablgam_1.mp3"},
+    {name:"баблгам №2",file:"bablgam_2.mp3"},{name:"Angry Birds",file:"angry_birds.mp3"},
+    {name:"оркестр-БЭМ",file:"orcestr_BAM_1.mp3"},{name:"птички",file:"ptichki_1.mp3"}
+];
+let currentTrackIdx=parseInt(localStorage.getItem('musicTrack')||'0');
+let bgMusic=new Audio(playlist[currentTrackIdx].file);
+bgMusic.loop=localStorage.getItem('musicLoop')==='1'; bgMusic.volume=0.3;
+let mOn=true;
+bgMusic.onended=()=>{if(!bgMusic.loop)playTrack((currentTrackIdx+1)%playlist.length);};
+document.addEventListener('click',function sm(){if(mOn)bgMusic.play().catch(()=>{});document.removeEventListener('click',sm);},{once:true});
+
+function renderPlaylist(){
+    document.getElementById('music-playlist').innerHTML=playlist.map((t,i)=>`
+        <div class="music-item ${i===currentTrackIdx?'active':''}">
+            <label style="flex:1;cursor:pointer;" onclick="playTrack(${i})">${t.name}</label>
+            <input type="checkbox" class="loop-checkbox" id="loop-${i}" onclick="updateLoop(${i})" ${i===currentTrackIdx&&bgMusic.loop?'checked':''}>
+        </div>`).join('');
+}
+function updateLoop(i){if(i===currentTrackIdx){bgMusic.loop=document.getElementById('loop-'+i).checked;localStorage.setItem('musicLoop',bgMusic.loop?'1':'0');}}
+function playTrack(i){
+    bgMusic.pause(); currentTrackIdx=i; localStorage.setItem('musicTrack',i);
+    bgMusic=new Audio(playlist[i].file);
+    bgMusic.loop=document.getElementById('loop-'+i)?document.getElementById('loop-'+i).checked:false;
+    localStorage.setItem('musicLoop',bgMusic.loop?'1':'0');
+    bgMusic.volume=document.getElementById('music-vol').value;
+    if(mOn)bgMusic.play().catch(()=>{});
+    bgMusic.onended=()=>{if(!bgMusic.loop)playTrack((currentTrackIdx+1)%playlist.length);};
+    renderPlaylist();
+}
+function applyVolumes(){
+    const v=document.getElementById('music-vol')?document.getElementById('music-vol').value:0.3;
+    bgMusic.volume=mOn?v:0;
+    if(mOn)bgMusic.play().catch(()=>{}); else bgMusic.pause();
+    const mt=document.getElementById('m-toggle');
+    if(mt){mt.className=mOn?'mute-toggle on':'mute-toggle off';mt.textContent=mOn?'🎵 МУЗЫКА: ВКЛ':'🎵 МУЗЫКА: ВЫКЛ';}
+}
+function toggleMute(){mOn=!mOn;applyVolumes();}
+function toggleSettings(e){e.stopPropagation();document.getElementById('settings-panel').style.display='block';renderPlaylist();}
+function closePanels(){
+    document.getElementById('settings-panel').style.display='none';
+    document.getElementById('admin-panel').style.display='none';
+    document.getElementById('admin-profile-panel').style.display='none';
+}
+
+function openAdmin(e){
+    e.stopPropagation();
+    if(prompt('Пароль:')==='1337'){
+        document.getElementById('admin-panel').style.display='block';
+        loadAdminUsers();
+    }
+}
+
+let selAdminUser='';
+function loadAdminUsers(){
+    db.ref('players').on('value',s=>{
+        const list=document.getElementById('admin-users-list');
+        list.innerHTML='';
+        s.forEach(c=>{
+            const d=document.createElement('div');
+            d.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid rgba(255,180,0,0.07);color:rgba(255,220,150,0.8);font-size:13px;font-weight:700;border-radius:8px;cursor:pointer;transition:background .2s;';
+            d.onmouseover=()=>d.style.background='rgba(255,100,0,0.07)';
+            d.onmouseout=()=>d.style.background='transparent';
+            d.innerHTML=`<span style="display:flex;align-items:center;gap:8px;"><span onclick="event.stopPropagation();apDeleteUser('${c.key}')" style="color:#ef5350;font-size:15px;cursor:pointer;padding:2px 5px;border-radius:4px;" onmouseover="this.style.background='rgba(255,60,60,0.18)'" onmouseout="this.style.background='transparent'">✖</span>${c.key}</span><span style="color:rgba(255,200,0,0.5);">${c.val().balance} АР</span>`;
+            d.onclick=()=>openAdminProfile(c.key);
+            list.appendChild(d);
+        });
+    });
+}
+
+function apDeleteUser(u){
+    if(confirm('Удалить аккаунт «'+u+'»?')) db.ref('players/'+u).remove();
+}
+
+function openAdminProfile(u){
+    selAdminUser=u;
+    document.getElementById('admin-panel').style.display='none';
+    document.getElementById('admin-profile-panel').style.display='block';
+    document.getElementById('ap-name').textContent='👤 '+u.toUpperCase();
+    db.ref('players/'+u).once('value').then(s=>{
+        const d=s.val()||{};
+        document.getElementById('ap-bal').textContent=d.balance||0;
+        document.getElementById('ap-history').innerHTML=(d.history||[]).slice().reverse().map(h=>'<div style="padding:2px 0;border-bottom:1px solid rgba(255,180,0,0.06);">> '+h+'</div>').join('');
+    });
+}
+
+function apMod(n){
+    db.ref('players/'+selAdminUser+'/balance').once('value').then(s=>{
+        const nb=Math.max(0,(s.val()||0)+n);
+        db.ref('players/'+selAdminUser+'/balance').set(nb);
+        document.getElementById('ap-bal').textContent=nb;
+    });
+}
+
+function apDelete(){
+    if(confirm('Удалить аккаунт «'+selAdminUser+'»?')){
+        db.ref('players/'+selAdminUser).remove();
+        document.getElementById('admin-profile-panel').style.display='none';
+        document.getElementById('admin-panel').style.display='block';
+    }
+}
+
+function promptPromo(){
+    const input=prompt('Введи промокод:'); if(!input)return;
+    const code=input.trim().toLowerCase();
+    const codes={'mell':3,'мелл':5,'меллстрой':5};
+    if(!(code in codes)){alert('❌ Промокод не найден!');return;}
+    db.ref('players/'+user+'/usedPromos/'+code).once('value').then(snap=>{
+        if(snap.exists()&&snap.val()===true){alert('⛔ Уже использован!');return;}
+        const r=codes[code];
+        db.ref('players/'+user).once('value').then(s=>{
+            const d=s.val();
+            db.ref('players/'+user).update({balance:(d.balance||0)+r,['usedPromos/'+code]:true,history:(d.history||[]).concat(['🎁 ПРОМО «'+code+'» +'+r+' АР']).slice(-15)});
+            alert('✅ +'+r+' АР!');
+        });
+    });
+}
+window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;if(!gameRunning)drawIdle();}});
+</script>
+</body>
+</html>
