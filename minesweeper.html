@@ -72,7 +72,8 @@
         .cell.revealed { cursor: default; transform: none !important; }
         .cell.empty { background: linear-gradient(180deg, #1a1a2e, #0d0d1a); border-color: rgba(255,255,255,0.08); }
         .cell.coin-cell { background: linear-gradient(180deg, #2a1a00, #1a0d00); border-color: rgba(255,180,0,0.4); box-shadow: 0 0 10px rgba(255,180,0,0.2); }
-        .cell.bomb-cell { background: linear-gradient(180deg, #3a0000, #1a0000); border-color: rgba(255,0,0,0.5); box-shadow: 0 0 10px rgba(255,0,0,0.3); animation: bombShake 0.4s ease; }
+        .cell.xray-bomb { box-shadow: 0 0 8px rgba(255,0,0,0.6) !important; border-color: rgba(255,50,50,0.7) !important; }
+        .cell.xray-bomb::after { content: '💣'; position: absolute; font-size: 16px; opacity: 0.35; pointer-events: none; }
         @keyframes bombShake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
 
         /* STATUS */
@@ -251,6 +252,7 @@
         <div id="admin-panel" onclick="event.stopPropagation()">
             <div class="panel-title">👑 АДМИН-ПАНЕЛЬ</div>
             <div class="users-list-container"><div id="users-list"></div></div>
+            <button onclick="toggleXray()" id="xray-btn" style="width:100%;padding:10px;margin-bottom:8px;font-family:'Fredoka One',cursive;font-size:15px;letter-spacing:2px;color:#fff;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(180deg,#1565c0,#0d47a1);box-shadow:0 3px 0 #082788;">☢️ Х-РЕЙ: ВЫКЛ</button>
             <button onclick="closePanels()" class="btn-panel-close">✕ ЗАКРЫТЬ</button>
         </div>
 
@@ -443,6 +445,13 @@
         openedCount = 0;
         gameActive = true;
 
+        // Применяем х-рей если включён
+        if (xrayOn) {
+            document.querySelectorAll('.cell').forEach((cell, i) => {
+                if (board[i] === 'bomb') cell.classList.add('xray-bomb');
+            });
+        }
+
         // UI
         document.getElementById('start-btn').style.display = 'none';
         const cashout = document.getElementById('cashout-btn');
@@ -628,6 +637,20 @@
 
     function modBal(v) { db.ref('players/' + selU + '/balance').transaction(b => (b || 0) + v); }
     function backToAdmin() { document.getElementById('user-profile-panel').style.display = 'none'; document.getElementById('admin-panel').style.display = 'block'; }
+
+    let xrayOn = false;
+    function toggleXray() {
+        xrayOn = !xrayOn;
+        const btn = document.getElementById('xray-btn');
+        btn.textContent = xrayOn ? '☢️ Х-РЕЙ: ВКЛ' : '☢️ Х-РЕЙ: ВЫКЛ';
+        btn.style.background = xrayOn ? 'linear-gradient(180deg,#e65100,#bf360c)' : 'linear-gradient(180deg,#1565c0,#0d47a1)';
+        document.querySelectorAll('.cell').forEach((cell, i) => {
+            if (!cell.classList.contains('revealed')) {
+                if (xrayOn && board[i] === 'bomb') cell.classList.add('xray-bomb');
+                else cell.classList.remove('xray-bomb');
+            }
+        });
+    }
     function toggleSettings(e) { e.stopPropagation(); document.getElementById('settings-panel').style.display = 'block'; renderPlaylist(); }
     function closePanels() { ['settings-panel', 'admin-panel', 'user-profile-panel', 'chance-modal'].forEach(p => document.getElementById(p).style.display = 'none'); }
     function closeChanceModal() { document.getElementById('chance-modal').style.display = 'none'; }
