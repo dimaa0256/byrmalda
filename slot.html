@@ -374,6 +374,8 @@
     }
 
     function go() {
+        localStorage.setItem('lastUser', user);
+        localStorage.setItem('lobbyUser', user);
         document.getElementById('auth-section').style.display = 'none';
         document.getElementById('game-section').style.display = 'block';
         document.getElementById('display-name').innerText = user.toUpperCase();
@@ -589,7 +591,10 @@
     function toggleMute(t) { if (t === 'music') mOn = !mOn; else sOn = !sOn; applyVolumes(); }
 
     function verifyAge() { localStorage.setItem('adult', 'true'); document.getElementById('age-gate') && document.getElementById('age-gate').remove(); }
-    if (localStorage.getItem('adult') === 'true') { /* already verified */ }
+
+    // Автовход если вошли через лобби
+    const _lu = localStorage.getItem('lobbyUser');
+    if (_lu) { user = _lu; go(); }
 </script>
 </body>
 </html>

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🍓 БУРМАЛДА</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Nunito', sans-serif; }
@@ -18,76 +20,88 @@
         }
         .lobby {
             width: 400px; max-height: 96vh; overflow-y: auto; overflow-x: hidden;
-            position: relative; z-index: 10; border-radius: 28px; padding: 30px 20px 24px;
+            position: relative; z-index: 10; border-radius: 28px; padding: 24px 20px;
             background: linear-gradient(170deg, #1a0025 0%, #0d0018 60%, #1a0008 100%);
             border: 2px solid rgba(255,200,0,0.35);
-            box-shadow: 0 0 0 1px rgba(255,180,0,0.1), 0 0 40px rgba(200,0,0,0.4), 0 0 80px rgba(255,140,0,0.1), inset 0 1px 0 rgba(255,220,0,0.2);
+            box-shadow: 0 0 0 1px rgba(255,180,0,0.1), 0 0 40px rgba(200,0,0,0.4), inset 0 1px 0 rgba(255,220,0,0.2);
             scrollbar-width: thin; scrollbar-color: #8b0000 transparent;
         }
-        .lobby-title {
-            font-family: 'Fredoka One', cursive; font-size: 38px; text-align: center;
-            margin-bottom: 6px; letter-spacing: 2px; color: #fff;
+        .casino-title {
+            font-family: 'Fredoka One', cursive; font-size: 36px; text-align: center;
+            margin-bottom: 4px; letter-spacing: 2px; color: #fff;
             text-shadow: 0 0 10px #ff4400, 0 0 30px #ff2200, 2px 2px 0 #8b0000, 4px 4px 0 #5a0000;
             animation: titlePop 3s ease-in-out infinite;
         }
         @keyframes titlePop {
-            0%,100% { text-shadow: 0 0 10px #ff4400, 0 0 30px #ff2200, 2px 2px 0 #8b0000, 4px 4px 0 #5a0000; transform: scale(1); }
-            50% { text-shadow: 0 0 20px #ff6600, 0 0 50px #ff4400, 2px 2px 0 #8b0000, 4px 4px 0 #5a0000; transform: scale(1.02); }
+            0%,100% { transform: scale(1); } 50% { transform: scale(1.02); }
         }
-        .lobby-subtitle { text-align: center; font-size: 12px; font-weight: 800; letter-spacing: 4px; color: rgba(255,180,0,0.45); margin-bottom: 20px; text-transform: uppercase; }
-        .title-lights { display: flex; justify-content: center; gap: 8px; margin-bottom: 28px; }
-        .light-dot { width: 10px; height: 10px; border-radius: 50%; background: #ffd700; box-shadow: 0 0 6px #ffd700, 0 0 12px #ffaa00; animation: lightBlink 1.2s ease-in-out infinite; }
-        .light-dot:nth-child(2n) { animation-delay: 0.4s; background: #ff4400; box-shadow: 0 0 6px #ff4400, 0 0 12px #ff2200; }
+        .lobby-subtitle { text-align: center; font-size: 11px; font-weight: 800; letter-spacing: 4px; color: rgba(255,180,0,0.45); margin-bottom: 14px; text-transform: uppercase; }
+        .title-lights { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; }
+        .light-dot { width: 8px; height: 8px; border-radius: 50%; background: #ffd700; box-shadow: 0 0 6px #ffd700; animation: lightBlink 1.2s ease-in-out infinite; }
+        .light-dot:nth-child(2n) { animation-delay: 0.4s; background: #ff4400; box-shadow: 0 0 6px #ff4400; }
         .light-dot:nth-child(3n) { animation-delay: 0.8s; }
         @keyframes lightBlink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
-        .games-label { font-size: 10px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; color: rgba(255,180,0,0.4); text-align: center; margin-bottom: 16px; }
-        .games-grid { display: flex; flex-direction: column; gap: 14px; }
-        .game-card {
-            display: block; text-decoration: none;
-            background: linear-gradient(135deg, rgba(255,50,0,0.08), rgba(139,0,0,0.12));
-            border: 2px solid rgba(255,180,0,0.2); border-radius: 20px;
-            padding: 20px; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden;
-        }
+
+        /* AUTH */
+        input[type="text"], input[type="password"] { width: 100%; display: block; margin: 0 0 10px; padding: 13px 18px; border-radius: 14px; background: rgba(0,0,0,0.55); color: #fff; border: 2px solid rgba(255,100,0,0.3); text-align: center; font-size: 15px; font-family: 'Nunito', sans-serif; font-weight: 800; letter-spacing: 2px; outline: none; }
+        input::placeholder { color: rgba(255,180,100,0.35); font-size: 13px; }
+        .btn-login { width: 100%; padding: 14px; font-family: 'Fredoka One', cursive; font-size: 18px; letter-spacing: 4px; color: #fff; background: linear-gradient(180deg, #ff3300, #8b0000); border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 5px 0 #3a0000; transition: all 0.15s; margin-bottom: 14px; }
+        .btn-login:active { transform: translateY(4px); box-shadow: 0 1px 0 #3a0000; }
+
+        /* USER INFO */
+        .user-bar { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,180,0,0.2); border-radius: 16px; padding: 10px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .user-bar-name { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: rgba(255,180,100,0.5); text-transform: uppercase; margin-bottom: 2px; }
+        .user-bar-val { font-family: 'Fredoka One', cursive; font-size: 18px; color: #fff; }
+        .user-bar-bal { font-family: 'Fredoka One', cursive; font-size: 18px; color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.5); }
+        .btn-logout { padding: 6px 14px; background: transparent; border: 1px solid rgba(255,100,0,0.3); border-radius: 10px; color: rgba(255,150,100,0.6); font-size: 11px; font-weight: 800; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; }
+        .btn-logout:hover { border-color: #ff4400; color: #ff8844; }
+
+        /* GAMES */
+        .games-label { font-size: 10px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; color: rgba(255,180,0,0.4); text-align: center; margin-bottom: 12px; }
+        .games-grid { display: flex; flex-direction: column; gap: 12px; }
+        .game-card { display: block; text-decoration: none; background: linear-gradient(135deg, rgba(255,50,0,0.08), rgba(139,0,0,0.12)); border: 2px solid rgba(255,180,0,0.2); border-radius: 20px; padding: 18px; cursor: pointer; transition: all 0.25s; }
         .game-card:hover { border-color: rgba(255,215,0,0.5); transform: translateY(-3px); box-shadow: 0 8px 30px rgba(200,0,0,0.4); }
-        .game-card:active { transform: translateY(0px); }
-        .game-card-inner { display: flex; align-items: center; gap: 16px; }
-        .game-icon { font-size: 48px; filter: drop-shadow(0 0 8px rgba(255,180,0,0.5)); flex-shrink: 0; }
-        .game-name { font-family: 'Fredoka One', cursive; font-size: 22px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; text-shadow: 0 0 10px rgba(255,100,0,0.5); }
-        .game-desc { font-size: 12px; font-weight: 700; color: rgba(255,200,100,0.55); letter-spacing: 1px; line-height: 1.4; }
+        .game-card:active { transform: translateY(0); }
+        .game-card-inner { display: flex; align-items: center; gap: 14px; }
+        .game-icon { font-size: 44px; filter: drop-shadow(0 0 8px rgba(255,180,0,0.5)); flex-shrink: 0; }
+        .game-name { font-family: 'Fredoka One', cursive; font-size: 20px; color: #fff; margin-bottom: 3px; }
+        .game-desc { font-size: 11px; font-weight: 700; color: rgba(255,200,100,0.55); line-height: 1.4; }
         .game-arrow { font-size: 22px; color: rgba(255,215,0,0.4); transition: all 0.25s; flex-shrink: 0; }
         .game-card:hover .game-arrow { color: #ffd700; transform: translateX(4px); }
-        .game-tag { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
+        .game-tag { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; }
         .tag-slot { background: rgba(255,60,0,0.2); color: #ff8844; border: 1px solid rgba(255,80,0,0.3); }
         .tag-mine { background: rgba(60,200,60,0.15); color: #66dd66; border: 1px solid rgba(60,200,60,0.3); }
-        .divider { width: 100%; height: 1px; margin: 20px 0; background: linear-gradient(90deg, transparent, rgba(255,180,0,0.2), transparent); }
+
+        .divider { width: 100%; height: 1px; margin: 16px 0; background: linear-gradient(90deg, transparent, rgba(255,180,0,0.2), transparent); }
         .footer-text { text-align: center; font-size: 10px; font-weight: 800; color: rgba(255,100,0,0.25); letter-spacing: 3px; text-transform: uppercase; }
-        .music-fab { position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(180deg, #ff3300, #8b0000); box-shadow: 0 4px 0 #4a0000, 0 6px 16px rgba(200,0,0,0.4); border: none; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .music-fab:hover { filter: brightness(1.2); transform: scale(1.1); }
-        #music-panel { display: none; position: fixed; bottom: 80px; right: 16px; z-index: 101; width: 260px; background: linear-gradient(160deg, #180020, #0a0015); border: 2px solid rgba(255,200,0,0.4); padding: 16px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
-        .music-panel-title { font-family: 'Fredoka One', cursive; font-size: 16px; letter-spacing: 2px; color: #ffd700; text-align: center; margin-bottom: 12px; }
-        .music-list { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,180,0,0.15); border-radius: 12px; padding: 4px; max-height: 160px; overflow-y: auto; margin-bottom: 10px; scrollbar-width: thin; }
-        .music-item { display: flex; align-items: center; padding: 7px 10px; font-size: 12px; font-weight: 700; color: rgba(255,220,150,0.55); border-radius: 8px; cursor: pointer; }
-        .music-item:hover { background: rgba(255,100,0,0.07); }
-        .music-item.active { color: #ffd700; background: rgba(255,100,0,0.12); }
-        .loop-checkbox { width: 16px; height: 16px; margin-left: 8px; cursor: pointer; accent-color: #ff3300; flex-shrink: 0; }
-        .mute-toggle { padding: 8px 14px; border-radius: 10px; width: 100%; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 1px; cursor: pointer; border: 1px solid; margin-bottom: 8px; transition: all 0.2s; }
-        .on { background: rgba(46,125,50,0.2); color: #66bb6a; border-color: rgba(76,175,80,0.3); }
-        .off { background: rgba(192,57,43,0.2); color: #ef5350; border-color: rgba(231,76,60,0.3); }
-        input[type="range"] { width: 85%; display: block; margin: 0 auto 8px; accent-color: #ff3300; }
-        .btn-panel-close { width: 100%; padding: 8px; border-radius: 10px; background: transparent; color: rgba(255,180,0,0.45); border: 1px solid rgba(255,180,0,0.2); cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; transition: all 0.2s; }
-        .btn-panel-close:hover { border-color: #ffd700; color: #ffd700; }
 
         /* AGE GATE */
         #age-gate { position: fixed; inset: 0; background: radial-gradient(ellipse at center, #0d0010 0%, #000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; gap: 22px; }
         .age-icon { font-size: 64px; animation: ageBounce 2s ease-in-out infinite; }
         @keyframes ageBounce { 0%,100%{transform:scale(1) rotate(-3deg)} 50%{transform:scale(1.08) rotate(3deg)} }
-        .age-title { font-family: 'Fredoka One', cursive; font-size: 28px; letter-spacing: 4px; color: #fff; text-shadow: 0 0 20px #ff3300, 0 0 40px #ff0000; }
+        .age-title { font-family: 'Fredoka One', cursive; font-size: 28px; letter-spacing: 4px; color: #fff; text-shadow: 0 0 20px #ff3300; }
         .age-divider { width: 100px; height: 2px; background: linear-gradient(90deg, transparent, #ffd700, transparent); }
-        .btn-age { padding: 16px 52px; font-family: 'Fredoka One', cursive; font-size: 18px; letter-spacing: 3px; color: #fff; background: linear-gradient(180deg, #ff3300, #8b0000); border: none; border-radius: 18px; cursor: pointer; text-transform: uppercase; box-shadow: 0 6px 0 #3a0000, 0 10px 30px rgba(200,0,0,0.5); transition: all 0.2s; }
-        .btn-age:hover { filter: brightness(1.12); }
+        .btn-age { padding: 16px 52px; font-family: 'Fredoka One', cursive; font-size: 18px; letter-spacing: 3px; color: #fff; background: linear-gradient(180deg, #ff3300, #8b0000); border: none; border-radius: 18px; cursor: pointer; box-shadow: 0 6px 0 #3a0000; transition: all 0.2s; }
         .btn-age:active { transform: translateY(4px); }
-        .btn-age-decline { padding: 12px 40px; font-family: 'Fredoka One', cursive; font-size: 15px; letter-spacing: 2px; color: rgba(255,180,100,0.5); background: transparent; border: 1px solid rgba(255,100,0,0.25); border-radius: 14px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
-        .btn-age-decline:hover { color: rgba(255,180,100,0.8); border-color: rgba(255,100,0,0.5); }
+        .btn-age-decline { padding: 12px 40px; font-family: 'Fredoka One', cursive; font-size: 15px; color: rgba(255,180,100,0.5); background: transparent; border: 1px solid rgba(255,100,0,0.25); border-radius: 14px; cursor: pointer; transition: all 0.2s; }
+        .btn-age-decline:hover { color: rgba(255,180,100,0.8); }
+
+        /* MUSIC */
+        .music-fab { position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(180deg, #ff3300, #8b0000); box-shadow: 0 4px 0 #4a0000; border: none; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .music-fab:hover { filter: brightness(1.2); transform: scale(1.1); }
+        #music-panel { display: none; position: fixed; bottom: 80px; right: 16px; z-index: 101; width: 260px; background: linear-gradient(160deg, #180020, #0a0015); border: 2px solid rgba(255,200,0,0.4); padding: 16px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
+        .music-panel-title { font-family: 'Fredoka One', cursive; font-size: 16px; color: #ffd700; text-align: center; margin-bottom: 12px; }
+        .music-list { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,180,0,0.15); border-radius: 12px; padding: 4px; max-height: 160px; overflow-y: auto; margin-bottom: 10px; scrollbar-width: thin; }
+        .music-item { display: flex; align-items: center; padding: 7px 10px; font-size: 12px; font-weight: 700; color: rgba(255,220,150,0.55); border-radius: 8px; }
+        .music-item:hover { background: rgba(255,100,0,0.07); }
+        .music-item.active { color: #ffd700; background: rgba(255,100,0,0.12); }
+        .loop-checkbox { width: 16px; height: 16px; margin-left: 8px; cursor: pointer; accent-color: #ff3300; flex-shrink: 0; }
+        .mute-toggle { padding: 8px 14px; border-radius: 10px; width: 100%; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; border: 1px solid; margin-bottom: 8px; transition: all 0.2s; }
+        .on { background: rgba(46,125,50,0.2); color: #66bb6a; border-color: rgba(76,175,80,0.3); }
+        .off { background: rgba(192,57,43,0.2); color: #ef5350; border-color: rgba(231,76,60,0.3); }
+        input[type="range"] { width: 85%; display: block; margin: 0 auto 8px; accent-color: #ff3300; }
+        .btn-panel-close { width: 100%; padding: 8px; border-radius: 10px; background: transparent; color: rgba(255,180,0,0.45); border: 1px solid rgba(255,180,0,0.2); cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; transition: all 0.2s; }
+        .btn-panel-close:hover { border-color: #ffd700; color: #ffd700; }
     </style>
 </head>
 <body>
@@ -101,14 +115,38 @@
     <button class="btn-age" onclick="verifyAge()">МНЕ ЕСТЬ 18</button>
     <button class="btn-age-decline" onclick="window.location.href='https://www.google.com'">МНЕ НЕТ 18</button>
 </div>
+
 <div class="lobby">
-    <div class="lobby-title">🍓 БУРМАЛДА</div>
+    <div class="casino-title">🍓 БУРМАЛДА</div>
     <div class="lobby-subtitle">КАЗИНО</div>
     <div class="title-lights">
         <div class="light-dot"></div><div class="light-dot"></div>
         <div class="light-dot"></div><div class="light-dot"></div>
         <div class="light-dot"></div><div class="light-dot"></div>
     </div>
+
+    <!-- AUTH SECTION -->
+    <div id="auth-block">
+        <input type="text" id="username" placeholder="ЛОГИН">
+        <input type="password" id="password" placeholder="ПАРОЛЬ">
+        <button class="btn-login" onclick="login()">ВОЙТИ</button>
+    </div>
+
+    <!-- USER INFO (after login) -->
+    <div id="user-block" style="display:none;">
+        <div class="user-bar">
+            <div>
+                <div class="user-bar-name">игрок</div>
+                <div class="user-bar-val" id="lobby-username"></div>
+            </div>
+            <div style="text-align:right;">
+                <div class="user-bar-name">баланс</div>
+                <div class="user-bar-bal" id="lobby-balance">0 АР</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">ВЫЙТИ</button>
+        </div>
+    </div>
+
     <div class="games-label">выбери игру</div>
     <div class="games-grid">
         <a href="slot.html" class="game-card">
@@ -138,7 +176,7 @@
     <div class="footer-text">18+</div>
 </div>
 
-<!-- MUSIC FAB -->
+<!-- MUSIC -->
 <button class="music-fab" onclick="toggleMusicPanel(event)">🎵</button>
 <div id="music-panel" onclick="event.stopPropagation()">
     <div class="music-panel-title">🎵 ПЛЕЙЛИСТ</div>
@@ -147,6 +185,7 @@
     <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolume()">
     <button onclick="closeMusicPanel()" class="btn-panel-close">✕ ЗАКРЫТЬ</button>
 </div>
+
 <script>
     // COINS
     (function() {
@@ -163,6 +202,72 @@
             c.appendChild(el);
         }
     })();
+
+    // FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s",
+        databaseURL: "https://dima256-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "dima256",
+        appId: "1:208400853144:web:78eb608f5aacd57e8848ed"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // AGE GATE
+    function verifyAge() {
+        localStorage.setItem('adult', 'true');
+        document.getElementById('age-gate').remove();
+        if (mOn) bgMusic.play().catch(() => {});
+    }
+    if (localStorage.getItem('adult') === 'true') document.getElementById('age-gate').remove();
+
+    // AUTH
+    let currentUser = localStorage.getItem('lobbyUser') || '';
+
+    function login() {
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value;
+        if (!u || !p) return;
+        db.ref('players/' + u).once('value').then(s => {
+            if (!s.exists()) {
+                db.ref('players/' + u).set({ balance: 5, password: p, history: ["Регистрация"], usedPromos: {} })
+                    .then(() => { currentUser = u; saveAndShowUser(); });
+            } else if (s.val().password === p) {
+                currentUser = u; saveAndShowUser();
+            } else {
+                alert("Неверный пароль!");
+            }
+        });
+    }
+
+    function saveAndShowUser() {
+        localStorage.setItem('lobbyUser', currentUser);
+        localStorage.setItem('lastUser', currentUser);
+        showUserBlock();
+    }
+
+    function showUserBlock() {
+        if (!currentUser) return;
+        document.getElementById('auth-block').style.display = 'none';
+        document.getElementById('user-block').style.display = 'block';
+        document.getElementById('lobby-username').textContent = currentUser.toUpperCase();
+        db.ref('players/' + currentUser + '/balance').on('value', s => {
+            document.getElementById('lobby-balance').textContent = (s.val() || 0) + ' АР';
+        });
+    }
+
+    function logout() {
+        localStorage.removeItem('lobbyUser');
+        localStorage.removeItem('lastUser');
+        currentUser = '';
+        document.getElementById('user-block').style.display = 'none';
+        document.getElementById('auth-block').style.display = 'block';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    }
+
+    // Auto-login if was logged in
+    if (currentUser) showUserBlock();
 
     // MUSIC
     const playlist = [
@@ -181,34 +286,19 @@
         { name: "оркестр-БЭМ", file: "orcestr_BAM_1.mp3" },
         { name: "птички", file: "ptichki_1.mp3" }
     ];
-
-    let currentTrackIdx = 0;
-    let mOn = true;
+    let currentTrackIdx = 0, mOn = true;
     let bgMusic = new Audio(playlist[0].file);
-    bgMusic.loop = false;
-    bgMusic.volume = 0.3;
-
-    document.addEventListener('click', () => { if (mOn) bgMusic.play().catch(() => {}); }, { once: true });
+    bgMusic.loop = false; bgMusic.volume = 0.3;
     bgMusic.onended = () => { if (!bgMusic.loop) playTrack((currentTrackIdx + 1) % playlist.length); };
-
-    function verifyAge() {
-        localStorage.setItem('adult', 'true');
-        document.getElementById('age-gate').remove();
-        if (mOn) bgMusic.play().catch(() => {});
-    }
-    if (localStorage.getItem('adult') === 'true') document.getElementById('age-gate').remove();
 
     function renderPlaylist() {
         document.getElementById('music-playlist').innerHTML = playlist.map((t, i) => `
             <div class="music-item ${i === currentTrackIdx ? 'active' : ''}">
                 <label style="flex:1;cursor:pointer;" onclick="playTrack(${i})">${t.name}</label>
                 <input type="checkbox" class="loop-checkbox" id="loop-${i}" onclick="updateLoop(${i})" ${i === currentTrackIdx && bgMusic.loop ? 'checked' : ''}>
-            </div>
-        `).join('');
+            </div>`).join('');
     }
-
     function updateLoop(i) { if (i === currentTrackIdx) bgMusic.loop = document.getElementById('loop-' + i).checked; }
-
     function playTrack(i) {
         bgMusic.pause(); currentTrackIdx = i;
         bgMusic = new Audio(playlist[i].file);
@@ -218,11 +308,7 @@
         bgMusic.onended = () => { if (!bgMusic.loop) playTrack((currentTrackIdx + 1) % playlist.length); };
         renderPlaylist();
     }
-
-    function applyVolume() {
-        bgMusic.volume = mOn ? document.getElementById('music-vol').value : 0;
-    }
-
+    function applyVolume() { bgMusic.volume = mOn ? document.getElementById('music-vol').value : 0; }
     function toggleMute() {
         mOn = !mOn;
         if (mOn) { bgMusic.volume = document.getElementById('music-vol').value; bgMusic.play().catch(() => {}); }
@@ -230,15 +316,13 @@
         document.getElementById('m-toggle').className = mOn ? 'mute-toggle on' : 'mute-toggle off';
         document.getElementById('m-toggle').textContent = mOn ? '🎵 МУЗЫКА: ВКЛ' : '🎵 МУЗЫКА: ВЫКЛ';
     }
-
     function toggleMusicPanel(e) {
         e.stopPropagation();
-        const panel = document.getElementById('music-panel');
-        const isOpen = panel.style.display === 'block';
-        panel.style.display = isOpen ? 'none' : 'block';
-        if (!isOpen) renderPlaylist();
+        const p = document.getElementById('music-panel');
+        const open = p.style.display === 'block';
+        p.style.display = open ? 'none' : 'block';
+        if (!open) renderPlaylist();
     }
-
     function closeMusicPanel() { document.getElementById('music-panel').style.display = 'none'; }
     document.addEventListener('click', closeMusicPanel);
 </script>

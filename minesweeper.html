@@ -388,6 +388,8 @@
     }
 
     function go() {
+        localStorage.setItem('lastUser', user);
+        localStorage.setItem('lobbyUser', user);
         document.getElementById('auth-section').style.display = 'none';
         document.getElementById('game-section').style.display = 'block';
         document.getElementById('display-name').innerText = user.toUpperCase();
@@ -649,6 +651,10 @@
         [sndBomb, sndCoin, sndCashout].forEach(a => a.volume = sOn ? sVol : 0);
     }
     function toggleMute(t) { if (t === 'music') mOn = !mOn; else sOn = !sOn; applyVolumes(); }
+
+    // Автовход если вошли через лобби
+    const _lu = localStorage.getItem('lobbyUser');
+    if (_lu) { user = _lu; go(); }
 </script>
 </body>
 </html>
