@@ -334,9 +334,9 @@
         { name: "птички", file: "ptichki_1.mp3" }
     ];
 
-    let user = "", selU = "", currentTrackIdx = 0;
-    let bgMusic = new Audio(playlist[0].file);
-    bgMusic.loop = true;
+    let user = "", selU = "", currentTrackIdx = parseInt(localStorage.getItem('musicTrack') || '0');
+    let bgMusic = new Audio(playlist[currentTrackIdx].file);
+    bgMusic.loop = localStorage.getItem('musicLoop') === '1';
     let mOn = true, sOn = false;
 
     // GAME STATE
@@ -363,11 +363,18 @@
                 <input type="checkbox" class="loop-checkbox" id="loop-${i}" onclick="updateLoop(${i})" ${i === currentTrackIdx && bgMusic.loop ? 'checked' : ''}>
             </div>`).join('');
     }
-    function updateLoop(i) { if (i === currentTrackIdx) bgMusic.loop = document.getElementById('loop-' + i).checked; }
+    function updateLoop(i) {
+        if (i === currentTrackIdx) {
+            bgMusic.loop = document.getElementById('loop-' + i).checked;
+            localStorage.setItem('musicLoop', bgMusic.loop ? '1' : '0');
+        }
+    }
     function playTrack(i) {
         bgMusic.pause(); currentTrackIdx = i;
+        localStorage.setItem('musicTrack', i);
         bgMusic.src = playlist[i].file;
         bgMusic.loop = document.getElementById('loop-' + i) ? document.getElementById('loop-' + i).checked : false;
+        localStorage.setItem('musicLoop', bgMusic.loop ? '1' : '0');
         if (mOn) bgMusic.play().catch(() => {});
         renderPlaylist();
     }

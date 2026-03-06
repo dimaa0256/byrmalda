@@ -293,9 +293,9 @@
         { name: "оркестр-БЭМ", file: "orcestr_BAM_1.mp3" },
         { name: "птички", file: "ptichki_1.mp3" }
     ];
-    let currentTrackIdx = 0, mOn = true;
-    let bgMusic = new Audio(playlist[0].file);
-    bgMusic.loop = false; bgMusic.volume = 0.3;
+    let currentTrackIdx = parseInt(localStorage.getItem('musicTrack') || '0'), mOn = true;
+    let bgMusic = new Audio(playlist[currentTrackIdx].file);
+    bgMusic.loop = localStorage.getItem('musicLoop') === '1'; bgMusic.volume = 0.3;
     bgMusic.onended = () => { if (!bgMusic.loop) playTrack((currentTrackIdx + 1) % playlist.length); };
 
     function renderPlaylist() {
@@ -305,11 +305,18 @@
                 <input type="checkbox" class="loop-checkbox" id="loop-${i}" onclick="updateLoop(${i})" ${i === currentTrackIdx && bgMusic.loop ? 'checked' : ''}>
             </div>`).join('');
     }
-    function updateLoop(i) { if (i === currentTrackIdx) bgMusic.loop = document.getElementById('loop-' + i).checked; }
+    function updateLoop(i) {
+        if (i === currentTrackIdx) {
+            bgMusic.loop = document.getElementById('loop-' + i).checked;
+            localStorage.setItem('musicLoop', bgMusic.loop ? '1' : '0');
+        }
+    }
     function playTrack(i) {
         bgMusic.pause(); currentTrackIdx = i;
+        localStorage.setItem('musicTrack', i);
         bgMusic = new Audio(playlist[i].file);
         bgMusic.loop = document.getElementById('loop-' + i) ? document.getElementById('loop-' + i).checked : false;
+        localStorage.setItem('musicLoop', bgMusic.loop ? '1' : '0');
         bgMusic.volume = document.getElementById('music-vol').value;
         if (mOn) bgMusic.play().catch(() => {});
         bgMusic.onended = () => { if (!bgMusic.loop) playTrack((currentTrackIdx + 1) % playlist.length); };
