@@ -570,7 +570,7 @@ function gameLoop(){
         planeY -= riseSpeed;
         planeVY = 0;
         // Останавливаем взлёт когда достигли целевой высоты
-        const targetY = canvas.height * (0.40 - speedRatio * 0.35);
+        const targetY = canvas.height * (0.15 - speedRatio * 0.12); // медленно=15%, быстро=3%
         if (planeY <= targetY) {
             planeY = targetY;
             takeoffPhase = false;
@@ -582,7 +582,7 @@ function gameLoop(){
         planeY += planeVY;
     }
 
-    if(planeY<minY){planeY=minY;planeVY=0;}
+    if(planeY < minY && !takeoffPhase){planeY=minY; planeVY=0;}
 
     if(!takeoffPhase && planeY>=maxY){
         if(islandSafeZone) endGame(true);
