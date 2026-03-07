@@ -411,7 +411,7 @@
             let players = [];
             snap.forEach(ch=>{
                 const d = ch.val()||{};
-                // скрытых тоже показываем, просто серыми
+                if(d.hidden && !isAdmin) return; // скрытые видны только админу
                 // gamesCount = новые игры + то что осталось в истории
                 const fromHistory = (d.history||[]).filter(h=>h.includes('САПЁР')||h.includes('СЛОТ')||h.includes('ПОЛЁТ')).length;
                 const games = (d.gamesCount||0) + fromHistory;
