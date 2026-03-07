@@ -612,88 +612,14 @@
     function verifyAge() { localStorage.setItem('adult', 'true'); document.getElementById('age-gate') && document.getElementById('age-gate').remove(); }
 
     // Автовход если вошли через лобби
-    const _lu = localStorage.getItem('lobbyUser');
-    if (_lu) { user = _lu; go(); }
-    function closeGameQuests(){ document.getElementById('quest-overlay').style.display='none'; }
-    const QUEST_POOL_G={
-        easy:[
-            {id:'e1',text:'Сыграй 3 игры в любой игре',reward:5,check:d=>(d.questDayGames||0)>=3},
-            {id:'e2',text:'Выиграй хотя бы 1 раз в слоте',reward:3,check:d=>(d.questSlotWins||0)>=1},
-            {id:'e3',text:'Открой 10 ячеек в сапёре',reward:4,check:d=>(d.questMinesCells||0)>=10},
-            {id:'e4',text:'Сыграй в полёт 2 раза',reward:4,check:d=>(d.questFlightGames||0)>=2},
-            {id:'e6',text:'Открой 5 ячеек в сапёре',reward:3,check:d=>(d.questMinesCells||0)>=5},
-            {id:'e7',text:'Сыграй в слот 3 раза',reward:3,check:d=>(d.questSlotGames||0)>=3},
-            {id:'e8',text:'Сыграй в сапёр 1 раз',reward:3,check:d=>(d.questMinesGames||0)>=1},
-            {id:'e9',text:'Долети до 500м в полёте',reward:4,check:d=>(d.questMaxDist||0)>=500},
-        ],
-        medium:[
-            {id:'m1',text:'Долети до 2000м в полёте',reward:10,check:d=>(d.questMaxDist||0)>=2000},
-            {id:'m2',text:'Выиграй 15 АР за одну игру в сапёре',reward:8,check:d=>(d.questMinesMaxWin||0)>=15},
-            {id:'m3',text:'Выведи выигрыш в сапёре 3 раза',reward:5,check:d=>(d.questMinesWins||0)>=3},
-            {id:'m4',text:'Долети до 1000м в полёте',reward:7,check:d=>(d.questMaxDist||0)>=1000},
-            {id:'m5',text:'Сыграй 5 игр за день',reward:8,check:d=>(d.questDayGames||0)>=5},
-            {id:'m6',text:'Выиграй в слот 3 раза',reward:9,check:d=>(d.questSlotWins||0)>=3},
-        ],
-        hard:[
-            {id:'h1',text:'Собери 50 АР за день',reward:25,check:d=>(d.questDayEarned||0)>=50},
-            {id:'h2',text:'Долети до 5000м в полёте',reward:20,check:d=>(d.questMaxDist||0)>=5000},
-            {id:'h3',text:'Сыграй 10 игр за день',reward:20,check:d=>(d.questDayGames||0)>=10},
-            {id:'h4',text:'Выведи выигрыш в сапёре 5 раз',reward:20,check:d=>(d.questMinesWins||0)>=5},
-        ]
-    };
-    function getDailyQuestsG(){
-        const seed=new Date().toDateString().split('').reduce((a,c)=>a+c.charCodeAt(0),0);
-        const pick=(arr,n)=>[...arr].sort((a,b)=>((seed*a.id.charCodeAt(a.id.length-1))%97)-((seed*b.id.charCodeAt(b.id.length-1))%97)).slice(0,n);
-        return [...pick(QUEST_POOL_G.easy,3),...pick(QUEST_POOL_G.medium,2),...pick(QUEST_POOL_G.hard,1)];
-    }
-    function renderGameQuests(){
-        db.ref('players/'+user).once('value').then(s=>{
-            const d=s.val()||{};
-            const today=new Date().toDateString();
-            const done=d.questsDone||{};
-            const quests=getDailyQuestsG();
-            const types=['easy','easy','easy','medium','medium','hard'];
-            const diffBg={easy:'rgba(0,200,100,0.1)',medium:'rgba(255,180,0,0.1)',hard:'rgba(255,50,50,0.1)'};
-            const diffColor={easy:'#66ff88',medium:'#ffd700',hard:'#ff6666'};
-            const diffLabel={easy:'🟢 ЛЁГКИЙ',medium:'🟡 СРЕДНИЙ',hard:'🔴 СЛОЖНЫЙ'};
-            document.getElementById('quest-list').innerHTML=quests.map((q,i)=>{
-                const type=types[i];
-                const completed=done[today+'_'+q.id];
-                const ok=q.check(d);
-                const canClaim=ok&&!completed;
-                return `<div style="background:${diffBg[type]};border:1px solid ${diffColor[type]}40;border-radius:12px;padding:10px;margin-bottom:8px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                        <span style="font-size:10px;color:${diffColor[type]};font-family:'Fredoka One',cursive;letter-spacing:1px;">${diffLabel[type]}</span>
-                        <span style="font-size:12px;color:#ffd700;font-family:'Fredoka One',cursive;">+${q.reward} АР</span>
-                    </div>
-                    <div style="font-size:12px;color:rgba(255,255,255,0.85);font-family:Nunito,sans-serif;margin-bottom:6px;">${q.text}</div>
-                    <button onclick="claimGameQuest('${q.id}','${today}')" ${canClaim?'':'disabled'} style="width:100%;padding:6px;border-radius:8px;font-family:'Fredoka One',cursive;font-size:11px;cursor:${canClaim?'pointer':'not-allowed'};border:none;background:${completed?'rgba(0,200,100,0.2)':canClaim?'linear-gradient(180deg,#9c27b0,#6a0080)':'rgba(255,255,255,0.05)'};color:${completed?'#66ff88':canClaim?'#fff':'rgba(255,255,255,0.3)'};">
-                        ${completed?'✅ ВЫПОЛНЕНО':canClaim?'🎁 ЗАБРАТЬ':'⏳ НЕ ВЫПОЛНЕНО'}
-                    </button>
-                </div>`;
-            }).join('');
-        });
-    }
-    async function claimGameQuest(qid,today){
-        const s=await db.ref('players/'+user).once('value');
-        const d=s.val()||{};
-        const key=today+'_'+qid;
-        if((d.questsDone||{})[key]) return;
-        const q=[...QUEST_POOL_G.easy,...QUEST_POOL_G.medium,...QUEST_POOL_G.hard].find(x=>x.id===qid);
-        if(!q||!q.check(d)) return;
-        await db.ref('players/'+user).update({
-            balance:(d.balance||0)+q.reward,
-            ['questsDone/'+key]:true,
-            history:[...(d.history||[]),'📋 Квест: '+q.text+' +'+q.reward+' АР'].slice(-50)
-        });
-        renderGameQuests();
-    }
-
+    try {
+        const _lu = localStorage.getItem('lobbyUser');
+        if (_lu) { user = _lu; go(); }
+    } catch(e) { console.error('autologin error', e); }
 
     function openGameQuests(){
         if(!user){ alert('Войди в аккаунт!'); return; }
-        const overlay = document.getElementById('quest-overlay');
-        overlay.style.display = 'flex';
+        document.getElementById('quest-overlay').style.display='flex';
         const now=new Date(), midnight=new Date(); midnight.setHours(24,0,0,0);
         const h=Math.floor((midnight-now)/3600000), m=Math.floor(((midnight-now)%3600000)/60000);
         document.getElementById('quest-reset').textContent='Сброс через '+h+'ч '+m+'м';
@@ -742,28 +668,28 @@
             const types=['easy','easy','easy','medium','medium','hard'];
             const diffBg={easy:'rgba(0,200,100,0.1)',medium:'rgba(255,180,0,0.1)',hard:'rgba(255,50,50,0.1)'};
             const diffColor={easy:'#66ff88',medium:'#ffd700',hard:'#ff6666'};
-            const diffLabel={easy:'🟢 ЛЁГКИЙ',medium:'🟡 СРЕДНИЙ',hard:'🔴 СЛОЖНЫЙ'};
-            document.getElementById('quest-list').innerHTML=quests.map((q,i)=>{
+            const diffLabel={easy:'\U0001f7e2 \u041b\u0401\u0413\u041a\u0418\u0419',medium:'\U0001f7e1 \u0421\u0420\u0415\u0414\u041d\u0418\u0419',hard:'\U0001f534 \u0421\u041b\u041e\u0416\u041d\u042b\u0419'};
+            const el=document.getElementById('quest-list'); el.innerHTML='';
+            quests.forEach((q,i)=>{
                 const type=types[i];
-                const completed=done[today+'_'+q.id];
-                const ok=q.check(d);
-                const canClaim=ok&&!completed;
-                return '<div style="background:'+diffBg[type]+';border:1px solid '+diffColor[type]+'40;border-radius:12px;padding:10px;margin-bottom:8px;">'
-                    +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
-                    +'<span style="font-size:10px;color:'+diffColor[type]+';font-family:Fredoka One,cursive;letter-spacing:1px;">'+diffLabel[type]+'</span>'
-                    +'<span style="font-size:12px;color:#ffd700;font-family:Fredoka One,cursive;">+'+q.reward+' АР</span>'
-                    +'</div>'
-                    +'<div style="font-size:12px;color:rgba(255,255,255,0.85);font-family:Nunito,sans-serif;margin-bottom:6px;">'+q.text+'</div>'
-                    +'<button onclick="claimGameQuest(''+q.id+'',''+today+'')" '+(canClaim?'':'disabled')+' style="width:100%;padding:6px;border-radius:8px;font-family:Fredoka One,cursive;font-size:11px;cursor:'+(canClaim?'pointer':'not-allowed')+';border:none;background:'+(completed?'rgba(0,200,100,0.2)':canClaim?'linear-gradient(180deg,#9c27b0,#6a0080)':'rgba(255,255,255,0.05)')+';color:'+(completed?'#66ff88':canClaim?'#fff':'rgba(255,255,255,0.3)')+';">'
-                    +(completed?'✅ ВЫПОЛНЕНО':canClaim?'🎁 ЗАБРАТЬ':'⏳ НЕ ВЫПОЛНЕНО')
-                    +'</button></div>';
-            }).join('');
+                const completed=!!(done[today+'_'+q.id]);
+                const canClaim=q.check(d)&&!completed;
+                const wrap=document.createElement('div');
+                wrap.style.cssText='background:'+diffBg[type]+';border:1px solid '+diffColor[type]+'40;border-radius:12px;padding:10px;margin-bottom:8px;';
+                const info=document.createElement('div');
+                info.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:10px;color:'+diffColor[type]+';font-family:Fredoka One,cursive;letter-spacing:1px;">'+diffLabel[type]+'</span><span style="font-size:12px;color:#ffd700;font-family:Fredoka One,cursive;">+'+q.reward+' \u0410\u0420</span></div><div style="font-size:12px;color:rgba(255,255,255,0.85);font-family:Nunito,sans-serif;margin-bottom:6px;">'+q.text+'</div>';
+                const btn=document.createElement('button');
+                btn.textContent=completed?'\u2705 \u0412\u042b\u041f\u041e\u041b\u041d\u0415\u041d\u041e':canClaim?'\U0001f381 \u0417\u0410\u0411\u0420\u0410\u0422\u042c':'\u23f3 \u041d\u0415 \u0412\u042b\u041f\u041e\u041b\u041d\u0415\u041d\u041e';
+                btn.disabled=!canClaim;
+                btn.style.cssText='width:100%;padding:6px;border-radius:8px;font-family:Fredoka One,cursive;font-size:11px;border:none;cursor:'+(canClaim?'pointer':'not-allowed')+';background:'+(completed?'rgba(0,200,100,0.2)':canClaim?'linear-gradient(180deg,#9c27b0,#6a0080)':'rgba(255,255,255,0.05)')+';color:'+(completed?'#66ff88':canClaim?'#fff':'rgba(255,255,255,0.3)')+';';
+                btn.onclick=()=>claimGameQuest(q.id,today);
+                wrap.appendChild(info); wrap.appendChild(btn); el.appendChild(wrap);
+            });
         });
     }
     async function claimGameQuest(qid,today){
         const s=await db.ref('players/'+user).once('value');
-        const d=s.val()||{};
-        const key=today+'_'+qid;
+        const d=s.val()||{}; const key=today+'_'+qid;
         if((d.questsDone||{})[key]) return;
         const q=[...QUEST_POOL_G.easy,...QUEST_POOL_G.medium,...QUEST_POOL_G.hard].find(x=>x.id===qid);
         if(!q||!q.check(d)) return;
@@ -775,12 +701,8 @@
         renderGameQuests();
     }
 
-
-
-
-    // ── КВЕСТЫ ──
 </script>
     <!-- QUEST OVERLAY -->
-    <div id="quest-overlay" onclick="if(event.target===this)closeGameQuests()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.82);z-index:9999;align-items:center;justify-content:center;"><div onclick="event.stopPropagation()" style="background:linear-gradient(160deg,#0d001a,#1a0030);border:2px solid rgba(150,0,255,0.4);border-radius:22px;padding:18px;width:88%;max-width:360px;max-height:82vh;overflow-y:auto;scrollbar-width:thin;"><div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;color:#cc88ff;margin-bottom:4px;">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div><div id="quest-reset" style="font-size:10px;text-align:center;color:rgba(200,150,255,0.4);letter-spacing:2px;margin-bottom:12px;"></div><div id="quest-list"></div><button onclick="closeGameQuests()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(150,0,255,0.45);border:1px solid rgba(150,0,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button></div></div>
+    <div id="quest-overlay" onclick="if(event.target===this)closeGameQuests()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at center, rgba(20,0,40,0.97) 0%, rgba(0,0,15,0.99) 100%);z-index:9999;align-items:center;justify-content:center;"><div onclick="event.stopPropagation()" style="background:linear-gradient(160deg,#0d001a,#1a0030);border:2px solid rgba(150,0,255,0.4);border-radius:22px;padding:18px;width:88%;max-width:360px;max-height:82vh;overflow-y:auto;scrollbar-width:thin;"><div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;color:#cc88ff;margin-bottom:4px;">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div><div id="quest-reset" style="font-size:10px;text-align:center;color:rgba(200,150,255,0.4);letter-spacing:2px;margin-bottom:12px;"></div><div id="quest-list"></div><button onclick="closeGameQuests()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(150,0,255,0.45);border:1px solid rgba(150,0,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button></div></div>
 </body>
 </html>
