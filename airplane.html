@@ -321,6 +321,7 @@ let bgOffset=0, frameCount=0;
 let tokenSpawnTimer=0, islandSpawnTimer=0;
 let takeoffPhase=false, takeoffProgress=0;
 let firstTokenSpawned=false;
+let exploding=false;
 const PLANE_X_RATIO=0.30;
 
 function initCanvas(){
@@ -581,13 +582,14 @@ function spawnToken(){
     // Токены всегда на высоте самолёта ±половина экрана
     // Так они точно попадают на путь
     const tokenX = bgOffset + canvas.width + 20 + Math.random() * 40;
-    const tokenWorldY = cameraY + 15 + Math.random() * (canvas.height - 30);
+    // Все токены спавнятся рядом с самолётом по высоте — небольшой разброс
+    const tokenWorldY = planeWorldY + (Math.random()-0.5) * 60;
     tokens.push({x:tokenX, y:tokenWorldY, type,value,label,collected:false,a:1});
 }
 
 function spawnIsland(){
     const rf=Math.min(distance/900,0.82);
-    const visible=Math.random()<(0.72-rf*0.58);
+    const visible=Math.random()<0.85; // острова почти всегда видны
     islands.push({x:bgOffset+canvas.width+70+Math.random()*60, worldY:0, w:45+Math.random()*30,visible,a:1});
 }
 
@@ -627,6 +629,15 @@ function gameLoop(){
     const screenY = planeWorldY - cameraY;
 
     // Конец игры — самолёт достиг земли (worldY >= 0)
+    // Взрыв на 29000м
+    if(!takeoffPhase && distance >= 29000 && !exploding){
+        exploding = true;
+        spawnParticles(canvas.width*PLANE_X_RATIO, screenY, false);
+        spawnParticles(canvas.width*PLANE_X_RATIO, screenY, false);
+        spawnParticles(canvas.width*PLANE_X_RATIO, screenY, false);
+        planeVY = 5; // резко падает вниз
+        setTimeout(()=>{ endGame(false); }, 1200);
+    }
     if(!takeoffPhase && planeWorldY >= 0){
         if(islandSafeZone) endGame(true);
         else endGame(false);
@@ -646,11 +657,10 @@ function gameLoop(){
             });
         }
         tokenSpawnTimer++;
-        const rate = Math.max(35, 80 - distance/25);
-        if(tokenSpawnTimer>=rate){ spawnToken(); tokenSpawnTimer=0; }
+        if(tokenSpawnTimer >= 45){ spawnToken(); tokenSpawnTimer=0; }
 
         islandSpawnTimer++;
-        const irate = Math.max(200, 350 - distance/10);
+        const irate = 280; // стабильный спавн островов
         if(islandSpawnTimer>=irate){ spawnIsland(); islandSpawnTimer=0; }
     }
 
@@ -683,9 +693,13 @@ function gameLoop(){
 
 
 
-    ctx.fillStyle='rgba(150,200,255,0.22)';
-    ctx.font='10px Nunito'; ctx.textAlign='right';
-    ctx.fillText('📏 '+Math.floor(distance)+'м', canvas.width-8, 26);
+    ctx.font='bold 11px Nunito'; ctx.textAlign='right';
+    ctx.fillStyle = distance > 25000 ? 'rgba(255,100,100,0.9)' : 'rgba(150,200,255,0.7)';
+    ctx.fillText('📏 '+Math.floor(distance)+'м', canvas.width-8, 14);
+    if(distance > 20000){
+        ctx.fillStyle='rgba(255,80,80,0.9)';
+        ctx.fillText('💥 '+Math.max(0,29000-Math.floor(distance))+'м до взрыва', canvas.width-8, 26);
+    }
 
     animId=requestAnimationFrame(gameLoop);
 }
@@ -701,6 +715,7 @@ async function startGame(){
 
     divingActive=false; diveBtn.disabled=false; diveBtn.textContent='⬇️ НЫРНУТЬ НА ОСТРОВ';
     firstTokenSpawned=false;
+    exploding=false;
     gameRunning=true; winnings=0; distance=0; bgOffset=0; frameCount=0;
     tokens=[]; islands=[]; particles=[]; tokenSpawnTimer=0; islandSpawnTimer=0;
     islandSafeZone=false; takeoffPhase=true; takeoffProgress=0;
