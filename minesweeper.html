@@ -218,12 +218,16 @@
         <div class="mine-frame">
             <div class="mine-inner">
                 <div class="mine-status" id="mine-status">Нажми НАЧАТЬ чтобы играть</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <div style="font-size:11px;font-weight:800;color:rgba(255,100,100,0.7);letter-spacing:1px;">💣 Бомб: <span id="bomb-count" style="color:#ff6666;">5</span></div>
+                    <div style="font-size:11px;font-weight:800;color:rgba(255,180,0,0.6);letter-spacing:1px;">Вывод после: <span style="color:#ffd700;">3 ячеек</span></div>
+                </div>
                 <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
                 <div class="mine-grid" id="mine-grid"></div>
             </div>
         </div>
 
-        <button id="start-btn" class="btn-start" onclick="startGame()">💣 НАЧАТЬ (5 АР)</button>
+        <button id="start-btn" class="btn-start" onclick="startGame()">💣 НАЧАТЬ (3 АР)</button>
         <button id="cashout-btn" class="btn-cashout" onclick="cashout()">💰 ВЫВЕСТИ</button>
         <button class="promo-btn" onclick="promptPromo()">🎁 ПРОМОКОД</button>
 
@@ -341,7 +345,7 @@
 
     // GAME STATE
     const GRID_SIZE = 5;
-    const COST = 5;
+    const COST = 3;
     const UNLOCK_AT = 3; // ячеек для разблокировки вывода
     const BOMBS = 5;
     const COIN_REWARD = 2; // АР за монету
@@ -446,6 +450,7 @@
 
         // Списываем стоимость
         await db.ref('players/' + user + '/balance').set(d.balance - COST);
+        db.ref('players/' + user + '/gamesCount').once('value').then(s=>db.ref('players/' + user + '/gamesCount').set((s.val()||0)+1));
 
         generateBoard();
         sessionCoins = 0;
@@ -517,6 +522,8 @@
         const safe = GRID_SIZE * GRID_SIZE - BOMBS;
         const progress = Math.min(openedCount / safe * 100, 100);
         document.getElementById('progress-bar').style.width = progress + '%';
+        const remainingBombs = board.filter((v, i) => v === 'bomb' && !revealed[i]).length;
+        document.getElementById('bomb-count').textContent = remainingBombs;
         document.getElementById('mine-status').innerHTML =
             'Открыто: <span>' + openedCount + '</span> | Собрано: <span>' + sessionCoins + ' АР</span>';
     }
@@ -540,9 +547,16 @@
         const won = sessionCoins;
         await db.ref('players/' + user).update({
             balance: d.balance + won,
-            history: (d.history || []).concat(['💰 САПЁР: вывод +' + won + ' АР']).slice(-15)
+            history: (d.history || []).concat(['💰 САПЁР: вывод +' + won + ' АР']).slice(-50)
         });
-        showResult(true, won);
+        // Показываем все мины на 1 секунду
+        board.forEach((v,i)=>{
+            if(v==='bomb' && !revealed[i]){
+                const cell = document.querySelector('.cell[data-idx="'+i+'"]');
+                if(cell){ cell.textContent='💣'; cell.classList.add('revealed','bomb-cell'); }
+            }
+        });
+        setTimeout(()=>{ showResult(true, won); }, 1000);
     }
 
     function showResult(win, amount) {
@@ -560,7 +574,7 @@
             db.ref('players/' + user).once('value').then(s => {
                 const d = s.val();
                 db.ref('players/' + user + '/history').set(
-                    (d.history || []).concat(['💥 САПЁР: бомба −' + COST + ' АР']).slice(-15)
+                    (d.history || []).concat(['💥 САПЁР: бомба −' + COST + ' АР']).slice(-50)
                 );
             });
         }

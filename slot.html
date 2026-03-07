@@ -463,7 +463,8 @@
         const delta = win - 1;
         db.ref('players/' + user).update({
             balance: d.balance - 1 + win,
-            history: (d.history || []).concat([res.join('') + ' ' + (delta >= 0 ? '+' : '') + delta + ' АР']).slice(-15)
+            gamesCount: (d.gamesCount||0)+1,
+            history: (d.history || []).concat([res.join('') + ' ' + (delta >= 0 ? '+' : '') + delta + ' АР']).slice(-50)
         });
         document.getElementById('spin-btn').disabled = false;
     }
@@ -482,7 +483,7 @@
                 db.ref('players/' + user).update({
                     balance: (d.balance || 0) + reward,
                     ['usedPromos/' + code]: true,
-                    history: (d.history || []).concat(['🎁 ПРОМО «' + code + '» +' + reward + ' АР']).slice(-15)
+                    history: (d.history || []).concat(['🎁 ПРОМО «' + code + '» +' + reward + ' АР']).slice(-50)
                 });
                 alert("✅ Промокод активирован! +" + reward + " АР начислено.");
             });

@@ -145,6 +145,81 @@
             </div>
             <button class="btn-logout" onclick="logout()">ВЫЙТИ</button>
         </div>
+
+        <div style="display:flex;gap:8px;margin-top:8px;">
+            <button onclick="openVip()" style="flex:1;padding:9px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ffd700;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'">👑 ВИП</button>
+            <button onclick="openLeaderboard()" style="flex:1;padding:9px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#88ccff;background:rgba(0,100,255,0.08);border:1px solid rgba(0,150,255,0.3);border-radius:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(0,100,255,0.18)'" onmouseout="this.style.background='rgba(0,100,255,0.08)'">🏆 ТОП</button>
+        </div>
+        <div id="daily-reward-wrap" style="display:none;margin-top:8px;">
+            <button onclick="claimDaily()" id="daily-btn" style="width:100%;padding:10px;border-radius:14px;background:linear-gradient(135deg,rgba(0,200,100,0.2),rgba(0,150,50,0.1));border:1px solid rgba(0,200,100,0.4);color:#00e676;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;">🎁 ЕЖЕДНЕВНАЯ НАГРАДА</button>
+        </div>
+    </div>
+    
+    <!-- LOBBY ADMIN PANEL -->
+    <div id="lobby-admin-panel" style="display:none;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:18px;border-radius:22px;margin-bottom:12px;">
+        <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:12px;color:#ffd700;">👑 АДМИН-ПАНЕЛЬ</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <button onclick="adminTab('users')" id="tab-users" style="flex:1;padding:8px;border-radius:10px;background:rgba(255,180,0,0.2);color:#ffd700;border:1px solid rgba(255,180,0,0.4);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">ИГРОКИ</button>
+            <button onclick="adminTab('settings')" id="tab-settings" style="flex:1;padding:8px;border-radius:10px;background:transparent;color:rgba(255,180,0,0.5);border:1px solid rgba(255,180,0,0.2);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">НАСТРОЙКИ</button>
+        </div>
+        <div id="admin-tab-users">
+            <div style="max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:12px;border:1px solid rgba(255,180,0,0.15);padding:4px;margin-bottom:8px;scrollbar-width:thin;">
+                <div id="lobby-admin-users"></div>
+            </div>
+        </div>
+        <div id="admin-tab-settings" style="display:none;">
+            <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:12px;margin-bottom:8px;">
+                <div style="color:#ffd700;font-family:'Fredoka One',cursive;font-size:13px;margin-bottom:8px;">🎁 ЕЖЕДНЕВНАЯ НАГРАДА</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:Nunito,sans-serif;">Размер:</span>
+                    <input id="daily-amount-input" type="number" value="10" min="1" style="width:70px;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,180,0,0.3);color:#fff;font-family:Nunito,sans-serif;font-size:13px;">
+                    <span style="color:rgba(255,255,255,0.5);font-size:12px;">АР</span>
+                    <button onclick="saveDailyAmount()" style="padding:4px 10px;border-radius:8px;background:rgba(255,180,0,0.2);border:1px solid rgba(255,180,0,0.4);color:#ffd700;font-size:11px;cursor:pointer;font-family:Nunito,sans-serif;">✓</button>
+                </div>
+            </div>
+        </div>
+        <!-- Profile view -->
+        <div id="lobby-admin-profile" style="display:none;">
+            <div id="lap-name" style="font-family:'Fredoka One',cursive;font-size:16px;color:#ff4444;text-align:center;margin-bottom:6px;"></div>
+            <div style="height:1px;background:linear-gradient(90deg,transparent,#ffd700,transparent);margin-bottom:10px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="color:rgba(255,255,255,0.6);font-size:13px;font-family:Nunito,sans-serif;">Баланс:</span>
+                <span id="lap-bal" style="color:#ffd700;font-family:'Fredoka One',cursive;font-size:16px;"></span>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+                <button onclick="lapMod(1)" style="flex:1;padding:7px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">+1</button>
+                <button onclick="lapMod(10)" style="flex:1;padding:7px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">+10</button>
+                <button onclick="lapMod(-1)" style="flex:1;padding:7px;background:rgba(180,0,0,0.2);color:#ff6666;border:1px solid rgba(200,0,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">−1</button>
+                <button onclick="lapMod(-10)" style="flex:1;padding:7px;background:rgba(180,0,0,0.2);color:#ff6666;border:1px solid rgba(200,0,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">−10</button>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:8px;">
+                <button onclick="lapToggleVerified()" id="lap-verified-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;">✓ ПРОВЕРЕН</button>
+                <button onclick="lapTogglePinned()" id="lap-pinned-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;">📌 ЗАКРЕП</button>
+                <button onclick="lapToggleAdmin()" id="lap-admin-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;">👑 АДМИН</button>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:8px;">
+                <button onclick="lapToggleDaily()" id="lap-daily-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;">🎁 НАГРАДА</button>
+            </div>
+            <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,180,0,0.6);margin-bottom:6px;letter-spacing:2px;">ВСЯ ИСТОРИЯ</div>
+            <div id="lap-history" style="max-height:120px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:10px;padding:8px;font-size:11px;color:rgba(255,255,255,0.6);font-family:Nunito,sans-serif;scrollbar-width:thin;margin-bottom:8px;"></div>
+            <div style="display:flex;gap:6px;">
+                <button onclick="document.getElementById('lobby-admin-profile').style.display='none';document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';" style="flex:1;padding:8px;background:transparent;color:#ffd700;border:1px solid rgba(255,215,0,0.3);border-radius:10px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;">← НАЗАД</button>
+                <button onclick="lapDelete()" style="flex:1;padding:8px;background:rgba(200,0,0,0.2);color:#ff4444;border:1px solid rgba(200,0,0,0.3);border-radius:10px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;">🗑 УДАЛИТЬ</button>
+            </div>
+        </div>
+        <button onclick="document.getElementById('lobby-admin-panel').style.display='none'" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
+    </div>
+
+
+    <!-- LEADERBOARD -->
+    <div id="leaderboard-panel" style="display:none;background:linear-gradient(160deg,#0a0015,#180020);border:2px solid rgba(0,150,255,0.3);padding:18px;border-radius:22px;margin-bottom:14px;">
+        <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:12px;color:#88ccff;">🏆 ТАБЛИЦА ЛИДЕРОВ</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <button onclick="lbTab('ar')" id="lb-tab-ar" style="flex:1;padding:8px;border-radius:10px;background:rgba(0,150,255,0.2);color:#88ccff;border:1px solid rgba(0,150,255,0.4);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">💰 ТОП ПО АР</button>
+            <button onclick="lbTab('games')" id="lb-tab-games" style="flex:1;padding:8px;border-radius:10px;background:transparent;color:rgba(0,150,255,0.5);border:1px solid rgba(0,150,255,0.2);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">🎮 ТОП ПО ИГРАМ</button>
+        </div>
+        <div id="lb-list" style="max-height:220px;overflow-y:auto;scrollbar-width:thin;"></div>
+        <button onclick="document.getElementById('leaderboard-panel').style.display='none'" style="width:100%;padding:9px;margin-top:10px;border-radius:12px;background:transparent;color:rgba(0,150,255,0.45);border:1px solid rgba(0,150,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
     </div>
 
     <div class="games-label">выбери игру</div>
@@ -269,8 +344,30 @@
         document.getElementById('auth-block').style.display = 'none';
         document.getElementById('user-block').style.display = 'block';
         document.getElementById('lobby-username').textContent = currentUser.toUpperCase();
-        db.ref('players/' + currentUser + '/balance').on('value', s => {
-            document.getElementById('lobby-balance').textContent = (s.val() || 0) + ' АР';
+        db.ref('players/' + currentUser).on('value', s => {
+            const d = s.val()||{};
+            document.getElementById('lobby-balance').textContent = (d.balance || 0) + ' АР';
+
+            // Show daily reward button for verified users
+            const dailyWrap = document.getElementById('daily-reward-wrap');
+            if(d.verified && d.dailyEnabled !== false){
+                dailyWrap.style.display = 'block';
+                const now = new Date().toDateString();
+                const btn = document.getElementById('daily-btn');
+                if(d.lastDaily === now){
+                    btn.textContent = '✅ НАГРАДА УЖЕ ПОЛУЧЕНА';
+                    btn.style.opacity='0.5'; btn.disabled=true;
+                } else {
+                    btn.textContent = '🎁 ЕЖЕДНЕВНАЯ НАГРАДА';
+                    btn.style.opacity='1'; btn.disabled=false;
+                }
+            } else {
+                dailyWrap.style.display = 'none';
+            }
+            isAdmin = !!d.admin;
+            // Badge for verified/pinned
+            const badge = d.pinned ? '📌 ' : d.verified ? '✅ ' : '';
+            document.getElementById('lobby-username').textContent = badge + currentUser.toUpperCase();
         });
     }
 
@@ -286,6 +383,253 @@
 
     // Auto-login if was logged in
     if (currentUser) showUserBlock();
+
+    // ── LEADERBOARD ──
+    let lbCurrentTab = 'ar';
+    let isAdmin = false;
+
+    function openLeaderboard(){
+        document.getElementById('leaderboard-panel').style.display='block';
+        lbTab('ar');
+    }
+
+    function lbTab(tab){
+        lbCurrentTab = tab;
+        document.getElementById('lb-tab-ar').style.background = tab==='ar'?'rgba(0,150,255,0.2)':'transparent';
+        document.getElementById('lb-tab-ar').style.color = tab==='ar'?'#88ccff':'rgba(0,150,255,0.5)';
+        document.getElementById('lb-tab-ar').style.border = tab==='ar'?'1px solid rgba(0,150,255,0.4)':'1px solid rgba(0,150,255,0.2)';
+        document.getElementById('lb-tab-games').style.background = tab==='games'?'rgba(0,150,255,0.2)':'transparent';
+        document.getElementById('lb-tab-games').style.color = tab==='games'?'#88ccff':'rgba(0,150,255,0.5)';
+        document.getElementById('lb-tab-games').style.border = tab==='games'?'1px solid rgba(0,150,255,0.4)':'1px solid rgba(0,150,255,0.2)';
+        loadLeaderboard(tab);
+    }
+
+    function loadLeaderboard(tab){
+        const el = document.getElementById('lb-list');
+        el.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-family:Nunito,sans-serif;">загрузка...</div>';
+        db.ref('players').once('value').then(snap=>{
+            let players = [];
+            snap.forEach(ch=>{
+                const d = ch.val()||{};
+                // скрытых тоже показываем, просто серыми
+                // gamesCount = новые игры + то что осталось в истории
+                const fromHistory = (d.history||[]).filter(h=>h.includes('САПЁР')||h.includes('СЛОТ')||h.includes('ПОЛЁТ')).length;
+                const games = (d.gamesCount||0) + fromHistory;
+                players.push({name:ch.key, balance:d.balance||0, games, verified:d.verified, pinned:d.pinned, admin:d.admin, hidden:d.hidden});
+            });
+            if(tab==='ar') players.sort((a,b)=>b.balance-a.balance);
+            else players.sort((a,b)=>b.games-a.games);
+
+            // Все игроки в топе. Скрытые — серые, без номера, у админа с глазом
+            let visibleRank = 0;
+            el.innerHTML = players.slice(0,20).map((p,i)=>{
+                const badge = p.pinned?'📌':p.admin?'👑':p.verified?'✅':'';
+                const isMe = p.name===currentUser;
+                if(!p.hidden) visibleRank++;
+                const num = p.hidden
+                    ? `<span style="color:rgba(255,255,255,0.15);font-size:11px;">—</span>`
+                    : `<span style="color:rgba(255,255,255,0.4);font-size:11px;font-family:'Fredoka One',cursive;">#${visibleRank}</span>`;
+                const nameColor = p.hidden ? 'rgba(255,255,255,0.25)' : (isMe?'#ffd700':'rgba(255,255,255,0.85)');
+                const valColor = p.hidden ? 'rgba(255,255,255,0.2)' : 'rgba(255,180,0,0.8)';
+                const hideBtn = isAdmin ? `<span onclick="lbHidePlayer('${p.name}')" title="${p.hidden?'Показать':'Скрыть'}" style="cursor:pointer;font-size:15px;filter:${p.hidden?'grayscale(1)':'none'};opacity:${p.hidden?'0.4':'0.7'};" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='${p.hidden?'0.4':'0.7'}'">👁</span>` : '';
+                return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${isMe&&!p.hidden?'rgba(255,180,0,0.08)':'transparent'};border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <span style="width:26px;text-align:center;">${num}</span>
+                    <span style="font-size:13px;opacity:${p.hidden?'0.3':'1'};">${badge}</span>
+                    <span style="flex:1;font-family:'Fredoka One',cursive;font-size:13px;color:${nameColor};">${p.name}</span>
+                    <span style="font-size:12px;font-family:Nunito,sans-serif;font-weight:700;color:${valColor};">${tab==='ar'?p.balance+' АР':p.games+' игр'}</span>
+                    ${hideBtn}
+                </div>`;
+            }).join('') || '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-family:Nunito,sans-serif;">пусто</div>';
+        });
+    }
+
+    function lbHidePlayer(name){
+        db.ref('players/'+name+'/hidden').once('value').then(s=>{
+            db.ref('players/'+name+'/hidden').set(!s.val());
+            setTimeout(()=>loadLeaderboard(lbCurrentTab), 300);
+        });
+    }
+
+    // VIP — открывает админку
+    function openVip(){
+        db.ref('players/'+currentUser).once('value').then(s=>{
+            const d = s.val()||{};
+            if(d.admin){
+                openLobbyAdmin();
+            } else {
+                const pwd = prompt('Пароль:');
+                if(pwd==='1337') openLobbyAdmin();
+            }
+        });
+    }
+    async function redeemVipPromo(){
+        if(!currentUser){ alert('Сначала войди!'); return; }
+        const code = document.getElementById('vip-promo').value.trim().toLowerCase();
+        const snap = await db.ref('players/'+currentUser).once('value');
+        const d = snap.val()||{};
+        const used = d.usedPromos||{};
+        const promos = {mell:3, мелл:5, меллстрой:5};
+        if(!promos[code]){ alert('Неверный промокод!'); return; }
+        if(used[code]){ alert('Промокод уже использован!'); return; }
+        const reward = promos[code];
+        used[code]=true;
+        await db.ref('players/'+currentUser).update({
+            balance:(d.balance||0)+reward,
+            usedPromos:used,
+            history:(d.history||[]).concat(['🎁 Промокод +'+reward+' АР']).slice(-50)
+        });
+        alert('Получено '+reward+' АР!');
+        document.getElementById('vip-promo').value='';
+    }
+
+    // ── ADMIN / VERIFIED / DAILY ──
+    let lapUser = '';
+
+    function openLobbyAdmin(){
+        document.getElementById('lobby-admin-panel').style.display='block';
+        document.getElementById('lobby-admin-profile').style.display='none';
+        document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';
+        loadLobbyAdminUsers();
+        // load daily amount setting
+        db.ref('settings/dailyAmount').once('value').then(s=>{
+            if(s.val()) document.getElementById('daily-amount-input').value = s.val();
+        });
+    }
+
+    function adminTab(tab){
+        document.getElementById('admin-tab-users').style.display = tab==='users'?'block':'none';
+        document.getElementById('admin-tab-settings').style.display = tab==='settings'?'block':'none';
+        document.getElementById('tab-users').style.background = tab==='users'?'rgba(255,180,0,0.2)':'transparent';
+        document.getElementById('tab-settings').style.background = tab==='settings'?'rgba(255,180,0,0.2)':'transparent';
+        document.getElementById('tab-users').style.color = tab==='users'?'#ffd700':'rgba(255,180,0,0.5)';
+        document.getElementById('tab-settings').style.color = tab==='settings'?'#ffd700':'rgba(255,180,0,0.5)';
+    }
+
+    function saveDailyAmount(){
+        const amt = parseInt(document.getElementById('daily-amount-input').value)||10;
+        db.ref('settings/dailyAmount').set(amt);
+        alert('Сохранено: '+amt+' АР');
+    }
+
+    function loadLobbyAdminUsers(){
+        db.ref('players').once('value').then(snap=>{
+            const all = [];
+            snap.forEach(ch=>{ all.push({key:ch.key,...ch.val()}); });
+            // Sort: pinned first, then verified, then rest
+            all.sort((a,b)=>{
+                if(b.pinned !== a.pinned) return (b.pinned?1:0)-(a.pinned?1:0);
+                if(b.verified !== a.verified) return (b.verified?1:0)-(a.verified?1:0);
+                return a.key.localeCompare(b.key);
+            });
+            const el = document.getElementById('lobby-admin-users');
+            el.innerHTML = all.map(u=>`
+                <div onclick="openLobbyProfile('${u.key}')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-radius:8px;transition:background .2s;" onmouseover="this.style.background='rgba(255,180,0,0.08)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:14px;">${u.pinned?'📌':u.admin?'👑':u.verified?'✅':'👤'}</span>
+                    <span style="flex:1;font-family:'Fredoka One',cursive;font-size:14px;color:${u.admin?'#ffd700':u.verified?'#66ff88':'rgba(255,255,255,0.8)'}">${u.key}</span>
+                    <span style="color:rgba(255,180,0,0.7);font-size:12px;font-family:Nunito,sans-serif;">${u.balance||0} АР</span>
+                    <span onclick="event.stopPropagation();lapDeleteUser('${u.key}')" style="color:rgba(255,80,80,0.6);cursor:pointer;font-size:16px;padding:0 4px;">✖</span>
+                </div>`).join('');
+        });
+    }
+
+    function openLobbyProfile(u){
+        lapUser = u;
+        db.ref('players/'+u).once('value').then(s=>{
+            const d = s.val()||{};
+            document.getElementById('lap-name').textContent = u.toUpperCase();
+            document.getElementById('lap-bal').textContent = (d.balance||0)+' АР';
+            // History - all entries
+            const hist = d.history||[];
+            document.getElementById('lap-history').innerHTML = [...hist].reverse().map(h=>`<div style="padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);">${h}</div>`).join('');
+            // Toggle buttons state
+            const vb = document.getElementById('lap-verified-btn');
+            vb.style.background = d.verified?'rgba(0,180,0,0.3)':'rgba(255,255,255,0.05)';
+            vb.style.color = d.verified?'#66ff88':'rgba(255,255,255,0.5)';
+            vb.style.border = d.verified?'1px solid rgba(0,200,0,0.4)':'1px solid rgba(255,255,255,0.1)';
+            const pb = document.getElementById('lap-pinned-btn');
+            pb.style.background = d.pinned?'rgba(255,180,0,0.3)':'rgba(255,255,255,0.05)';
+            pb.style.color = d.pinned?'#ffd700':'rgba(255,255,255,0.5)';
+            pb.style.border = d.pinned?'1px solid rgba(255,180,0,0.4)':'1px solid rgba(255,255,255,0.1)';
+            const ab = document.getElementById('lap-admin-btn');
+            ab.style.background = d.admin?'rgba(255,150,0,0.3)':'rgba(255,255,255,0.05)';
+            ab.style.color = d.admin?'#ffd700':'rgba(255,255,255,0.5)';
+            ab.style.border = d.admin?'1px solid rgba(255,180,0,0.4)':'1px solid rgba(255,255,255,0.1)';
+            const db2 = document.getElementById('lap-daily-btn');
+            db2.style.background = d.dailyEnabled!==false?'rgba(0,200,100,0.3)':'rgba(255,255,255,0.05)';
+            db2.style.color = d.dailyEnabled!==false?'#00e676':'rgba(255,255,255,0.5)';
+            db2.style.border = d.dailyEnabled!==false?'1px solid rgba(0,200,100,0.4)':'1px solid rgba(255,255,255,0.1)';
+            // Show profile
+            document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='none';
+            document.getElementById('lobby-admin-profile').style.display='block';
+        });
+    }
+
+    function lapMod(n){
+        db.ref('players/'+lapUser+'/balance').once('value').then(s=>{
+            const newBal = Math.max(0,(s.val()||0)+n);
+            db.ref('players/'+lapUser+'/balance').set(newBal);
+            document.getElementById('lap-bal').textContent = newBal+' АР';
+        });
+    }
+    function lapToggle(field, btn, onStyle, offStyle){
+        db.ref('players/'+lapUser+'/'+field).once('value').then(s=>{
+            const newVal = !s.val();
+            db.ref('players/'+lapUser+'/'+field).set(newVal);
+            const el = document.getElementById(btn);
+            el.style.background = newVal ? onStyle.bg : 'rgba(255,255,255,0.05)';
+            el.style.color = newVal ? onStyle.color : 'rgba(255,255,255,0.5)';
+            el.style.border = newVal ? onStyle.border : '1px solid rgba(255,255,255,0.1)';
+            if(lapUser===currentUser) showUserBlock(); // refresh own UI
+        });
+    }
+    function lapToggleVerified(){ lapToggle('verified','lap-verified-btn',{bg:'rgba(0,180,0,0.3)',color:'#66ff88',border:'1px solid rgba(0,200,0,0.4)'}); }
+    function lapTogglePinned(){ lapToggle('pinned','lap-pinned-btn',{bg:'rgba(255,180,0,0.3)',color:'#ffd700',border:'1px solid rgba(255,180,0,0.4)'}); }
+    function lapToggleAdmin(){ lapToggle('admin','lap-admin-btn',{bg:'rgba(255,150,0,0.3)',color:'#ffd700',border:'1px solid rgba(255,180,0,0.4)'}); }
+    function lapToggleDaily(){
+        db.ref('players/'+lapUser+'/dailyEnabled').once('value').then(s=>{
+            const newVal = s.val()===false ? true : false; // default is enabled
+            db.ref('players/'+lapUser+'/dailyEnabled').set(newVal);
+            const el = document.getElementById('lap-daily-btn');
+            el.style.background = newVal?'rgba(0,200,100,0.3)':'rgba(255,255,255,0.05)';
+            el.style.color = newVal?'#00e676':'rgba(255,255,255,0.5)';
+            el.style.border = newVal?'1px solid rgba(0,200,100,0.4)':'1px solid rgba(255,255,255,0.1)';
+        });
+    }
+    function lapDelete(){
+        if(confirm('Удалить '+lapUser+'?')){
+            db.ref('players/'+lapUser).remove();
+            document.getElementById('lobby-admin-profile').style.display='none';
+            document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';
+            loadLobbyAdminUsers();
+        }
+    }
+    function lapToggleHidden(u){
+        db.ref('players/'+u+'/hidden').once('value').then(s=>{
+            db.ref('players/'+u+'/hidden').set(!s.val()).then(loadLobbyAdminUsers);
+        });
+    }
+    function lapDeleteUser(u){
+        if(confirm('Удалить '+u+'?')){ db.ref('players/'+u).remove().then(loadLobbyAdminUsers); }
+    }
+
+    // ── DAILY REWARD ──
+    async function claimDaily(){
+        const snap = await db.ref('players/'+currentUser).once('value');
+        const d = snap.val()||{};
+        if(d.dailyEnabled===false) return;
+        const now = new Date().toDateString();
+        if(d.lastDaily===now){ alert('Награда уже получена сегодня!'); return; }
+        const amt = (await db.ref('settings/dailyAmount').once('value')).val()||10;
+        const newBal = (d.balance||0)+amt;
+        await db.ref('players/'+currentUser).update({
+            balance: newBal,
+            lastDaily: now,
+            history: [...(d.history||[]), 'Ежедневная награда +'+amt+' АР']
+        });
+        document.getElementById('daily-btn').textContent = '✅ ПОЛУЧЕНО ('+amt+' АР)';
+        document.getElementById('daily-btn').style.opacity='0.5';
+        document.getElementById('daily-btn').disabled=true;
+    }
 
     // MUSIC
     const playlist = [

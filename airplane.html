@@ -712,6 +712,7 @@ async function startGame(){
     const d=snap.val();
     if(d.balance<bet){alert('Недостаточно АР!');return;}
     await db.ref('players/'+user+'/balance').set(d.balance-bet);
+    db.ref('players/'+user+'/gamesCount').once('value').then(s=>db.ref('players/'+user+'/gamesCount').set((s.val()||0)+1));
 
     divingActive=false; diveBtn.disabled=false; diveBtn.textContent='⬇️ НЫРНУТЬ НА ОСТРОВ';
     firstTokenSpawned=false;
@@ -761,17 +762,17 @@ async function endGame(landed){
     const d=snap.val();
 
     if(landed&&winnings>0){
-        await db.ref('players/'+user).update({balance:d.balance+Math.round(winnings),history:(d.history||[]).concat(['✈️ ПОЛЁТ: +'+Math.round(winnings)+' АР']).slice(-15)});
+        await db.ref('players/'+user).update({balance:d.balance+Math.round(winnings),history:(d.history||[]).concat(['✈️ ПОЛЁТ: +'+Math.round(winnings)+' АР']).slice(-50)});
         document.getElementById('result-icon').textContent='🏝️';
         document.getElementById('result-text').textContent='ПОСАДКА!';
         document.getElementById('result-sub').textContent='Ты забрал '+Math.round(winnings)+' АР!';
     } else if(landed){
-        await db.ref('players/'+user+'/history').set((d.history||[]).concat(['✈️ ПОЛЁТ: посадка 0 АР']).slice(-15));
+        await db.ref('players/'+user+'/history').set((d.history||[]).concat(['✈️ ПОЛЁТ: посадка 0 АР']).slice(-50));
         document.getElementById('result-icon').textContent='🏝️';
         document.getElementById('result-text').textContent='ПОСАДКА!';
         document.getElementById('result-sub').textContent='Собранного нет';
     } else {
-        await db.ref('players/'+user+'/history').set((d.history||[]).concat(['✈️ ПОЛЁТ: утонул −'+bet+' АР']).slice(-15));
+        await db.ref('players/'+user+'/history').set((d.history||[]).concat(['✈️ ПОЛЁТ: утонул −'+bet+' АР']).slice(-50));
         document.getElementById('result-icon').textContent='💦';
         document.getElementById('result-text').textContent='УПАЛ В ВОДУ!';
         document.getElementById('result-sub').textContent='Потеря: '+bet+' АР';
@@ -940,7 +941,7 @@ function promptPromo(){
         const r=codes[code];
         db.ref('players/'+user).once('value').then(s=>{
             const d=s.val();
-            db.ref('players/'+user).update({balance:(d.balance||0)+r,['usedPromos/'+code]:true,history:(d.history||[]).concat(['🎁 ПРОМО «'+code+'» +'+r+' АР']).slice(-15)});
+            db.ref('players/'+user).update({balance:(d.balance||0)+r,['usedPromos/'+code]:true,history:(d.history||[]).concat(['🎁 ПРОМО «'+code+'» +'+r+' АР']).slice(-50)});
             alert('✅ +'+r+' АР!');
         });
     });
