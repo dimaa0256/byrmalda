@@ -581,9 +581,9 @@ function spawnToken(){
     }
     // Токены всегда на высоте самолёта ±половина экрана
     // Так они точно попадают на путь
-    const tokenX = bgOffset + canvas.width + 20 + Math.random() * 40;
+    const tokenX = bgOffset + canvas.width + 10 + Math.random() * 20;
     // Все токены спавнятся рядом с самолётом по высоте — небольшой разброс
-    const tokenWorldY = planeWorldY + (Math.random()-0.5) * 60;
+    const tokenWorldY = planeWorldY + (Math.random()-0.5) * canvas.height * 0.8;
     tokens.push({x:tokenX, y:tokenWorldY, type,value,label,collected:false,a:1});
 }
 
@@ -657,7 +657,7 @@ function gameLoop(){
             });
         }
         tokenSpawnTimer++;
-        if(tokenSpawnTimer >= 45){ spawnToken(); tokenSpawnTimer=0; }
+        if(tokenSpawnTimer >= 22){ spawnToken(); tokenSpawnTimer=0; }
 
         islandSpawnTimer++;
         const irate = 280; // стабильный спавн островов
