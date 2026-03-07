@@ -162,6 +162,24 @@
         <button id="start-btn" class="btn-start" onclick="startGame()">✈️ ВЗЛЕТАТЬ</button>
         <button id="dive-btn" class="btn-dive" id="dive-btn">⬇️ НЫРНУТЬ НА ОСТРОВ</button>
         <button class="promo-btn" onclick="promptPromo()">🎁 ПРОМОКОД</button>
+        <!-- CONTROL MODE OVERLAY -->
+        <div id="ctrl-overlay" style="display:none;position:absolute;bottom:220px;left:0;right:0;z-index:30;pointer-events:none;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 16px;pointer-events:all;">
+                <!-- Высота — слева -->
+                <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                    <div style="font-family:'Fredoka One',cursive;font-size:11px;color:#88ffaa;letter-spacing:2px;">ВЫСОТА</div>
+                    <button onmousedown="startCtrl(-1)" onmouseup="stopCtrl()" ontouchstart="e=>{e.preventDefault();startCtrl(-1)}" ontouchend="stopCtrl()" style="width:60px;height:60px;border-radius:50%;background:rgba(0,150,0,0.7);color:#fff;border:2px solid #00e676;font-size:26px;cursor:pointer;">▲</button>
+                    <button onmousedown="startCtrl(1)" onmouseup="stopCtrl()" ontouchstart="e=>{e.preventDefault();startCtrl(1)}" ontouchend="stopCtrl()" style="width:60px;height:60px;border-radius:50%;background:rgba(180,0,0,0.7);color:#fff;border:2px solid #ff4444;font-size:26px;cursor:pointer;">▼</button>
+                </div>
+                <!-- Скорость — справа -->
+                <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                    <div style="font-family:'Fredoka One',cursive;font-size:11px;color:#88ccff;letter-spacing:2px;">СКОРОСТЬ</div>
+                    <button onclick="changeSpeed(0.1)" style="width:60px;height:60px;border-radius:50%;background:rgba(0,80,200,0.7);color:#fff;border:2px solid #0088ff;font-size:26px;cursor:pointer;">+</button>
+                    <button onclick="changeSpeed(-0.1)" style="width:60px;height:60px;border-radius:50%;background:rgba(0,80,200,0.7);color:#fff;border:2px solid #0088ff;font-size:26px;cursor:pointer;">−</button>
+                </div>
+            </div>
+        </div>
+
         <div class="history-label">история</div>
         <div id="history" class="history-box"></div>
 
@@ -185,8 +203,9 @@
         <!-- ADMIN -->
         <div id="admin-panel" onclick="event.stopPropagation()" style="display:none;position:absolute;top:8px;left:8px;right:8px;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:20px 18px;z-index:100;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,0.95);">
             <div style="font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:2px;text-align:center;margin-bottom:14px;color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,0.4);">👑 АДМИН-ПАНЕЛЬ</div>
-            <div style="max-height:170px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:12px;border:1px solid rgba(255,180,0,0.15);padding:4px;margin-bottom:4px;scrollbar-width:thin;"><div id="admin-users-list"></div></div>
-            <button onclick="closePanels()" style="width:100%;padding:10px;margin-top:10px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">✕ ЗАКРЫТЬ</button>
+            <div style="max-height:170px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:12px;border:1px solid rgba(255,180,0,0.15);padding:4px;margin-bottom:8px;scrollbar-width:thin;"><div id="admin-users-list"></div></div>
+            <button onclick="toggleControlMode()" id="ctrl-mode-btn" style="width:100%;padding:10px;margin-bottom:8px;border-radius:12px;background:linear-gradient(180deg,#7b1fa2,#4a148c);color:#fff;border:none;cursor:pointer;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;box-shadow:0 3px 0 #2a0060;">🕹 УПРАВЛЕНИЕ: ВЫКЛ</button>
+            <button onclick="closePanels()" style="width:100%;padding:10px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">✕ ЗАКРЫТЬ</button>
         </div>
 
         <!-- ADMIN PROFILE -->
@@ -293,14 +312,16 @@ const canvas=document.getElementById('sky');
 const ctx=canvas.getContext('2d');
 let gameRunning=false, animId=null;
 let planeY, planeVY;
+let planeWorldY = 0; // мировая Y координата самолёта
 let winnings=0, bet=5;
 let distance=0;
 let islandSafeZone=false;
 let tokens=[], islands=[], particles=[], clouds=[];
 let bgOffset=0, frameCount=0;
 let tokenSpawnTimer=0, islandSpawnTimer=0;
-let takeoffPhase=false, takeoffProgress=0; // for takeoff animation
-const PLANE_X_RATIO=0.22;
+let takeoffPhase=false, takeoffProgress=0;
+let firstTokenSpawned=false;
+const PLANE_X_RATIO=0.30;
 
 function initCanvas(){
     canvas.width=canvas.offsetWidth;
@@ -350,8 +371,8 @@ function drawGround(yPos){
     ctx.setLineDash([]);
 }
 
-function drawWater(){
-    const wy=canvas.height-16;
+function drawWater(wy){
+    wy = (wy !== undefined) ? wy : canvas.height-16;
     const wg=ctx.createLinearGradient(0,wy-8,0,canvas.height);
     wg.addColorStop(0,'#0a4a8a'); wg.addColorStop(1,'#051530');
     ctx.save(); ctx.globalAlpha=0.75; ctx.fillStyle=wg;
@@ -362,13 +383,14 @@ function drawWater(){
     ctx.lineTo(canvas.width,canvas.height); ctx.lineTo(0,canvas.height); ctx.closePath(); ctx.fill(); ctx.restore();
 }
 
-function drawIslands(){
+function drawIslands(camY){
+    camY = camY || 0;
     islandSafeZone=false;
     islands.forEach(isl=>{
         if(!isl.visible)return;
         const ix=((isl.x-bgOffset)%(canvas.width*5)+canvas.width*5)%(canvas.width*5);
         if(ix<-isl.w||ix>canvas.width+isl.w)return;
-        const iy=canvas.height-24;
+        const iy = (isl.worldY || 0) - camY - 8; // опустили ниже
         ctx.save(); ctx.globalAlpha=isl.a||1;
         // Shadow
         ctx.fillStyle='rgba(0,80,150,0.5)';
@@ -392,36 +414,47 @@ function drawIslands(){
         ctx.restore();
         // Safe zone check
         const px=canvas.width*PLANE_X_RATIO;
-        if(Math.abs(px-ix)<isl.w/2+12&&planeY>iy-28) islandSafeZone=true;
+        if(Math.abs(px-ix)<isl.w/2+12&&planeWorldY>-40) islandSafeZone=true;
     });
 }
 
-function drawTokens(){
+function drawTokens(camY){
+    camY = camY || 0;
+    const planeScreenX = canvas.width * PLANE_X_RATIO;
     tokens.forEach(t=>{
         if(t.collected)return;
-        const tx=((t.x-bgOffset)%(canvas.width*5)+canvas.width*5)%(canvas.width*5);
-        if(tx<-40||tx>canvas.width+40)return;
+        // Простая формула: экранный X = мировой X минус bgOffset
+        const tx = t.x - bgOffset;
+        // Если токен ушёл за левый край — пропускаем (он позади)
+        if(tx < -40) return;
+        // Если ещё не появился справа — пропускаем
+        if(tx > canvas.width + 40) return;
+        const ty = t.y - camY;
+        if(ty < -40 || ty > canvas.height + 40) return;
+
         ctx.save(); ctx.globalAlpha=t.a||1;
         const pos=t.value>0||(t.type==='mult'&&t.value>1);
         const col=pos?'#00e676':'#ff4444';
-        // Glow
         ctx.shadowColor=col; ctx.shadowBlur=14;
         if(t.type==='mult'){
             ctx.fillStyle=col+'30'; ctx.strokeStyle=col; ctx.lineWidth=2;
-            ctx.beginPath(); ctx.arc(tx,t.y,17,0,Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(tx,ty,17,0,Math.PI*2); ctx.fill(); ctx.stroke();
         } else {
             ctx.fillStyle=col+'30'; ctx.strokeStyle=col; ctx.lineWidth=1.5;
             ctx.beginPath();
-            ctx.moveTo(tx,t.y-15); ctx.lineTo(tx+12,t.y); ctx.lineTo(tx,t.y+15); ctx.lineTo(tx-12,t.y);
+            ctx.moveTo(tx,ty-15); ctx.lineTo(tx+12,ty); ctx.lineTo(tx,ty+15); ctx.lineTo(tx-12,ty);
             ctx.closePath(); ctx.fill(); ctx.stroke();
         }
         ctx.shadowBlur=0; ctx.fillStyle=col;
         ctx.font='bold 11px Fredoka One,cursive'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(t.label,tx,t.y);
+        ctx.fillText(t.label,tx,ty);
         ctx.restore();
-        // Collect check
-        const px=canvas.width*PLANE_X_RATIO;
-        if(Math.abs(px-tx)<22&&Math.abs(planeY-t.y)<22) collectToken(t);
+
+        // Коллизия: самолёт всегда на planeScreenX, токен на tx
+        const spd = 0.5 + speedRatio * 1.5;
+        const hitX = 18 + spd * 8;
+        const hitY = 22;
+        if(Math.abs(planeScreenX - tx) < hitX && Math.abs(planeWorldY - t.y) < hitY) collectToken(t);
     });
 }
 
@@ -525,7 +558,7 @@ function drawIdle(){
 // ── TOKEN SPAWNING ──
 function spawnToken(){
     const rf=Math.min(distance/900,0.82);
-    const isNeg=Math.random()<(0.08+rf*0.48);
+    const isNeg=Math.random()<(0.25+rf*0.45);
     const isMult=Math.random()<0.38;
     let value,label,type;
     if(isMult){
@@ -545,16 +578,23 @@ function spawnToken(){
             label='+'+value+' АР';
         }
     }
-    tokens.push({x:bgOffset+canvas.width+20+Math.random()*60, y:16+Math.random()*(canvas.height-50), type,value,label,collected:false,a:1});
+    // Токены всегда на высоте самолёта ±половина экрана
+    // Так они точно попадают на путь
+    const tokenX = bgOffset + canvas.width + 20 + Math.random() * 40;
+    const tokenWorldY = cameraY + 15 + Math.random() * (canvas.height - 30);
+    tokens.push({x:tokenX, y:tokenWorldY, type,value,label,collected:false,a:1});
 }
 
 function spawnIsland(){
     const rf=Math.min(distance/900,0.82);
     const visible=Math.random()<(0.72-rf*0.58);
-    islands.push({x:bgOffset+canvas.width+70+Math.random()*60,w:45+Math.random()*30,visible,a:1});
+    islands.push({x:bgOffset+canvas.width+70+Math.random()*60, worldY:0, w:45+Math.random()*30,visible,a:1});
 }
 
 // ── GAME LOOP ──
+// Мировые координаты: planeWorldY=0 это земля, отрицательное = выше
+let cameraY = 0; // смещение камеры (мировые координаты верхнего края canvas)
+
 function gameLoop(){
     if(!gameRunning)return;
     frameCount++;
@@ -562,42 +602,56 @@ function gameLoop(){
     bgOffset += spd;
     distance += spd;
 
-    const minY = 14, maxY = canvas.height - 22;
-
-    if (takeoffPhase) {
-        // Просто двигаем самолёт вверх каждый кадр
-        const riseSpeed = 1.2 + speedRatio * 2.0; // медленно=1.2px/кадр, быстро=3.2px/кадр
-        planeY -= riseSpeed;
-        planeVY = 0;
-        // Останавливаем взлёт когда достигли целевой высоты
-        const targetY = canvas.height * (0.15 - speedRatio * 0.12); // медленно=15%, быстро=3%
-        if (planeY <= targetY) {
-            planeY = targetY;
+    if(takeoffPhase){
+        // Взлёт — плавно но быстро, скорость убывает (как настоящий взлёт)
+        const riseSpeed = 2.5 + speedRatio * 2.5;
+        planeWorldY -= riseSpeed;
+        planeVY = -riseSpeed; // запомним скорость для плавного перехода
+        // Пик: медленно=-250px, быстро=-600px
+        const peakY = -(250 + speedRatio * 350);
+        if(planeWorldY <= peakY){
+            planeWorldY = peakY;
             takeoffPhase = false;
-            planeVY = 0;
+            planeVY = 0; // на пике скорость = 0, дальше гравитация
+            firstTokenSpawned = false; // спавним первый токен сразу на пике
         }
     } else {
-        // Слабая гравитация — долгий полёт
-        planeVY += 0.008 + speedRatio * 0.006;
-        planeY += planeVY;
+        planeVY += 0.003 + speedRatio * 0.002; // очень слабая гравитация
+        planeWorldY += planeVY;
     }
 
-    if(planeY < minY && !takeoffPhase){planeY=minY; planeVY=0;}
+    // Камера ЖЁСТКО следит — всегда держит самолёт на 50% экрана
+    cameraY = planeWorldY - canvas.height * 0.50;
 
-    if(!takeoffPhase && planeY>=maxY){
+    // Экранная позиция самолёта — всегда по середине
+    const screenY = planeWorldY - cameraY;
+
+    // Конец игры — самолёт достиг земли (worldY >= 0)
+    if(!takeoffPhase && planeWorldY >= 0){
         if(islandSafeZone) endGame(true);
         else endGame(false);
         return;
     }
 
-    // Spawn tokens — часто и близко
+    // Spawn tokens (только после взлёта)
     if(!takeoffPhase){
+        // Первый токен сразу после взлёта — прямо перед носом самолёта
+        if(!firstTokenSpawned){
+            firstTokenSpawned = true;
+            tokens.push({
+                x: bgOffset + canvas.width + 30,
+                y: planeWorldY,
+                type:'ar', value: Math.ceil(bet*0.3), label:'+'+Math.ceil(bet*0.3)+' АР',
+                collected:false, a:1, isFirst:true
+            });
+        }
         tokenSpawnTimer++;
-        const rate = Math.max(20, 55 - distance/30);
-        if(tokenSpawnTimer>=rate){spawnToken();tokenSpawnTimer=0;}
+        const rate = Math.max(35, 80 - distance/25);
+        if(tokenSpawnTimer>=rate){ spawnToken(); tokenSpawnTimer=0; }
+
         islandSpawnTimer++;
-        const irate = Math.max(80, 200 - distance/12);
-        if(islandSpawnTimer>=irate){spawnIsland();islandSpawnTimer=0;}
+        const irate = Math.max(200, 350 - distance/10);
+        if(islandSpawnTimer>=irate){ spawnIsland(); islandSpawnTimer=0; }
     }
 
     // DRAW
@@ -605,24 +659,33 @@ function gameLoop(){
     drawBg(bgOffset);
     drawClouds(0.28);
 
-    // Show ground during takeoff
-    // Земля только во время взлёта — уезжает вниз
+    // Земля/вода — рисуем относительно камеры
+    const groundScreenY = 0 - cameraY; // мировой Y=0 это земля
     if(takeoffPhase){
-        const groundY = canvas.height * 0.72 + takeoffProgress * canvas.height * 0.6;
-        drawGround(groundY);
+        // Взлётная полоса уезжает вниз
+        drawGround(groundScreenY - canvas.height * 0.15);
+    }
+    if(groundScreenY < canvas.height){
+        drawWater(Math.max(0, groundScreenY));
     }
 
-    drawIslands();
-    if(!takeoffPhase) drawTokens();
-    drawWater();
+    drawIslands(cameraY);
+    if(!takeoffPhase){
+        // Первый несобранный токен всегда следует за самолётом по Y
+        const first = tokens.find(t=>!t.collected && t.isFirst);
+        if(first) first.y = planeWorldY;
+        drawTokens(cameraY);
+    }
     drawParticles();
 
-    const tilt=Math.max(-0.35,Math.min(0.25,planeVY*0.07));
-    drawPlane(canvas.width*PLANE_X_RATIO,planeY,tilt);
+    const tilt = Math.max(-0.35, Math.min(0.25, planeVY * 0.07));
+    drawPlane(canvas.width * PLANE_X_RATIO, screenY, tilt);
+
+
 
     ctx.fillStyle='rgba(150,200,255,0.22)';
     ctx.font='10px Nunito'; ctx.textAlign='right';
-    ctx.fillText('📏 '+Math.floor(distance)+'м',canvas.width-8,14);
+    ctx.fillText('📏 '+Math.floor(distance)+'м', canvas.width-8, 26);
 
     animId=requestAnimationFrame(gameLoop);
 }
@@ -636,37 +699,48 @@ async function startGame(){
     if(d.balance<bet){alert('Недостаточно АР!');return;}
     await db.ref('players/'+user+'/balance').set(d.balance-bet);
 
+    divingActive=false; diveBtn.disabled=false; diveBtn.textContent='⬇️ НЫРНУТЬ НА ОСТРОВ';
+    firstTokenSpawned=false;
     gameRunning=true; winnings=0; distance=0; bgOffset=0; frameCount=0;
     tokens=[]; islands=[]; particles=[]; tokenSpawnTimer=0; islandSpawnTimer=0;
     islandSafeZone=false; takeoffPhase=true; takeoffProgress=0;
 
     // Старт внизу, плавный взлёт
-    planeY = canvas.height * 0.90;
+    planeWorldY = 0; // старт на земле
+    planeY = canvas.height * 0.88;
     planeVY = 0;
+    cameraY = 0;
 
     updateWinDisplay(0,true);
     document.getElementById('start-btn').style.display='none';
     document.getElementById('dive-btn').style.display='block';
     document.getElementById('bet-input').disabled=true;
+    document.getElementById('speed-track').style.pointerEvents='none';
+    document.getElementById('speed-track').style.opacity='0.45';
 
     gameLoop();
 }
 
-// Dive button - hold to dive
+// Кнопка нырнуть — один раз нажал, отменить нельзя
 const diveBtn=document.getElementById('dive-btn');
-let diveInterval=null;
-function startDive(){if(!gameRunning)return;diveInterval=setInterval(()=>{if(gameRunning)planeVY+=0.6;},50);}
-function stopDive(){clearInterval(diveInterval);diveInterval=null;}
-diveBtn.addEventListener('mousedown',startDive);
+let divingActive=false;
+function startDive(){
+    if(!gameRunning||divingActive)return;
+    divingActive=true;
+    diveBtn.disabled=true;
+    diveBtn.textContent='⬇️ ПАДАЮ...';
+    setInterval(()=>{ if(gameRunning && divingActive) planeVY+=0.12; },50);
+}
+diveBtn.addEventListener('click',startDive);
 diveBtn.addEventListener('touchstart',e=>{e.preventDefault();startDive();},{passive:false});
-document.addEventListener('mouseup',stopDive);
-document.addEventListener('touchend',stopDive);
 
 async function endGame(landed){
     gameRunning=false; cancelAnimationFrame(animId);
     document.getElementById('start-btn').style.display='block';
     document.getElementById('dive-btn').style.display='none';
     document.getElementById('bet-input').disabled=false;
+    document.getElementById('speed-track').style.pointerEvents='auto';
+    document.getElementById('speed-track').style.opacity='1';
 
     const snap=await db.ref('players/'+user).once('value');
     const d=snap.val();
@@ -799,6 +873,47 @@ function apDelete(){
         document.getElementById('admin-panel').style.display='block';
     }
 }
+
+// ── CONTROL MODE ──
+let controlMode = false;
+let ctrlInterval = null;
+
+function toggleControlMode(){
+    controlMode = !controlMode;
+    const btn = document.getElementById('ctrl-mode-btn');
+    const overlay = document.getElementById('ctrl-overlay');
+    if(controlMode){
+        btn.textContent = '🕹 УПРАВЛЕНИЕ: ВКЛ';
+        btn.style.background = 'linear-gradient(180deg,#00c853,#007a2e)';
+        btn.style.boxShadow = '0 3px 0 #004a1a';
+        overlay.style.display = 'block';
+        // Разрешаем менять скорость во время игры
+        document.getElementById('speed-track').style.pointerEvents = 'auto';
+        document.getElementById('speed-track').style.opacity = '1';
+    } else {
+        btn.textContent = '🕹 УПРАВЛЕНИЕ: ВЫКЛ';
+        btn.style.background = 'linear-gradient(180deg,#7b1fa2,#4a148c)';
+        btn.style.boxShadow = '0 3px 0 #2a0060';
+        overlay.style.display = 'none';
+        if(!gameRunning){
+            document.getElementById('speed-track').style.pointerEvents = 'none';
+            document.getElementById('speed-track').style.opacity = '0.45';
+        }
+    }
+}
+
+function changeSpeed(delta){
+    speedRatio = Math.max(0, Math.min(1, speedRatio + delta));
+    updateSpeedVisual();
+}
+
+function startCtrl(dir){
+    stopCtrl();
+    ctrlInterval = setInterval(()=>{
+        if(gameRunning) planeVY += dir * 0.25;
+    }, 50);
+}
+function stopCtrl(){ clearInterval(ctrlInterval); ctrlInterval = null; }
 
 function promptPromo(){
     const input=prompt('Введи промокод:'); if(!input)return;
