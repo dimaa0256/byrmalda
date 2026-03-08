@@ -419,12 +419,22 @@
         });
     }
 
+    document.getElementById('auth-section').style.display='none';
+    const _loadingDiv = document.createElement('div');
+    _loadingDiv.style.cssText='text-align:center;padding:40px;font-family:Fredoka One,cursive;font-size:18px;letter-spacing:3px;color:rgba(255,180,0,0.5);';
+    _loadingDiv.textContent='ЗАГРУЗКА...';
+    document.getElementById('auth-section').parentNode.insertBefore(_loadingDiv, document.getElementById('auth-section'));
+
     auth.onAuthStateChanged(firebaseUser=>{
-        if(firebaseUser && !user){
+        _loadingDiv.remove();
+        if(firebaseUser && !uid){
             uid=firebaseUser.uid;
             db.ref('players/'+uid+'/username').once('value').then(s=>{
                 if(s.exists()){ user=s.val(); go(); }
+                else { document.getElementById('auth-section').style.display='block'; }
             });
+        } else if(!firebaseUser){
+            document.getElementById('auth-section').style.display='block';
         }
     });
 
@@ -487,8 +497,8 @@
         if (d.balance < COST) { alert('Недостаточно АР! Нужно ' + COST + ' АР.'); return; }
 
         
-        await db.ref('players/' + user + '/balance').set(d.balance - COST);
-        db.ref('players/' + user + '/gamesCount').once('value').then(s=>db.ref('players/' + user + '/gamesCount').set((s.val()||0)+1));
+        await db.ref('players/' + uid + '/balance').set(d.balance - COST);
+        db.ref('players/' + uid + '/gamesCount').once('value').then(s=>db.ref('players/' + uid + '/gamesCount').set((s.val()||0)+1));
         db.ref('players/' + uid).once('value').then(s=>{
             const d=s.val()||{};
             db.ref('players/' + uid).update({questMinesGames:(d.questMinesGames||0)+1, questDayGames:(d.questDayGames||0)+1});
@@ -529,7 +539,7 @@
         if (!gameActive || revealed[idx]) return;
         revealed[idx] = true;
         openedCount++;
-        db.ref('players/'+user+'/questMinesCells').once('value').then(s=>db.ref('players/'+user+'/questMinesCells').set((s.val()||0)+1));
+        db.ref('players/'+uid+'/questMinesCells').once('value').then(s=>db.ref('players/'+uid+'/questMinesCells').set((s.val()||0)+1));
 
         const cell = document.querySelector('.cell[data-idx="' + idx + '"]');
         const type = board[idx];
@@ -619,7 +629,7 @@
             
             db.ref('players/' + uid).once('value').then(s => {
                 const d = s.val();
-                db.ref('players/' + user + '/history').set(
+                db.ref('players/' + uid + '/history').set(
                     (d.history || []).concat(['💥 САПЁР: бомба −' + COST + ' АР']).slice(-50)
                 );
             });
@@ -642,7 +652,7 @@
         const code = input.trim().toLowerCase();
         const promoCodes = { "mell": 3, "мелл": 5, "меллстрой": 5 };
         if (!(code in promoCodes)) { alert("❌ Промокод не найден!"); return; }
-        db.ref('players/' + user + '/usedPromos/' + code).once('value').then(snap => {
+        db.ref('players/' + uid + '/usedPromos/' + code).once('value').then(snap => {
             if (snap.exists() && snap.val() === true) { alert("⛔ Ты уже использовал этот промокод!"); return; }
             const reward = promoCodes[code];
             db.ref('players/' + uid).once('value').then(s => {
@@ -659,7 +669,7 @@
 
     function toggleAdmin(e) {
         e.stopPropagation();
-        db.ref('players/'+user+'/admin').once('value').then(s=>{
+        db.ref('players/'+uid+'/admin').once('value').then(s=>{
             if(s.val()){
                 document.getElementById('admin-panel').style.display='block'; loadUsers();
             } else {

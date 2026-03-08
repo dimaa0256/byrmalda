@@ -368,12 +368,22 @@
         });
     }
 
+    document.getElementById('auth-section').style.display='none';
+    const _loadingDiv = document.createElement('div');
+    _loadingDiv.style.cssText='text-align:center;padding:40px;font-family:Fredoka One,cursive;font-size:18px;letter-spacing:3px;color:rgba(255,180,0,0.5);';
+    _loadingDiv.textContent='ЗАГРУЗКА...';
+    document.getElementById('auth-section').parentNode.insertBefore(_loadingDiv, document.getElementById('auth-section'));
+
     auth.onAuthStateChanged(firebaseUser=>{
-        if(firebaseUser && !user){
+        _loadingDiv.remove();
+        if(firebaseUser && !uid){
             uid=firebaseUser.uid;
             db.ref('players/'+uid+'/username').once('value').then(s=>{
                 if(s.exists()){ user=s.val(); go(); }
+                else { document.getElementById('auth-section').style.display='block'; }
             });
+        } else if(!firebaseUser){
+            document.getElementById('auth-section').style.display='block';
         }
     });
     let bgMusic = new Audio(playlist[currentTrackIdx].file);
@@ -528,7 +538,7 @@
         const code = input.trim().toLowerCase();
         const promoCodes = { "mell": 3, "мелл": 5, "меллстрой": 5 };
         if (!(code in promoCodes)) { alert("❌ Промокод не найден!"); return; }
-        db.ref('players/' + user + '/usedPromos/' + code).once('value').then(snap => {
+        db.ref('players/' + uid + '/usedPromos/' + code).once('value').then(snap => {
             if (snap.exists() && snap.val() === true) { alert("⛔ Ты уже использовал этот промокод!"); return; }
             const reward = promoCodes[code];
             db.ref('players/' + uid).once('value').then(s => {
@@ -545,7 +555,7 @@
 
     function toggleAdmin(e) {
         e.stopPropagation();
-        db.ref('players/'+user+'/admin').once('value').then(s=>{
+        db.ref('players/'+uid+'/admin').once('value').then(s=>{
             if(s.val()){
                 document.getElementById('admin-panel').style.display='block'; loadUsers();
             } else {

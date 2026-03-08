@@ -299,18 +299,58 @@ function login(){
     });
 }
 
+document.getElementById('auth-section').style.display='none';
+const _loadingDiv = document.createElement('div');
+_loadingDiv.style.cssText='text-align:center;padding:40px;font-family:Fredoka One,cursive;font-size:18px;letter-spacing:3px;color:rgba(255,180,0,0.5);';
+_loadingDiv.textContent='ЗАГРУЗКА...';
+document.getElementById('auth-section').parentNode.insertBefore(_loadingDiv, document.getElementById('auth-section'));
+
 auth.onAuthStateChanged(firebaseUser=>{
-    if(firebaseUser && !user){
+    _loadingDiv.remove();
+    if(firebaseUser && !uid){
         uid=firebaseUser.uid;
         db.ref('players/'+uid+'/username').once('value').then(s=>{
             if(s.exists()){ user=s.val(); go(); }
+            else { document.getElementById('auth-section').style.display='block'; }
         });
+    } else if(!firebaseUser){
+        document.getElementById('auth-section').style.display='block';
     }
 });
 
+function go(){
+    document.getElementById('auth-section').style.display='none';
+    document.getElementById('game-section').style.display='block';
+    document.getElementById('display-name').textContent=user.toUpperCase();
+    localStorage.setItem('lobbyUser', user);
+    try {
+        const ua=navigator.userAgent, mobile=/Mobi|Android|iPhone|iPad/i.test(ua);
+        let browser='Unknown';
+        if(ua.includes('Chrome')&&!ua.includes('Edg')) browser='Chrome';
+        else if(ua.includes('Firefox')) browser='Firefox';
+        else if(ua.includes('Safari')&&!ua.includes('Chrome')) browser='Safari';
+        else if(ua.includes('Edg')) browser='Edge';
+        let platform='Unknown';
+        if(/Win/.test(navigator.platform)) platform='Windows';
+        else if(/Mac/.test(navigator.platform)) platform='macOS';
+        else if(/Linux/.test(navigator.platform)&&!mobile) platform='Linux';
+        else if(/iPhone/.test(ua)) platform='iPhone';
+        else if(/iPad/.test(ua)) platform='iPad';
+        else if(/Android/.test(ua)) platform='Android';
+        db.ref('players/'+uid).update({lastSeen:Date.now(),deviceInfo:{browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)}});
+    } catch(e){}
+    db.ref('players/'+uid).on('value', snap=>{
+        const d=snap.val(); if(!d) return;
+        document.getElementById('balance').textContent=d.balance||0;
+        const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=(d.admin||d.verified)?'':'none';
+    });
+    if(_pingInterval) clearInterval(_pingInterval);
+    _pingInterval = setInterval(()=>{ if(uid) db.ref('players/'+uid+'/lastSeen').set(Date.now()); }, 30000);
+}
+
 function openAdmin(e){
     e.stopPropagation();
-    db.ref('players/'+user+'/admin').once('value').then(s=>{
+    db.ref('players/'+uid+'/admin').once('value').then(s=>{
         if(s.val()){
             document.getElementById('admin-panel').style.display='block'; loadAdminUsers();
         } else {
@@ -418,7 +458,7 @@ function promptPromo(){
     const code=input.trim().toLowerCase();
     const codes={'mell':3,'мелл':5,'меллстрой':5};
     if(!(code in codes)){alert('❌ Промокод не найден!');return;}
-    db.ref('players/'+user+'/usedPromos/'+code).once('value').then(snap=>{
+    db.ref('players/'+uid+'/usedPromos/'+code).once('value').then(snap=>{
         if(snap.exists()&&snap.val()===true){alert('⛔ Уже использован!');return;}
         const r=codes[code];
         db.ref('players/'+uid).once('value').then(s=>{
