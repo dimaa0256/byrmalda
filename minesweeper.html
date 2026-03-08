@@ -345,7 +345,7 @@
         { name: "птички", file: "ptichki_1.mp3" }
     ];
 
-    let user = "", selU = "", currentTrackIdx = parseInt(localStorage.getItem('musicTrack') || '0');
+    let user = "", uid = "", selU = "", currentTrackIdx = parseInt(localStorage.getItem('musicTrack') || '0');
     let bgMusic = new Audio(playlist[currentTrackIdx].file);
     bgMusic.loop = localStorage.getItem('musicLoop') === '1';
     let mOn = true, sOn = false;

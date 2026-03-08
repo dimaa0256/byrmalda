@@ -340,6 +340,11 @@
     };
 
     let user = "", uid = "", selU = "";
+    let currentTrackIdx = parseInt(localStorage.getItem('musicTrack') || '0');
+    let bgMusic = new Audio(playlist[currentTrackIdx].file);
+    bgMusic.loop = localStorage.getItem('musicLoop') === '1';
+    let mOn = true, sOn = true, milionPlayed = false;
+    let noDelay = false;
 
     function toEmail(u){ return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app'; }
 
@@ -386,10 +391,7 @@
             document.getElementById('auth-section').style.display='block';
         }
     });
-    let bgMusic = new Audio(playlist[currentTrackIdx].file);
-    bgMusic.loop = localStorage.getItem('musicLoop') === '1';
-    let mOn = true, sOn = true, milionPlayed = false;
-    let noDelay = false;
+
 
     function renderPlaylist() {
         document.getElementById('music-playlist').innerHTML = playlist.map((t, i) => `

@@ -170,8 +170,8 @@
             <div class="speed-hint">ЗАЖМИ И ТЯНИ → ЧТОБЫ ВЫБРАТЬ СКОРОСТЬ</div>
         </div>
 
-        <button id="start-btn" class="btn-start" onclick="startGame()">✈️ ВЗЛЕТАТЬ</button>
-        <button id="dive-btn" class="btn-dive" id="dive-btn">⬇️ НЫРНУТЬ НА ОСТРОВ</button>
+        <button id="start-btn" class="btn-start" onclick="startFlight()">✈️ ВЗЛЕТАТЬ</button>
+        <button id="dive-btn" class="btn-dive" onclick="divePlane()" style="display:none;">⬇️ НЫРНУТЬ НА ОСТРОВ</button>
         <div style="display:flex;gap:8px;">
             <button class="promo-btn" onclick="promptPromo()" style="flex:1;">🎁 ПРОМОКОД</button>
             <button class="promo-btn" onclick="openGameQuests()" style="flex:1;color:#cc88ff;border-color:rgba(150,0,255,0.35);">📋 КВЕСТЫ</button>
@@ -202,7 +202,7 @@
             <div class="result-icon" id="result-icon">💦</div>
             <div class="result-text" id="result-text">УПАЛ В ВОДУ!</div>
             <div class="result-sub" id="result-sub">Ты потерял ставку</div>
-            <button class="btn-result" onclick="hideResult()">ЕЩЁ РАЗ</button>
+            <button class="btn-result" onclick="document.getElementById('result-overlay').classList.remove('show')">ЕЩЁ РАЗ</button>
         </div>
 
         
@@ -274,6 +274,10 @@ const auth = firebase.auth();
 
 
 let user='', uid='';
+let _pingInterval=null;
+let canvas, ctx, gameRunning=false, animId=null;
+let planeX, planeY, planeVY, distance, winnings, bet=3, speedRatio=0.5, tokens=[];
+let islandX, islandShown=false;
 function login(){
     const u=document.getElementById('username').value.trim();
     const p=document.getElementById('password').value;
@@ -346,6 +350,7 @@ function go(){
     });
     if(_pingInterval) clearInterval(_pingInterval);
     _pingInterval = setInterval(()=>{ if(uid) db.ref('players/'+uid+'/lastSeen').set(Date.now()); }, 30000);
+    setTimeout(initCanvas, 50);
 }
 
 function openAdmin(e){
@@ -413,6 +418,217 @@ function apDelete(){
 }
 
 
+
+
+function initCanvas(){
+    canvas = document.getElementById('sky');
+    ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    drawIdle();
+}
+
+function drawIdle(){
+    if(!canvas||!ctx) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.font='40px serif';
+    ctx.textAlign='center';
+    ctx.fillText('✈️', canvas.width/2, canvas.height/2);
+}
+
+function updateSpeedVisual(){
+    const track = document.getElementById('speed-track');
+    const thumb = document.getElementById('speed-cursor');
+    const label = document.getElementById('speed-val-label');
+    if(!track||!thumb) return;
+    const fill = document.getElementById('speed-fill'); if(fill) fill.style.width=(speedRatio*100)+'%';
+    const tw = track.offsetWidth - 28;
+    thumb.style.left = (speedRatio * tw) + 'px';
+    if(speedRatio < 0.35) label.textContent = 'МЕДЛЕННАЯ';
+    else if(speedRatio < 0.65) label.textContent = 'СРЕДНЯЯ';
+    else label.textContent = 'БЫСТРАЯ';
+}
+
+async function startFlight(){
+    if(gameRunning) return;
+    const betInput = document.getElementById('bet-input');
+    bet = parseInt(betInput.value) || 3;
+    if(bet < 3){ alert('Минимальная ставка 3 АР'); return; }
+    const snap = await db.ref('players/'+uid).once('value');
+    const d = snap.val();
+    if(!d || d.balance < bet){ alert('Недостаточно АР!'); return; }
+    await db.ref('players/'+uid).update({
+        balance: d.balance - bet,
+        questFlightGames: (d.questFlightGames||0)+1,
+        questDayGames: (d.questDayGames||0)+1
+    });
+    winnings = bet;
+    document.getElementById('win-val').textContent = winnings+' АР';
+    planeX = canvas.width * 0.15;
+    planeY = canvas.height * 0.5;
+    planeVY = 0;
+    distance = 0;
+    tokens = [];
+    islandShown = false;
+    islandX = canvas.width * 1.5;
+    gameRunning = true;
+    document.getElementById('start-btn').style.display='none';
+    document.getElementById('dive-btn').style.display='block';
+    document.getElementById('bet-input').disabled=true;
+    document.getElementById('speed-track').style.pointerEvents='none';
+    document.getElementById('speed-track').style.opacity='0.45';
+    document.getElementById('result-overlay').classList.remove('show');
+    spawnTokens();
+    gameLoop();
+}
+
+function spawnTokens(){
+    const types = [
+        {sym:'💰',type:'ar',val:3},{sym:'⭐',type:'ar',val:5},{sym:'💎',type:'ar',val:8},
+        {sym:'×2',type:'mul',val:2},{sym:'×3',type:'mul',val:3},{sym:'+5',type:'ar',val:5},
+        {sym:'🍒',type:'ar',val:2},{sym:'🌟',type:'ar',val:4}
+    ];
+    tokens = [];
+    for(let i=0;i<12;i++){
+        const t = types[Math.floor(Math.random()*types.length)];
+        tokens.push({
+            x: canvas.width*(0.4 + Math.random()*2.5),
+            y: canvas.height*(0.1 + Math.random()*0.8),
+            sym:t.sym, type:t.type, val:t.val,
+            collected:false, r:22
+        });
+    }
+}
+
+function gameLoop(){
+    if(!gameRunning){ drawIdle(); return; }
+    const speed = 1.5 + speedRatio * 3.5;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Фон — вода внизу
+    ctx.fillStyle='rgba(0,80,160,0.18)';
+    ctx.fillRect(0, canvas.height*0.82, canvas.width, canvas.height*0.18);
+
+    // Остров
+    if(!islandShown && distance > 800 + Math.random()*400){
+        islandShown=true; islandX=canvas.width*1.1;
+    }
+    if(islandShown){
+        islandX -= speed*0.7;
+        ctx.font='52px serif'; ctx.textAlign='center';
+        ctx.fillText('🏝️', islandX, canvas.height*0.78);
+    }
+
+    // Токены
+    tokens.forEach(t=>{
+        if(t.collected) return;
+        t.x -= speed*0.6;
+        // Проверка столкновения с самолётом
+        const dx=t.x-planeX, dy=t.y-planeY;
+        if(Math.sqrt(dx*dx+dy*dy)<t.r+20){
+            t.collected=true;
+            if(t.type==='mul') winnings=Math.round(winnings*t.val);
+            else winnings+=t.val;
+            document.getElementById('win-val').textContent=Math.round(winnings)+' АР';
+        }
+        if(!t.collected){
+            ctx.font='22px serif'; ctx.textAlign='center';
+            ctx.fillText(t.sym, t.x, t.y);
+            ctx.font='bold 11px Nunito,sans-serif';
+            ctx.fillStyle='rgba(255,215,0,0.9)'; ctx.textAlign='center';
+            if(t.type==='mul') ctx.fillText(t.sym, t.x, t.y+16);
+            ctx.fillStyle='white';
+        }
+    });
+
+    // Гравитация и физика
+    const gravity = 0.06 + speedRatio*0.04;
+    planeVY += gravity;
+    planeY += planeVY;
+    planeX += speed*0.15;
+    distance += speed;
+
+    // Самолёт
+    ctx.font='34px serif'; ctx.textAlign='center';
+    ctx.save();
+    ctx.translate(planeX, planeY);
+    const angle = Math.min(Math.max(planeVY*0.08, -0.4), 0.4);
+    ctx.rotate(angle);
+    ctx.fillText('✈️',0,0);
+    ctx.restore();
+
+    // Расстояние
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.font='bold 12px Nunito,sans-serif';
+    ctx.textAlign='left';
+    ctx.fillText('📍 '+Math.floor(distance)+'м', 8, 20);
+
+    // Проверка — упал в воду
+    if(planeY > canvas.height*0.82){
+        endGame(false); return;
+    }
+    // Проверка — улетел за экран без острова
+    if(planeX > canvas.width + 50){
+        endGame(false); return;
+    }
+    // Проверка — долетел до острова
+    if(islandShown && Math.abs(planeX - islandX) < 40 && planeY > canvas.height*0.55){
+        endGame(true); return;
+    }
+
+    animId = requestAnimationFrame(gameLoop);
+}
+
+function divePlane(){
+    if(!gameRunning) return;
+    planeVY += 2.5;
+}
+
+async function endGame(landed){
+    gameRunning=false;
+    if(animId){ cancelAnimationFrame(animId); animId=null; }
+    document.getElementById('start-btn').style.display='block';
+    document.getElementById('dive-btn').style.display='none';
+    document.getElementById('bet-input').disabled=false;
+    document.getElementById('speed-track').style.pointerEvents='auto';
+    document.getElementById('speed-track').style.opacity='1';
+
+    const snap = await db.ref('players/'+uid).once('value');
+    const d = snap.val()||{};
+    const finalWin = Math.round(winnings);
+
+    db.ref('players/'+uid).update({
+        questMaxDist: Math.max(d.questMaxDist||0, Math.floor(distance)),
+        questDayEarned: landed && finalWin>0 ? (d.questDayEarned||0)+finalWin : (d.questDayEarned||0)
+    });
+
+    if(landed && finalWin>0){
+        await db.ref('players/'+uid).update({
+            balance: (d.balance||0)+finalWin,
+            history: [...(d.history||[]), '✈️ ПОЛЁТ: +'+finalWin+' АР'].slice(-50)
+        });
+        document.getElementById('result-icon').textContent='🏝️';
+        document.getElementById('result-text').textContent='ПОСАДКА!';
+        document.getElementById('result-sub').textContent='Ты забрал '+finalWin+' АР!';
+    } else if(landed){
+        await db.ref('players/'+uid).update({
+            history: [...(d.history||[]), '✈️ ПОЛЁТ: посадка 0 АР'].slice(-50)
+        });
+        document.getElementById('result-icon').textContent='🏝️';
+        document.getElementById('result-text').textContent='ПОСАДКА!';
+        document.getElementById('result-sub').textContent='Собранного нет';
+    } else {
+        await db.ref('players/'+uid).update({
+            history: [...(d.history||[]), '✈️ ПОЛЁТ: утонул −'+bet+' АР'].slice(-50)
+        });
+        document.getElementById('result-icon').textContent='💦';
+        document.getElementById('result-text').textContent='УПАЛ В ВОДУ!';
+        document.getElementById('result-sub').textContent='Потеря: '+bet+' АР';
+    }
+    document.getElementById('result-overlay').classList.add('show');
+    drawIdle();
+}
+
 let controlMode = false;
 let ctrlInterval = null;
 
@@ -468,6 +684,27 @@ function promptPromo(){
         });
     });
 }
+
+// Speed track drag
+(function(){
+    const track = document.getElementById('speed-track');
+    if(!track) return;
+    function setSpeed(e){
+        const rect = track.getBoundingClientRect();
+        const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+        speedRatio = Math.max(0, Math.min(1, x / rect.width));
+        updateSpeedVisual();
+    }
+    let dragging = false;
+    track.addEventListener('mousedown', e=>{ dragging=true; setSpeed(e); });
+    track.addEventListener('touchstart', e=>{ dragging=true; setSpeed(e); e.preventDefault(); }, {passive:false});
+    document.addEventListener('mousemove', e=>{ if(dragging) setSpeed(e); });
+    document.addEventListener('touchmove', e=>{ if(dragging) setSpeed(e); }, {passive:false});
+    document.addEventListener('mouseup', ()=>dragging=false);
+    document.addEventListener('touchend', ()=>dragging=false);
+    updateSpeedVisual();
+})();
+
 window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;if(!gameRunning)drawIdle();}});
 
     function openGameQuests(){
