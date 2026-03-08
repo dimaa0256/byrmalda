@@ -291,7 +291,10 @@ function login(){
                     db.ref('players/'+uid).set({username:u,balance:5,history:['Регистрация'],usedPromos:{}});
                     go();
                 })
-                .catch(e=>alert('Ошибка: '+e.message));
+                .catch(e=>{
+                    if(e.code==='auth/weak-password') alert('Пароль слишком короткий! Минимум 6 символов.');
+                    else alert('Ошибка: '+e.message);
+                });
         }
     });
 }

@@ -364,7 +364,7 @@
                         db.ref('players/'+uid).set({ username:u, balance:5, history:['Регистрация'], usedPromos:{} });
                         onSignedIn(cred.user, u);
                     })
-                    .catch(e=>{ showErr('Ошибка регистрации: '+e.message); });
+                    .catch(e=>{ showErr(e.code==='auth/weak-password'?'Пароль слишком короткий! Минимум 6 символов.':'Ошибка регистрации: '+e.message); });
             }
         });
     }
