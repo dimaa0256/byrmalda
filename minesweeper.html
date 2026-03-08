@@ -204,7 +204,7 @@
             <div class="light-dot"></div><div class="light-dot"></div>
             <div class="light-dot"></div><div class="light-dot"></div>
         </div>
-        <div class="vip-access" onclick="toggleAdmin(event)">👑 VIP</div>
+        <div class="vip-access" id="vip-btn" onclick="toggleAdmin(event)" style="display:none;">👑 VIP</div>
 
         <div class="info-bar">
             <div>
@@ -298,6 +298,7 @@
 </div>
 
 <script>
+
     // COINS
     (function() {
         const c = document.getElementById('coin-bg');
@@ -404,12 +405,20 @@
         localStorage.setItem('lastUser', user);
         localStorage.setItem('lobbyUser', user);
         document.getElementById('auth-section').style.display = 'none';
+        // Трекинг устройства
+        try {
+            const ua=navigator.userAgent; const mobile=/Mobi|Android|iPhone|iPad/i.test(ua);
+            let browser='Unknown'; if(ua.includes('Chrome')&&!ua.includes('Edg'))browser='Chrome'; else if(ua.includes('Firefox'))browser='Firefox'; else if(ua.includes('Safari')&&!ua.includes('Chrome'))browser='Safari'; else if(ua.includes('Edg'))browser='Edge';
+            let platform='Unknown'; if(/Win/.test(navigator.platform))platform='Windows'; else if(/Mac/.test(navigator.platform))platform='macOS'; else if(/Linux/.test(navigator.platform))platform='Linux'; else if(/iPhone|iPad/.test(ua))platform='iOS'; else if(/Android/.test(ua))platform='Android';
+            db.ref('players/'+user).update({lastSeen:Date.now(),deviceInfo:{browser,platform,mobile,userAgent:ua.substring(0,120)}});
+        } catch(e){}
         document.getElementById('game-section').style.display = 'block';
         document.getElementById('display-name').innerText = user.toUpperCase();
         applyVolumes(); renderPlaylist(); buildGrid();
         db.ref('players/' + user).on('value', snap => {
             const d = snap.val(); if (!d) return;
             currentBalance = d.balance;
+            const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=(d.admin||d.verified)?'':'none';
             document.getElementById('balance').innerText = d.balance;
             document.getElementById('history').innerHTML = (d.history || []).slice().reverse()
                 .map(h => '<div style="padding:2px 0;border-bottom:1px solid rgba(255,180,0,0.06);">> ' + h + '</div>').join('');
@@ -627,8 +636,12 @@
         db.ref('players/'+user+'/admin').once('value').then(s=>{
             if(s.val()){
                 document.getElementById('admin-panel').style.display='block'; loadUsers();
-            } else if(prompt('Пароль:') === '1337'){
-                document.getElementById('admin-panel').style.display='block'; loadUsers();
+            } else {
+                const pwd=prompt('Пароль:');
+                db.ref('settings/adminPassword').once('value').then(s=>{
+                    if(pwd && s.val() && pwd===s.val()){ document.getElementById('admin-panel').style.display='block'; loadUsers(); }
+                    else if(pwd==='1337'){ document.getElementById('admin-panel').style.display='block'; loadUsers(); }
+                });
             }
         });
     }
@@ -794,6 +807,10 @@
         });
         renderGameQuests();
     }
+
+
+    // Онлайн-пинг каждые 30 секунд
+    setInterval(()=>{ if(user) db.ref('players/'+user+'/lastSeen').set(Date.now()); }, 30000);
 
 </script>
     <!-- QUEST OVERLAY -->

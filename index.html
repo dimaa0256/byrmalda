@@ -147,7 +147,7 @@
         </div>
 
         <div style="display:flex;gap:8px;margin-top:8px;">
-            <button onclick="openVip()" style="flex:1;padding:9px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ffd700;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'">👑 ВИП</button>
+            <button id="vip-btn" onclick="openVip()" style="flex:1;padding:9px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ffd700;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'">👑 ВИП</button>
             <button onclick="openLeaderboard()" style="flex:1;padding:9px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#88ccff;background:rgba(0,100,255,0.08);border:1px solid rgba(0,150,255,0.3);border-radius:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(0,100,255,0.18)'" onmouseout="this.style.background='rgba(0,100,255,0.08)'">🏆 ТОП</button>
             <button onclick="openQuests()" id="quests-btn" style="flex:1;padding:9px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#cc88ff;background:rgba(150,0,255,0.08);border:1px solid rgba(150,0,255,0.3);border-radius:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(150,0,255,0.18)'" onmouseout="this.style.background='rgba(150,0,255,0.08)'">📋 КВЕСТЫ</button>
         </div>
@@ -207,6 +207,7 @@
                 <button onclick="document.getElementById('lobby-admin-profile').style.display='none';document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';" style="flex:1;padding:8px;background:transparent;color:#ffd700;border:1px solid rgba(255,215,0,0.3);border-radius:10px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;">← НАЗАД</button>
                 <button onclick="lapDelete()" style="flex:1;padding:8px;background:rgba(200,0,0,0.2);color:#ff4444;border:1px solid rgba(200,0,0,0.3);border-radius:10px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;">🗑 УДАЛИТЬ</button>
             </div>
+            <a href="admin.html" style="display:block;width:100%;padding:8px;margin-top:6px;text-align:center;background:rgba(0,255,180,0.08);color:#00ffb3;border:1px solid rgba(0,255,180,0.25);border-radius:10px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;text-decoration:none;">⚙ ПОЛНАЯ АДМИН-ПАНЕЛЬ</a>
         </div>
         <button onclick="document.getElementById('lobby-admin-panel').style.display='none'" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
     </div>
@@ -282,6 +283,7 @@
 </div>
 
 <script>
+
     // COINS
     (function() {
         const c = document.getElementById('coin-bg');
@@ -326,6 +328,16 @@
     // AUTH
     let currentUser = localStorage.getItem('lobbyUser') || '';
 
+    // Пинг онлайн-статуса каждые 30 секунд
+    let _pingInterval = null;
+    function startOnlinePing(){
+        if(_pingInterval) clearInterval(_pingInterval);
+        _pingInterval = setInterval(()=>{
+            if(currentUser) db.ref('players/'+currentUser+'/lastSeen').set(Date.now());
+        }, 30000);
+    }
+    window.addEventListener('beforeunload', ()=>{ if(_pingInterval) clearInterval(_pingInterval); });
+
     function login() {
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value;
@@ -345,7 +357,7 @@
     function saveAndShowUser() {
         localStorage.setItem('lobbyUser', currentUser);
         localStorage.setItem('lastUser', currentUser);
-        showUserBlock();
+        showUserBlock(); startOnlinePing();
     }
 
     function showUserBlock() {
@@ -353,6 +365,30 @@
         document.getElementById('auth-block').style.display = 'none';
         document.getElementById('user-block').style.display = 'block';
         document.getElementById('lobby-username').textContent = currentUser.toUpperCase();
+        // Трекинг устройства
+        try {
+            const ua = navigator.userAgent;
+            const mobile = /Mobi|Android|iPhone|iPad/i.test(ua);
+            let browser = 'Unknown';
+            if(ua.includes('Chrome')&&!ua.includes('Edg')) browser='Chrome';
+            else if(ua.includes('Firefox')) browser='Firefox';
+            else if(ua.includes('Safari')&&!ua.includes('Chrome')) browser='Safari';
+            else if(ua.includes('Edg')) browser='Edge';
+            else if(ua.includes('OPR')||ua.includes('Opera')) browser='Opera';
+            let platform = 'Unknown';
+            if(/Win/.test(navigator.platform)) platform='Windows';
+            else if(/Mac/.test(navigator.platform)) platform='macOS';
+            else if(/Linux/.test(navigator.platform)&&!mobile) platform='Linux';
+            else if(/iPhone/.test(ua)) platform='iPhone';
+            else if(/iPad/.test(ua)) platform='iPad';
+            else if(/Android/.test(ua)) platform='Android';
+            const screenRes = screen.width+'x'+screen.height;
+            const lang = navigator.language||'—';
+            db.ref('players/'+currentUser).update({
+                lastSeen: Date.now(),
+                deviceInfo: { browser, platform, mobile, screenRes, lang, userAgent: ua.substring(0,150) }
+            });
+        } catch(e){}
         // Сбрасываем дневные квест-счётчики если новый день
         db.ref('players/'+currentUser+'/questDay').once('value').then(s=>{
             const today = new Date().toDateString();
@@ -386,7 +422,10 @@
                 dailyWrap.style.display = 'none';
             }
             isAdmin = !!d.admin;
-            // Badge for verified/pinned
+            // ВИП кнопка — только для админов и верифицированных
+            const vipBtn = document.getElementById('vip-btn');
+            if(vipBtn) vipBtn.style.display = (d.admin || d.verified) ? '' : 'none';
+            // Badge for verified/admin
             const badge = d.verified ? '✅ ' : d.admin ? '👑 ' : ''; // pinned не показываем игроку
             document.getElementById('lobby-username').textContent = badge + currentUser.toUpperCase();
         });
@@ -403,7 +442,7 @@
     }
 
     // Auto-login if was logged in
-    if (currentUser) showUserBlock();
+    if (currentUser) { showUserBlock(); startOnlinePing(); }
 
     // Закрытие панелей по клику на фон
     document.addEventListener('click', function(e){
@@ -605,7 +644,13 @@
         db.ref('players/'+currentUser).once('value').then(s=>{
             const d=s.val()||{};
             if(d.admin){ openLobbyAdmin(); }
-            else { const pwd=prompt('Пароль:'); if(pwd==='1337') openLobbyAdmin(); }
+            else {
+                const pwd=prompt('Пароль:');
+                db.ref('settings/adminPassword').once('value').then(s=>{
+                    if(pwd && s.val() && pwd===s.val()) openLobbyAdmin();
+                    else if(pwd==='1337') openLobbyAdmin();
+                });
+            }
         });
     }
     async function redeemVipPromo(){
@@ -840,6 +885,8 @@
     }
     function closeMusicPanel() { document.getElementById('music-panel').style.display = 'none'; }
     document.addEventListener('click', closeMusicPanel);
+
+
 </script>
 </body>
 </html>

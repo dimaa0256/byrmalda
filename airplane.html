@@ -132,7 +132,7 @@
         <div class="casino-title">✈️ ПОЛЁТ</div>
         <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
         <div style="text-align:center;margin-bottom:8px;">
-            <button onclick="openAdmin(event)" style="padding:5px 22px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ffd700;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:20px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'">👑 ВИП</button>
+            <button onclick="openAdmin(event)" style="padding:5px 22px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ffd700;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:20px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'" id="vip-btn" style="display:none;">👑 ВИП</button>
         </div>
 
         <div class="info-bar">
@@ -146,7 +146,7 @@
         <div class="sky-frame"><canvas id="sky"></canvas></div>
 
         <div class="win-display">
-            <div class="win-label">собрано</div>
+            <div class="win-label">всего</div>
             <div class="win-val" id="win-val">0 АР</div>
         </div>
 
@@ -247,6 +247,7 @@
     </div>
 </div>
 <script>
+
 // ── FIREBASE ──
 const firebaseConfig = { apiKey:"AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s", databaseURL:"https://dima256-default-rtdb.europe-west1.firebasedatabase.app", projectId:"dima256", appId:"1:208400853144:web:78eb608f5aacd57e8848ed" };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -282,9 +283,16 @@ function login() {
 }
 function go(){
     localStorage.setItem('lobbyUser',user); localStorage.setItem('lastUser',user);
+    try{
+        const ua=navigator.userAgent; const mobile=/Mobi|Android|iPhone|iPad/i.test(ua);
+        let browser='Unknown'; if(ua.includes('Chrome')&&!ua.includes('Edg'))browser='Chrome'; else if(ua.includes('Firefox'))browser='Firefox'; else if(ua.includes('Safari')&&!ua.includes('Chrome'))browser='Safari'; else if(ua.includes('Edg'))browser='Edge';
+        let platform='Unknown'; if(/Win/.test(navigator.platform))platform='Windows'; else if(/Mac/.test(navigator.platform))platform='macOS'; else if(/Linux/.test(navigator.platform))platform='Linux'; else if(/iPhone|iPad/.test(ua))platform='iOS'; else if(/Android/.test(ua))platform='Android';
+        db.ref('players/'+user).update({lastSeen:Date.now(),deviceInfo:{browser,platform,mobile,userAgent:ua.substring(0,120)}});
+    }catch(e){}
     document.getElementById('auth-section').style.display='none';
     document.getElementById('game-section').style.display='block';
     document.getElementById('display-name').innerText=user.toUpperCase();
+    db.ref('players/'+user).once('value').then(s=>{ const d=s.val()||{}; const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=(d.admin||d.verified)?'':'none'; });
     initCanvas(); initSpeedSlider(); applyVolumes(); renderPlaylist();
     db.ref('players/'+user).on('value',snap=>{
         const d=snap.val(); if(!d)return;
@@ -752,7 +760,7 @@ async function startGame(){
     divingActive=false; diveBtn.disabled=false; diveBtn.textContent='⬇️ НЫРНУТЬ НА ОСТРОВ';
     firstTokenSpawned=false;
     exploding=false;
-    gameRunning=true; winnings=0; distance=0; bgOffset=0; frameCount=0;
+    gameRunning=true; winnings=bet; distance=0; bgOffset=0; frameCount=0;
     tokens=[]; islands=[]; particles=[]; tokenSpawnTimer=0; islandSpawnTimer=0;
     islandSafeZone=false; takeoffPhase=true; takeoffProgress=0;
 
@@ -762,7 +770,7 @@ async function startGame(){
     planeVY = 0;
     cameraY = 0;
 
-    updateWinDisplay(0,true);
+    updateWinDisplay(bet,true);
     document.getElementById('start-btn').style.display='none';
     document.getElementById('dive-btn').style.display='block';
     document.getElementById('bet-input').disabled=true;
@@ -790,7 +798,7 @@ async function endGame(landed){
     db.ref('players/'+user).once('value').then(s=>{
         const d=s.val()||{};
         const updates={questMaxDist: Math.max(d.questMaxDist||0, Math.floor(distance))};
-        if(landed && winnings>0) updates.questDayEarned=(d.questDayEarned||0)+winnings;
+        if(landed && winnings>bet) updates.questDayEarned=(d.questDayEarned||0)+(Math.round(winnings)-bet);
         db.ref('players/'+user).update(updates);
     });
     gameRunning=false; cancelAnimationFrame(animId);
@@ -803,16 +811,17 @@ async function endGame(landed){
     const snap=await db.ref('players/'+user).once('value');
     const d=snap.val();
 
+    const profit = Math.round(winnings) - bet; // чистый профит
     if(landed&&winnings>0){
-        await db.ref('players/'+user).update({balance:d.balance+Math.round(winnings),history:(d.history||[]).concat(['✈️ ПОЛЁТ: +'+Math.round(winnings)+' АР']).slice(-50)});
+        await db.ref('players/'+user).update({balance:d.balance+Math.round(winnings),history:(d.history||[]).concat(['✈️ ПОЛЁТ: '+(profit>=0?'+':'')+profit+' АР']).slice(-50)});
         document.getElementById('result-icon').textContent='🏝️';
         document.getElementById('result-text').textContent='ПОСАДКА!';
-        document.getElementById('result-sub').textContent='Ты забрал '+Math.round(winnings)+' АР!';
+        document.getElementById('result-sub').textContent=(profit>0?'Профит: +'+profit+' АР':profit===0?'Вернул ставку':'Потеря: '+profit+' АР');
     } else if(landed){
-        await db.ref('players/'+user+'/history').set((d.history||[]).concat(['✈️ ПОЛЁТ: посадка 0 АР']).slice(-50));
+        await db.ref('players/'+user).update({balance:d.balance+Math.round(winnings),history:(d.history||[]).concat(['✈️ ПОЛЁТ: '+profit+' АР']).slice(-50)});
         document.getElementById('result-icon').textContent='🏝️';
         document.getElementById('result-text').textContent='ПОСАДКА!';
-        document.getElementById('result-sub').textContent='Собранного нет';
+        document.getElementById('result-sub').textContent=(profit>=0?'Профит: +'+profit+' АР':'Потеря: '+Math.abs(profit)+' АР');
     } else {
         await db.ref('players/'+user+'/history').set((d.history||[]).concat(['✈️ ПОЛЁТ: утонул −'+bet+' АР']).slice(-50));
         document.getElementById('result-icon').textContent='💦';
@@ -880,8 +889,12 @@ function openAdmin(e){
     db.ref('players/'+user+'/admin').once('value').then(s=>{
         if(s.val()){
             document.getElementById('admin-panel').style.display='block'; loadAdminUsers();
-        } else if(prompt('Пароль:')==='1337'){
-            document.getElementById('admin-panel').style.display='block'; loadAdminUsers();
+        } else {
+            const pwd=prompt('Пароль:');
+            db.ref('settings/adminPassword').once('value').then(s=>{
+                if(pwd && s.val() && pwd===s.val()){ document.getElementById('admin-panel').style.display='block'; loadAdminUsers(); }
+                else if(pwd==='1337'){ document.getElementById('admin-panel').style.display='block'; loadAdminUsers(); }
+            });
         }
     });
 }
@@ -1076,6 +1089,10 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
         });
         renderGameQuests();
     }
+
+
+    // Онлайн-пинг каждые 30 секунд
+    setInterval(()=>{ if(user) db.ref('players/'+user+'/lastSeen').set(Date.now()); }, 30000);
 
 </script>
     <!-- QUEST OVERLAY -->
