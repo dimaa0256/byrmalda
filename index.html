@@ -103,6 +103,15 @@
         input[type="range"] { width: 85%; display: block; margin: 0 auto 8px; accent-color: #ff3300; }
         .btn-panel-close { width: 100%; padding: 8px; border-radius: 10px; background: transparent; color: rgba(255,180,0,0.45); border: 1px solid rgba(255,180,0,0.2); cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; transition: all 0.2s; }
         .btn-panel-close:hover { border-color: #ffd700; color: #ffd700; }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px rgba(0,0,0,0.55) inset !important;
+            -webkit-text-fill-color: #fff !important;
+            border: 2px solid rgba(255,100,0,0.3) !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
     </style>
 </head>
 <body>
@@ -334,7 +343,7 @@
     function startOnlinePing(){
         if(_pingInterval) clearInterval(_pingInterval);
         _pingInterval = setInterval(()=>{
-            if(currentUser) db.ref('players/'+currentUser+'/lastSeen').set(Date.now());
+            if(currentUid) db.ref('players/'+currentUid+'/lastSeen').set(Date.now());
         }, 30000);
     }
     window.addEventListener('beforeunload', ()=>{ if(_pingInterval) clearInterval(_pingInterval); });
@@ -416,13 +425,16 @@
             else if(ua.includes('Safari')&&!ua.includes('Chrome')) browser='Safari';
             else if(ua.includes('Edg')) browser='Edge';
             let platform='Unknown';
-            if(/Win/.test(navigator.platform)) platform='Windows';
-            else if(/Mac/.test(navigator.platform)) platform='macOS';
-            else if(/Linux/.test(navigator.platform)&&!mobile) platform='Linux';
-            else if(/iPhone/.test(ua)) platform='iPhone';
+            if(/iPhone/.test(ua)) platform='iPhone';
             else if(/iPad/.test(ua)) platform='iPad';
-            else if(/Android/.test(ua)) platform='Android';
-            db.ref('players/'+currentUid).update({lastSeen:Date.now(), deviceInfo:{browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)}});
+            else if(/Android/.test(ua)){
+                const m=ua.match(/Android[^;]*;\s*([^)]+)/i);
+                platform = m ? m[1].trim() : 'Android';
+            }
+            else if(/Win/.test(navigator.platform)) platform='Windows';
+            else if(/Mac/.test(navigator.platform)) platform='macOS';
+            else platform='Unknown';
+            db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Лобби', deviceInfo:{browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)}});
         } catch(e){}
         db.ref('players/'+currentUid+'/questDay').once('value').then(s=>{
             const today=new Date().toDateString();
