@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Nunito', sans-serif; }
@@ -309,6 +310,7 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
 
     
     function verifyAge() {
@@ -326,8 +328,6 @@
     }
 
     
-    let currentUser = localStorage.getItem('lobbyUser') || '';
-
     
     let _pingInterval = null;
     function startOnlinePing(){
@@ -338,210 +338,194 @@
     }
     window.addEventListener('beforeunload', ()=>{ if(_pingInterval) clearInterval(_pingInterval); });
 
-    function login() {
+    let currentUser = '';
+    let currentUid = '';
+    let isAdmin = false;
+
+    function toEmail(u){ return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app'; }
+
+    function login(){
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value;
-        if (!u || !p) return;
-        db.ref('players/' + u).once('value').then(s => {
-            if (!s.exists()) {
-                db.ref('players/' + u).set({ balance: 5, password: p, history: ["Регистрация"], usedPromos: {} })
-                    .then(() => { currentUser = u; saveAndShowUser(); });
-            } else if (s.val().password === p) {
-                currentUser = u; saveAndShowUser();
+        if(!u||!p){ showErr('Заполни поля'); return; }
+        if(u.length<2||u.length>20){ showErr('Имя: 2–20 символов'); return; }
+        showErr('');
+        db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
+            if(snap.exists()){
+                auth.signInWithEmailAndPassword(toEmail(u), p)
+                    .then(cred=>{ onSignedIn(cred.user, u); })
+                    .catch(e=>{ showErr(e.code==='auth/wrong-password'?'Неверный пароль!':'Ошибка входа'); });
             } else {
-                alert("Неверный пароль!");
+                auth.createUserWithEmailAndPassword(toEmail(u), p)
+                    .then(cred=>{
+                        const uid = cred.user.uid;
+                        db.ref('usernames/'+u.toLowerCase()).set(uid);
+                        db.ref('players/'+uid).set({ username:u, balance:5, history:['Регистрация'], usedPromos:{} });
+                        onSignedIn(cred.user, u);
+                    })
+                    .catch(e=>{ showErr('Ошибка регистрации: '+e.message); });
             }
         });
     }
 
-    function saveAndShowUser() {
-        localStorage.setItem('lobbyUser', currentUser);
-        localStorage.setItem('lastUser', currentUser);
-        showUserBlock(); startOnlinePing();
+    function showErr(msg){
+        let el = document.getElementById('login-err');
+        if(!el){
+            el = document.createElement('div');
+            el.id='login-err';
+            el.style.cssText='color:#ff6666;font-size:12px;text-align:center;margin-top:-6px;margin-bottom:8px;font-family:Nunito,sans-serif;font-weight:700;';
+            document.getElementById('auth-block').appendChild(el);
+        }
+        el.textContent = msg;
     }
 
-    function showUserBlock() {
-        if (!currentUser) return;
-        document.getElementById('auth-block').style.display = 'none';
-        document.getElementById('user-block').style.display = 'block';
-        document.getElementById('lobby-username').textContent = currentUser.toUpperCase();
-        
+    function onSignedIn(firebaseUser, username){
+        currentUid = firebaseUser.uid;
+        currentUser = username;
+        localStorage.setItem('lobbyUser', username);
+        localStorage.setItem('lobbyUid', currentUid);
+        showUserBlock();
+        startOnlinePing();
+    }
+
+    auth.onAuthStateChanged(firebaseUser=>{
+        if(firebaseUser){
+            currentUid = firebaseUser.uid;
+            db.ref('players/'+currentUid+'/username').once('value').then(s=>{
+                if(s.exists()){
+                    currentUser = s.val();
+                    localStorage.setItem('lobbyUser', currentUser);
+                    showUserBlock();
+                    startOnlinePing();
+                }
+            });
+        }
+    });
+
+    function showUserBlock(){
+        if(!currentUid) return;
+        document.getElementById('auth-block').style.display='none';
+        document.getElementById('user-block').style.display='block';
+        document.getElementById('lobby-username').textContent=currentUser.toUpperCase();
         try {
-            const ua = navigator.userAgent;
-            const mobile = /Mobi|Android|iPhone|iPad/i.test(ua);
-            let browser = 'Unknown';
+            const ua=navigator.userAgent, mobile=/Mobi|Android|iPhone|iPad/i.test(ua);
+            let browser='Unknown';
             if(ua.includes('Chrome')&&!ua.includes('Edg')) browser='Chrome';
             else if(ua.includes('Firefox')) browser='Firefox';
             else if(ua.includes('Safari')&&!ua.includes('Chrome')) browser='Safari';
             else if(ua.includes('Edg')) browser='Edge';
-            else if(ua.includes('OPR')||ua.includes('Opera')) browser='Opera';
-            let platform = 'Unknown';
+            let platform='Unknown';
             if(/Win/.test(navigator.platform)) platform='Windows';
             else if(/Mac/.test(navigator.platform)) platform='macOS';
             else if(/Linux/.test(navigator.platform)&&!mobile) platform='Linux';
             else if(/iPhone/.test(ua)) platform='iPhone';
             else if(/iPad/.test(ua)) platform='iPad';
             else if(/Android/.test(ua)) platform='Android';
-            const screenRes = screen.width+'x'+screen.height;
-            const lang = navigator.language||'—';
-            db.ref('players/'+currentUser).update({
-                lastSeen: Date.now(),
-                deviceInfo: { browser, platform, mobile, screenRes, lang, userAgent: ua.substring(0,150) }
-            });
+            db.ref('players/'+currentUid).update({lastSeen:Date.now(), deviceInfo:{browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)}});
         } catch(e){}
-        
-        db.ref('players/'+currentUser+'/questDay').once('value').then(s=>{
-            const today = new Date().toDateString();
-            if(s.val()!==today){
-                db.ref('players/'+currentUser).update({
-                    questDay:today, questSlotWins:0, questSlotGames:0,
-                    questMinesGames:0, questMinesCells:0, questMinesWins:0, questMinesMaxWin:0,
-                    questFlightGames:0, questMaxDist:0, questDayGames:0, questDayEarned:0,
-                    questBase_games: 0
-                });
-            }
+        db.ref('players/'+currentUid+'/questDay').once('value').then(s=>{
+            const today=new Date().toDateString();
+            if(s.val()!==today) db.ref('players/'+currentUid).update({questDay:today,questSlotWins:0,questSlotGames:0,questMinesGames:0,questMinesCells:0,questMinesWins:0,questMinesMaxWin:0,questFlightGames:0,questMaxDist:0,questDayGames:0,questDayEarned:0,questBase_games:0});
         });
-        db.ref('players/' + currentUser).on('value', s => {
-            const d = s.val()||{};
-            document.getElementById('lobby-balance').textContent = (d.balance || 0) + ' АР';
-
-            
-            const dailyWrap = document.getElementById('daily-reward-wrap');
-            if(d.verified && d.dailyEnabled !== false){
-                dailyWrap.style.display = 'block';
-                const now = new Date().toDateString();
-                const btn = document.getElementById('daily-btn');
-                if(d.lastDaily === now){
-                    btn.textContent = '✅ НАГРАДА УЖЕ ПОЛУЧЕНА';
-                    btn.style.opacity='0.5'; btn.disabled=true;
-                } else {
-                    btn.textContent = '🎁 ЕЖЕДНЕВНАЯ НАГРАДА';
-                    btn.style.opacity='1'; btn.disabled=false;
-                }
-            } else {
-                dailyWrap.style.display = 'none';
-            }
-            isAdmin = !!d.admin;
-            
-            const vipBtn = document.getElementById('vip-btn');
-            if(vipBtn) vipBtn.style.display = (d.admin || d.verified) ? '' : 'none';
-            
-            const badge = d.verified ? '✅ ' : d.admin ? '👑 ' : ''; 
-            document.getElementById('lobby-username').textContent = badge + currentUser.toUpperCase();
+        db.ref('players/'+currentUid).on('value', s=>{
+            const d=s.val()||{};
+            document.getElementById('lobby-balance').textContent=(d.balance||0)+' АР';
+            const dailyWrap=document.getElementById('daily-reward-wrap');
+            if(d.verified&&d.dailyEnabled!==false){
+                dailyWrap.style.display='block';
+                const btn=document.getElementById('daily-btn');
+                if(d.lastDaily===new Date().toDateString()){ btn.textContent='✅ НАГРАДА УЖЕ ПОЛУЧЕНА'; btn.style.opacity='0.5'; btn.disabled=true; }
+                else { btn.textContent='🎁 ЕЖЕДНЕВНАЯ НАГРАДА'; btn.style.opacity='1'; btn.disabled=false; }
+            } else { dailyWrap.style.display='none'; }
+            isAdmin=!!d.admin;
+            const vipBtn=document.getElementById('vip-btn');
+            if(vipBtn) vipBtn.style.display=(d.admin||d.verified)?'':'none';
+            const badge=d.verified?'✅ ':d.admin?'👑 ':'';
+            document.getElementById('lobby-username').textContent=badge+currentUser.toUpperCase();
         });
     }
 
-    function logout() {
+    function logout(){
+        auth.signOut();
+        db.ref('players/'+currentUid).off();
+        currentUser=''; currentUid='';
         localStorage.removeItem('lobbyUser');
-        localStorage.removeItem('lastUser');
-        currentUser = '';
-        document.getElementById('user-block').style.display = 'none';
-        document.getElementById('auth-block').style.display = 'block';
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
+        localStorage.removeItem('lobbyUid');
+        document.getElementById('user-block').style.display='none';
+        document.getElementById('auth-block').style.display='block';
+        document.getElementById('username').value='';
+        document.getElementById('password').value='';
+        ['lobby-admin-panel','leaderboard-panel','quests-panel'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
     }
 
-    
-    if (currentUser) { showUserBlock(); startOnlinePing(); }
-
-    
     document.addEventListener('click', function(e){
-        const panels = ['lobby-admin-panel','leaderboard-panel','quests-panel'];
-        const btns = ['quests-btn'];
-        const inside = panels.some(id=>document.getElementById(id)&&document.getElementById(id).contains(e.target));
-        const onBtn = e.target.closest('button') && (
-            e.target.closest('button').getAttribute('onclick')||'').match(/openVip|openLeaderboard|openQuests|openLobbyAdmin/);
-        if(!inside && !onBtn){
-            panels.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
-        }
+        const panels=['lobby-admin-panel','leaderboard-panel','quests-panel'];
+        const inside=panels.some(id=>document.getElementById(id)&&document.getElementById(id).contains(e.target));
+        const onBtn=e.target.closest('button')&&(e.target.closest('button').getAttribute('onclick')||'').match(/openVip|openLeaderboard|openQuests|openLobbyAdmin/);
+        if(!inside&&!onBtn) panels.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
     });
 
-    
-    const QUEST_POOL = {
-        easy: [
-            {id:'e1', text:'Сыграй 3 игры в любой игре', reward:5, check: d => (d.gamesCount||0) + (d.history||[]).filter(h=>h.includes('САПЁР')||h.includes('СЛОТ')||h.includes('ПОЛЁТ')).length >= (d.questBase_games||0) + 3},
-            {id:'e2', text:'Выиграй хотя бы 1 раз в слоте', reward:3, check: d => (d.questSlotWins||0) >= 1},
-            {id:'e3', text:'Открой 10 ячеек в сапёре', reward:4, check: d => (d.questMinesCells||0) >= 10},
-            {id:'e4', text:'Сыграй в полёт 2 раза', reward:4, check: d => (d.questFlightGames||0) >= 2},
-
-            {id:'e6', text:'Открой 5 ячеек в сапёре', reward:3, check: d => (d.questMinesCells||0) >= 5},
-            {id:'e7', text:'Сыграй в слот 3 раза', reward:3, check: d => (d.questSlotGames||0) >= 3},
-            {id:'e8', text:'Сыграй в сапёр 1 раз', reward:3, check: d => (d.questMinesGames||0) >= 1},
-            {id:'e9', text:'Долети до 500м в полёте', reward:4, check: d => (d.questMaxDist||0) >= 500},
+    const QUEST_POOL={
+        easy:[
+            {id:'e1',text:'Сыграй 3 игры в любой игре',reward:5,check:d=>(d.questDayGames||0)>=3},
+            {id:'e2',text:'Выиграй хотя бы 1 раз в слоте',reward:3,check:d=>(d.questSlotWins||0)>=1},
+            {id:'e3',text:'Открой 10 ячеек в сапёре',reward:4,check:d=>(d.questMinesCells||0)>=10},
+            {id:'e4',text:'Сыграй в полёт 2 раза',reward:4,check:d=>(d.questFlightGames||0)>=2},
+            {id:'e6',text:'Открой 5 ячеек в сапёре',reward:3,check:d=>(d.questMinesCells||0)>=5},
+            {id:'e7',text:'Сыграй в слот 3 раза',reward:3,check:d=>(d.questSlotGames||0)>=3},
+            {id:'e8',text:'Сыграй в сапёр 1 раз',reward:3,check:d=>(d.questMinesGames||0)>=1},
+            {id:'e9',text:'Долети до 500м в полёте',reward:4,check:d=>(d.questMaxDist||0)>=500},
         ],
-        medium: [
-            {id:'m1', text:'Долети до 2000м в полёте', reward:10, check: d => (d.questMaxDist||0) >= 2000},
-            {id:'m2', text:'Выиграй 15 АР за одну игру в сапёре', reward:8, check: d => (d.questMinesMaxWin||0) >= 15},
-            {id:'m3', text:'Выведи выигрыш в сапёре 3 раза', reward:5, check: d => (d.questMinesWins||0) >= 3},
-            {id:'m4', text:'Долети до 1000м в полёте', reward:7, check: d => (d.questMaxDist||0) >= 1000},
-            {id:'m5', text:'Сыграй 5 игр за день', reward:8, check: d => (d.questDayGames||0) >= 5},
-            {id:'m6', text:'Выиграй в слот 3 раза', reward:9, check: d => (d.questSlotWins||0) >= 3},
+        medium:[
+            {id:'m1',text:'Долети до 2000м в полёте',reward:10,check:d=>(d.questMaxDist||0)>=2000},
+            {id:'m2',text:'Выиграй 15 АР за одну игру в сапёре',reward:8,check:d=>(d.questMinesMaxWin||0)>=15},
+            {id:'m3',text:'Выведи выигрыш в сапёре 3 раза',reward:5,check:d=>(d.questMinesWins||0)>=3},
+            {id:'m4',text:'Долети до 1000м в полёте',reward:7,check:d=>(d.questMaxDist||0)>=1000},
+            {id:'m5',text:'Сыграй 5 игр за день',reward:8,check:d=>(d.questDayGames||0)>=5},
+            {id:'m6',text:'Выиграй в слот 3 раза',reward:9,check:d=>(d.questSlotWins||0)>=3},
         ],
-        hard: [
-            {id:'h1', text:'Собери 50 АР за день', reward:25, check: d => (d.questDayEarned||0) >= 50},
-            {id:'h2', text:'Долети до 5000м в полёте', reward:20, check: d => (d.questMaxDist||0) >= 5000},
-            {id:'h3', text:'Сыграй 10 игр за день', reward:20, check: d => (d.questDayGames||0) >= 10},
-            {id:'h4', text:'Выведи выигрыш в сапёре 5 раз', reward:20, check: d => (d.questMinesWins||0) >= 5},
+        hard:[
+            {id:'h1',text:'Собери 50 АР за день',reward:25,check:d=>(d.questDayEarned||0)>=50},
+            {id:'h2',text:'Долети до 5000м в полёте',reward:20,check:d=>(d.questMaxDist||0)>=5000},
+            {id:'h3',text:'Сыграй 10 игр за день',reward:20,check:d=>(d.questDayGames||0)>=10},
+            {id:'h4',text:'Выведи выигрыш в сапёре 5 раз',reward:20,check:d=>(d.questMinesWins||0)>=5},
         ]
     };
 
     function getDailyQuests(){
-        
-        const today = new Date().toDateString();
-        const seed = today.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
-        const pick = (arr, n) => {
-            const shuffled = [...arr].sort((a,b)=>{
-                const ha = (seed * a.id.charCodeAt(a.id.length-1)) % 97;
-                const hb = (seed * b.id.charCodeAt(b.id.length-1)) % 97;
-                return ha - hb;
-            });
-            return shuffled.slice(0,n);
-        };
-        return [
-            ...pick(QUEST_POOL.easy, 3),
-            ...pick(QUEST_POOL.medium, 2),
-            ...pick(QUEST_POOL.hard, 1),
-        ];
+        const seed=new Date().toDateString().split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+        const pick=(arr,n)=>[...arr].sort((a,b)=>((seed*a.id.charCodeAt(a.id.length-1))%97)-((seed*b.id.charCodeAt(b.id.length-1))%97)).slice(0,n);
+        return [...pick(QUEST_POOL.easy,3),...pick(QUEST_POOL.medium,2),...pick(QUEST_POOL.hard,1)];
     }
 
     function openQuests(){
-        const panel = document.getElementById('quests-panel');
+        const panel=document.getElementById('quests-panel');
         if(panel.style.display==='block'){ panel.style.display='none'; return; }
         document.getElementById('lobby-admin-panel').style.display='none';
         document.getElementById('leaderboard-panel').style.display='none';
         panel.style.display='block';
         renderQuests();
-        
-        const now = new Date();
-        const midnight = new Date(); midnight.setHours(24,0,0,0);
-        const h = Math.floor((midnight-now)/3600000);
-        const m = Math.floor(((midnight-now)%3600000)/60000);
-        document.getElementById('quests-reset-time').textContent = 'Сброс через ' + h + 'ч ' + m + 'м';
+        const now=new Date(), midnight=new Date(); midnight.setHours(24,0,0,0);
+        document.getElementById('quests-reset-time').textContent='Сброс через '+Math.floor((midnight-now)/3600000)+'ч '+Math.floor(((midnight-now)%3600000)/60000)+'м';
     }
 
     function renderQuests(){
-        if(!currentUser){ document.getElementById('quests-list').innerHTML='<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-family:Nunito,sans-serif;">Войди чтобы видеть квесты</div>'; return; }
-        db.ref('players/'+currentUser).once('value').then(s=>{
-            const d = s.val()||{};
-            const today = new Date().toDateString();
-            const done = d.questsDone||{};
-            const quests = getDailyQuests();
-            const diff = {easy:'rgba(0,200,100,0.15)', medium:'rgba(255,180,0,0.15)', hard:'rgba(255,50,50,0.15)'};
-            const diffLabel = {easy:'🟢 ЛЁГКИЙ', medium:'🟡 СРЕДНИЙ', hard:'🔴 СЛОЖНЫЙ'};
-            const diffColor = {easy:'#66ff88', medium:'#ffd700', hard:'#ff6666'};
-            const types = ['easy','easy','easy','medium','medium','hard'];
-            document.getElementById('quests-list').innerHTML = quests.map((q,i)=>{
-                const type = types[i];
-                const completed = done[today+'_'+q.id];
-                const progress = q.check(d);
-                const canClaim = progress && !completed;
+        if(!currentUid){ document.getElementById('quests-list').innerHTML='<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-family:Nunito,sans-serif;">Войди чтобы видеть квесты</div>'; return; }
+        db.ref('players/'+currentUid).once('value').then(s=>{
+            const d=s.val()||{}, today=new Date().toDateString(), done=d.questsDone||{}, quests=getDailyQuests();
+            const diff={easy:'rgba(0,200,100,0.15)',medium:'rgba(255,180,0,0.15)',hard:'rgba(255,50,50,0.15)'};
+            const diffLabel={easy:'🟢 ЛЁГКИЙ',medium:'🟡 СРЕДНИЙ',hard:'🔴 СЛОЖНЫЙ'};
+            const diffColor={easy:'#66ff88',medium:'#ffd700',hard:'#ff6666'};
+            const types=['easy','easy','easy','medium','medium','hard'];
+            document.getElementById('quests-list').innerHTML=quests.map((q,i)=>{
+                const type=types[i], completed=done[today+'_'+q.id], canClaim=q.check(d)&&!completed;
                 return `<div style="background:${diff[type]};border:1px solid ${diffColor[type]}40;border-radius:12px;padding:12px;margin-bottom:8px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                         <span style="font-size:10px;color:${diffColor[type]};font-family:'Fredoka One',cursive;letter-spacing:2px;">${diffLabel[type]}</span>
                         <span style="font-size:12px;color:#ffd700;font-family:'Fredoka One',cursive;">+${q.reward} АР</span>
                     </div>
                     <div style="font-size:13px;color:rgba(255,255,255,0.85);font-family:Nunito,sans-serif;margin-bottom:8px;">${q.text}</div>
-                    <button onclick="claimQuest('${q.id}','${today}')" ${canClaim?'':'disabled'} style="width:100%;padding:7px;border-radius:8px;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;cursor:${canClaim?'pointer':'not-allowed'};border:none;background:${completed?'rgba(0,200,100,0.2)':canClaim?'linear-gradient(180deg,#9c27b0,#6a0080)':'rgba(255,255,255,0.05)'};color:${completed?'#66ff88':canClaim?'#fff':'rgba(255,255,255,0.3)'};">
+                    <button onclick="claimQuest('${q.id}','${today}')" ${canClaim?'':'disabled'} style="width:100%;padding:7px;border-radius:8px;font-family:'Fredoka One',cursive;font-size:12px;cursor:${canClaim?'pointer':'not-allowed'};border:none;background:${completed?'rgba(0,200,100,0.2)':canClaim?'linear-gradient(180deg,#9c27b0,#6a0080)':'rgba(255,255,255,0.05)'};color:${completed?'#66ff88':canClaim?'#fff':'rgba(255,255,255,0.3)'};">
                         ${completed?'✅ ВЫПОЛНЕНО':canClaim?'🎁 ЗАБРАТЬ':'⏳ НЕ ВЫПОЛНЕНО'}
                     </button>
                 </div>`;
@@ -549,228 +533,174 @@
         });
     }
 
-    async function claimQuest(qid, today){
-        const s = await db.ref('players/'+currentUser).once('value');
-        const d = s.val()||{};
-        const key = today+'_'+qid;
+    async function claimQuest(qid,today){
+        const s=await db.ref('players/'+currentUid).once('value');
+        const d=s.val()||{}, key=today+'_'+qid;
         if((d.questsDone||{})[key]) return;
-        const q = [...QUEST_POOL.easy,...QUEST_POOL.medium,...QUEST_POOL.hard].find(x=>x.id===qid);
+        const q=[...QUEST_POOL.easy,...QUEST_POOL.medium,...QUEST_POOL.hard].find(x=>x.id===qid);
         if(!q||!q.check(d)) return;
-        await db.ref('players/'+currentUser).update({
-            balance: (d.balance||0)+q.reward,
-            ['questsDone/'+key]: true,
-            history: [...(d.history||[]), '📋 Квест: '+q.text+' +'+q.reward+' АР'].slice(-50)
-        });
+        await db.ref('players/'+currentUid).update({balance:(d.balance||0)+q.reward,['questsDone/'+key]:true,history:[...(d.history||[]),'📋 Квест: '+q.text+' +'+q.reward+' АР'].slice(-50)});
         renderQuests();
     }
 
-    
-    let lbCurrentTab = 'ar';
-    let isAdmin = false;
-
+    let lbCurrentTab='ar';
     function openLeaderboard(){
-        const panel = document.getElementById('leaderboard-panel');
+        const panel=document.getElementById('leaderboard-panel');
         if(panel.style.display==='block'){ panel.style.display='none'; return; }
         document.getElementById('lobby-admin-panel').style.display='none';
         document.getElementById('quests-panel').style.display='none';
         panel.style.display='block';
         lbTab('ar');
     }
-
     function lbTab(tab){
-        lbCurrentTab = tab;
-        document.getElementById('lb-tab-ar').style.background = tab==='ar'?'rgba(0,150,255,0.2)':'transparent';
-        document.getElementById('lb-tab-ar').style.color = tab==='ar'?'#88ccff':'rgba(0,150,255,0.5)';
-        document.getElementById('lb-tab-ar').style.border = tab==='ar'?'1px solid rgba(0,150,255,0.4)':'1px solid rgba(0,150,255,0.2)';
-        document.getElementById('lb-tab-games').style.background = tab==='games'?'rgba(0,150,255,0.2)':'transparent';
-        document.getElementById('lb-tab-games').style.color = tab==='games'?'#88ccff':'rgba(0,150,255,0.5)';
-        document.getElementById('lb-tab-games').style.border = tab==='games'?'1px solid rgba(0,150,255,0.4)':'1px solid rgba(0,150,255,0.2)';
+        lbCurrentTab=tab;
+        ['ar','games'].forEach(t=>{
+            const btn=document.getElementById('lb-tab-'+t);
+            btn.style.background=tab===t?'rgba(0,150,255,0.2)':'transparent';
+            btn.style.color=tab===t?'#88ccff':'rgba(0,150,255,0.5)';
+            btn.style.border=tab===t?'1px solid rgba(0,150,255,0.4)':'1px solid rgba(0,150,255,0.2)';
+        });
         loadLeaderboard(tab);
     }
-
     function loadLeaderboard(tab){
-        const el = document.getElementById('lb-list');
-        el.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-family:Nunito,sans-serif;">загрузка...</div>';
+        const el=document.getElementById('lb-list');
+        el.innerHTML='<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-family:Nunito,sans-serif;">загрузка...</div>';
         db.ref('players').once('value').then(snap=>{
-            let players = [];
+            let players=[];
             snap.forEach(ch=>{
-                const d = ch.val()||{};
-                if(d.hidden && !isAdmin) return; 
-                
-                const fromHistory = (d.history||[]).filter(h=>h.includes('САПЁР')||h.includes('СЛОТ')||h.includes('ПОЛЁТ')).length;
-                const games = (d.gamesCount||0) + fromHistory;
-                players.push({name:ch.key, balance:d.balance||0, games, verified:d.verified, pinned:d.pinned, admin:d.admin, hidden:d.hidden});
+                const d=ch.val()||{};
+                if(d.hidden&&!isAdmin) return;
+                players.push({uid:ch.key,name:d.username||ch.key,balance:d.balance||0,games:d.questDayGames||0,verified:d.verified,admin:d.admin,hidden:d.hidden});
             });
-            if(tab==='ar') players.sort((a,b)=>b.balance-a.balance);
-            else players.sort((a,b)=>b.games-a.games);
-
-            
-            let visibleRank = 0;
-            el.innerHTML = players.slice(0,20).map((p,i)=>{
-                const badge = p.admin?'👑':p.verified?'✅':''; 
-                const isMe = p.name===currentUser;
-                if(!p.hidden) visibleRank++;
-                const num = p.hidden
-                    ? `<span style="color:rgba(255,255,255,0.15);font-size:11px;">—</span>`
-                    : `<span style="color:rgba(255,255,255,0.4);font-size:11px;font-family:'Fredoka One',cursive;">#${visibleRank}</span>`;
-                const nameColor = p.hidden ? 'rgba(255,255,255,0.25)' : (isMe?'#ffd700':'rgba(255,255,255,0.85)');
-                const valColor = p.hidden ? 'rgba(255,255,255,0.2)' : 'rgba(255,180,0,0.8)';
-                const hideBtn = isAdmin ? `<span onclick="lbHidePlayer('${p.name}')" title="${p.hidden?'Показать':'Скрыть'}" style="cursor:pointer;font-size:15px;filter:${p.hidden?'grayscale(1)':'none'};opacity:${p.hidden?'0.4':'0.7'};" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='${p.hidden?'0.4':'0.7'}'">👁</span>` : '';
+            players.sort((a,b)=>tab==='ar'?b.balance-a.balance:b.games-a.games);
+            let rank=0;
+            el.innerHTML=players.slice(0,20).map(p=>{
+                const badge=p.admin?'👑':p.verified?'✅':'';
+                const isMe=p.uid===currentUid;
+                if(!p.hidden) rank++;
+                const num=p.hidden?'<span style="color:rgba(255,255,255,0.15);font-size:11px;">—</span>':'<span style="color:rgba(255,255,255,0.4);font-size:11px;font-family:\'Fredoka One\',cursive;">#'+rank+'</span>';
+                const nameColor=p.hidden?'rgba(255,255,255,0.25)':isMe?'#ffd700':'rgba(255,255,255,0.85)';
+                const hideBtn=isAdmin?`<span onclick="lbHidePlayer('${p.uid}')" style="cursor:pointer;font-size:15px;opacity:${p.hidden?'0.4':'0.7'};">👁</span>`:'';
                 return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${isMe&&!p.hidden?'rgba(255,180,0,0.08)':'transparent'};border-bottom:1px solid rgba(255,255,255,0.04);">
                     <span style="width:26px;text-align:center;">${num}</span>
                     <span style="font-size:13px;opacity:${p.hidden?'0.3':'1'};">${badge}</span>
                     <span style="flex:1;font-family:'Fredoka One',cursive;font-size:13px;color:${nameColor};">${p.name}</span>
-                    <span style="font-size:12px;font-family:Nunito,sans-serif;font-weight:700;color:${valColor};">${tab==='ar'?p.balance+' АР':p.games+' игр'}</span>
+                    <span style="font-size:12px;font-family:Nunito,sans-serif;font-weight:700;color:rgba(255,180,0,0.8);">${tab==='ar'?p.balance+' АР':p.games+' игр'}</span>
                     ${hideBtn}
                 </div>`;
-            }).join('') || '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-family:Nunito,sans-serif;">пусто</div>';
+            }).join('')||'<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);">пусто</div>';
         });
     }
-
-    function lbHidePlayer(name){
-        db.ref('players/'+name+'/hidden').once('value').then(s=>{
-            db.ref('players/'+name+'/hidden').set(!s.val());
-            setTimeout(()=>loadLeaderboard(lbCurrentTab), 300);
-        });
+    function lbHidePlayer(uid){
+        db.ref('players/'+uid+'/hidden').once('value').then(s=>{ db.ref('players/'+uid+'/hidden').set(!s.val()).then(()=>loadLeaderboard(lbCurrentTab)); });
     }
 
-    
     function openVip(){
-        const panel = document.getElementById('lobby-admin-panel');
+        const panel=document.getElementById('lobby-admin-panel');
         if(panel.style.display==='block'){ panel.style.display='none'; return; }
-        
         document.getElementById('leaderboard-panel').style.display='none';
         document.getElementById('quests-panel').style.display='none';
-        db.ref('players/'+currentUser).once('value').then(s=>{
+        db.ref('players/'+currentUid).once('value').then(s=>{
             const d=s.val()||{};
             if(d.admin){ openLobbyAdmin(); }
             else {
                 const pwd=prompt('Пароль:');
-                db.ref('settings/adminPassword').once('value').then(s=>{
-                    if(pwd && s.val() && pwd===s.val()) openLobbyAdmin();
-                    else if(pwd==='1337') openLobbyAdmin();
+                db.ref('settings/adminPassword').once('value').then(s2=>{
+                    if(pwd&&((s2.val()&&pwd===s2.val())||pwd==='1337')) openLobbyAdmin();
                 });
             }
         });
     }
+
     async function redeemVipPromo(){
-        if(!currentUser){ alert('Сначала войди!'); return; }
-        const code = document.getElementById('vip-promo').value.trim().toLowerCase();
-        const snap = await db.ref('players/'+currentUser).once('value');
-        const d = snap.val()||{};
-        const used = d.usedPromos||{};
-        const promos = {mell:3, мелл:5, меллстрой:5};
+        if(!currentUid){ alert('Сначала войди!'); return; }
+        const code=document.getElementById('vip-promo').value.trim().toLowerCase();
+        const snap=await db.ref('players/'+currentUid).once('value');
+        const d=snap.val()||{}, used=d.usedPromos||{};
+        const promos={mell:3,мелл:5,меллстрой:5};
         if(!promos[code]){ alert('Неверный промокод!'); return; }
         if(used[code]){ alert('Промокод уже использован!'); return; }
-        const reward = promos[code];
-        used[code]=true;
-        await db.ref('players/'+currentUser).update({
-            balance:(d.balance||0)+reward,
-            usedPromos:used,
-            history:(d.history||[]).concat(['🎁 Промокод +'+reward+' АР']).slice(-50)
-        });
+        const reward=promos[code]; used[code]=true;
+        await db.ref('players/'+currentUid).update({balance:(d.balance||0)+reward,usedPromos:used,history:(d.history||[]).concat(['🎁 Промокод +'+reward+' АР']).slice(-50)});
         alert('Получено '+reward+' АР!');
         document.getElementById('vip-promo').value='';
     }
 
-    
-    let lapUser = '';
-
+    let lapUser='';
     function openLobbyAdmin(){
         document.getElementById('lobby-admin-panel').style.display='block';
         document.getElementById('lobby-admin-profile').style.display='none';
         document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';
         loadLobbyAdminUsers();
-        
-        db.ref('settings/dailyAmount').once('value').then(s=>{
-            if(s.val()) document.getElementById('daily-amount-input').value = s.val();
-        });
+        db.ref('settings/dailyAmount').once('value').then(s=>{ if(s.val()) document.getElementById('daily-amount-input').value=s.val(); });
     }
-
     function adminTab(tab){
-        document.getElementById('admin-tab-users').style.display = tab==='users'?'block':'none';
-        document.getElementById('admin-tab-settings').style.display = tab==='settings'?'block':'none';
-        document.getElementById('tab-users').style.background = tab==='users'?'rgba(255,180,0,0.2)':'transparent';
-        document.getElementById('tab-settings').style.background = tab==='settings'?'rgba(255,180,0,0.2)':'transparent';
-        document.getElementById('tab-users').style.color = tab==='users'?'#ffd700':'rgba(255,180,0,0.5)';
-        document.getElementById('tab-settings').style.color = tab==='settings'?'#ffd700':'rgba(255,180,0,0.5)';
+        document.getElementById('admin-tab-users').style.display=tab==='users'?'block':'none';
+        document.getElementById('admin-tab-settings').style.display=tab==='settings'?'block':'none';
+        document.getElementById('tab-users').style.background=tab==='users'?'rgba(255,180,0,0.2)':'transparent';
+        document.getElementById('tab-settings').style.background=tab==='settings'?'rgba(255,180,0,0.2)':'transparent';
+        document.getElementById('tab-users').style.color=tab==='users'?'#ffd700':'rgba(255,180,0,0.5)';
+        document.getElementById('tab-settings').style.color=tab==='settings'?'#ffd700':'rgba(255,180,0,0.5)';
     }
-
     function saveDailyAmount(){
-        const amt = parseInt(document.getElementById('daily-amount-input').value)||10;
+        const amt=parseInt(document.getElementById('daily-amount-input').value)||10;
         db.ref('settings/dailyAmount').set(amt);
         alert('Сохранено: '+amt+' АР');
     }
-
     function loadLobbyAdminUsers(){
         db.ref('players').once('value').then(snap=>{
-            const all = [];
+            const all=[];
             snap.forEach(ch=>{ all.push({key:ch.key,...ch.val()}); });
-            
             all.sort((a,b)=>{
-                if(b.pinned !== a.pinned) return (b.pinned?1:0)-(a.pinned?1:0);
-                if(b.verified !== a.verified) return (b.verified?1:0)-(a.verified?1:0);
-                return a.key.localeCompare(b.key);
+                if(b.pinned!==a.pinned) return (b.pinned?1:0)-(a.pinned?1:0);
+                if(b.verified!==a.verified) return (b.verified?1:0)-(a.verified?1:0);
+                return (a.username||a.key).localeCompare(b.username||b.key);
             });
-            const el = document.getElementById('lobby-admin-users');
-            el.innerHTML = all.map(u=>`
-                <div onclick="openLobbyProfile('${u.key}')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-radius:8px;transition:background .2s;" onmouseover="this.style.background='rgba(255,180,0,0.08)'" onmouseout="this.style.background='transparent'">
+            const el=document.getElementById('lobby-admin-users');
+            el.innerHTML=all.map(u=>`
+                <div onclick="openLobbyProfile('${u.key}')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-radius:8px;" onmouseover="this.style.background='rgba(255,180,0,0.08)'" onmouseout="this.style.background='transparent'">
                     <span style="font-size:14px;">${u.pinned?'📌':u.admin?'👑':u.verified?'✅':'👤'}</span>
-                    <span style="flex:1;font-family:'Fredoka One',cursive;font-size:14px;color:${u.admin?'#ffd700':u.verified?'#66ff88':'rgba(255,255,255,0.8)'}">${u.key}</span>
+                    <span style="flex:1;font-family:'Fredoka One',cursive;font-size:14px;color:${u.admin?'#ffd700':u.verified?'#66ff88':'rgba(255,255,255,0.8)'}">${u.username||u.key}</span>
                     <span style="color:rgba(255,180,0,0.7);font-size:12px;font-family:Nunito,sans-serif;">${u.balance||0} АР</span>
                     <span onclick="event.stopPropagation();lapDeleteUser('${u.key}')" style="color:rgba(255,80,80,0.6);cursor:pointer;font-size:16px;padding:0 4px;">✖</span>
                 </div>`).join('');
         });
     }
-
-    function openLobbyProfile(u){
-        lapUser = u;
-        db.ref('players/'+u).once('value').then(s=>{
-            const d = s.val()||{};
-            document.getElementById('lap-name').textContent = u.toUpperCase();
-            document.getElementById('lap-bal').textContent = (d.balance||0)+' АР';
-            
-            const hist = d.history||[];
-            document.getElementById('lap-history').innerHTML = [...hist].reverse().map(h=>`<div style="padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);">${h}</div>`).join('');
-            
-            const vb = document.getElementById('lap-verified-btn');
-            vb.style.background = d.verified?'rgba(0,180,0,0.3)':'rgba(255,255,255,0.05)';
-            vb.style.color = d.verified?'#66ff88':'rgba(255,255,255,0.5)';
-            vb.style.border = d.verified?'1px solid rgba(0,200,0,0.4)':'1px solid rgba(255,255,255,0.1)';
-            const pb = document.getElementById('lap-pinned-btn');
-            pb.style.background = d.pinned?'rgba(255,180,0,0.3)':'rgba(255,255,255,0.05)';
-            pb.style.color = d.pinned?'#ffd700':'rgba(255,255,255,0.5)';
-            pb.style.border = d.pinned?'1px solid rgba(255,180,0,0.4)':'1px solid rgba(255,255,255,0.1)';
-            const ab = document.getElementById('lap-admin-btn');
-            ab.style.background = d.admin?'rgba(255,150,0,0.3)':'rgba(255,255,255,0.05)';
-            ab.style.color = d.admin?'#ffd700':'rgba(255,255,255,0.5)';
-            ab.style.border = d.admin?'1px solid rgba(255,180,0,0.4)':'1px solid rgba(255,255,255,0.1)';
-            const db2 = document.getElementById('lap-daily-btn');
-            db2.style.background = d.dailyEnabled!==false?'rgba(0,200,100,0.3)':'rgba(255,255,255,0.05)';
-            db2.style.color = d.dailyEnabled!==false?'#00e676':'rgba(255,255,255,0.5)';
-            db2.style.border = d.dailyEnabled!==false?'1px solid rgba(0,200,100,0.4)':'1px solid rgba(255,255,255,0.1)';
-            
+    function openLobbyProfile(uid){
+        lapUser=uid;
+        db.ref('players/'+uid).once('value').then(s=>{
+            const d=s.val()||{};
+            document.getElementById('lap-name').textContent=(d.username||uid).toUpperCase();
+            document.getElementById('lap-bal').textContent=(d.balance||0)+' АР';
+            document.getElementById('lap-history').innerHTML=[...(d.history||[])].reverse().map(h=>`<div style="padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);">${h}</div>`).join('');
+            const vb=document.getElementById('lap-verified-btn');
+            vb.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.verified?'rgba(0,180,0,0.3)':'rgba(255,255,255,0.05)'};color:${d.verified?'#66ff88':'rgba(255,255,255,0.5)'};border:${d.verified?'1px solid rgba(0,200,0,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
+            const pb=document.getElementById('lap-pinned-btn');
+            pb.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.pinned?'rgba(255,180,0,0.3)':'rgba(255,255,255,0.05)'};color:${d.pinned?'#ffd700':'rgba(255,255,255,0.5)'};border:${d.pinned?'1px solid rgba(255,180,0,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
+            const ab=document.getElementById('lap-admin-btn');
+            ab.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.admin?'rgba(255,150,0,0.3)':'rgba(255,255,255,0.05)'};color:${d.admin?'#ffd700':'rgba(255,255,255,0.5)'};border:${d.admin?'1px solid rgba(255,180,0,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
+            const db2=document.getElementById('lap-daily-btn');
+            db2.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.dailyEnabled!==false?'rgba(0,200,100,0.3)':'rgba(255,255,255,0.05)'};color:${d.dailyEnabled!==false?'#00e676':'rgba(255,255,255,0.5)'};border:${d.dailyEnabled!==false?'1px solid rgba(0,200,100,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
             document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='none';
             document.getElementById('lobby-admin-profile').style.display='block';
         });
     }
-
     function lapMod(n){
         db.ref('players/'+lapUser+'/balance').once('value').then(s=>{
-            const newBal = Math.max(0,(s.val()||0)+n);
+            const newBal=Math.max(0,(s.val()||0)+n);
             db.ref('players/'+lapUser+'/balance').set(newBal);
-            document.getElementById('lap-bal').textContent = newBal+' АР';
+            document.getElementById('lap-bal').textContent=newBal+' АР';
         });
     }
-    function lapToggle(field, btn, onStyle, offStyle){
+    function lapToggle(field,btn,onStyle){
         db.ref('players/'+lapUser+'/'+field).once('value').then(s=>{
-            const newVal = !s.val();
+            const newVal=!s.val();
             db.ref('players/'+lapUser+'/'+field).set(newVal);
-            const el = document.getElementById(btn);
-            el.style.background = newVal ? onStyle.bg : 'rgba(255,255,255,0.05)';
-            el.style.color = newVal ? onStyle.color : 'rgba(255,255,255,0.5)';
-            el.style.border = newVal ? onStyle.border : '1px solid rgba(255,255,255,0.1)';
-            if(lapUser===currentUser) showUserBlock(); 
+            const el=document.getElementById(btn);
+            el.style.background=newVal?onStyle.bg:'rgba(255,255,255,0.05)';
+            el.style.color=newVal?onStyle.color:'rgba(255,255,255,0.5)';
+            el.style.border=newVal?onStyle.border:'1px solid rgba(255,255,255,0.1)';
+            if(lapUser===currentUid) showUserBlock();
         });
     }
     function lapToggleVerified(){ lapToggle('verified','lap-verified-btn',{bg:'rgba(0,180,0,0.3)',color:'#66ff88',border:'1px solid rgba(0,200,0,0.4)'}); }
@@ -778,12 +708,12 @@
     function lapToggleAdmin(){ lapToggle('admin','lap-admin-btn',{bg:'rgba(255,150,0,0.3)',color:'#ffd700',border:'1px solid rgba(255,180,0,0.4)'}); }
     function lapToggleDaily(){
         db.ref('players/'+lapUser+'/dailyEnabled').once('value').then(s=>{
-            const newVal = s.val()===false ? true : false; 
+            const newVal=s.val()===false?true:false;
             db.ref('players/'+lapUser+'/dailyEnabled').set(newVal);
-            const el = document.getElementById('lap-daily-btn');
-            el.style.background = newVal?'rgba(0,200,100,0.3)':'rgba(255,255,255,0.05)';
-            el.style.color = newVal?'#00e676':'rgba(255,255,255,0.5)';
-            el.style.border = newVal?'1px solid rgba(0,200,100,0.4)':'1px solid rgba(255,255,255,0.1)';
+            const el=document.getElementById('lap-daily-btn');
+            el.style.background=newVal?'rgba(0,200,100,0.3)':'rgba(255,255,255,0.05)';
+            el.style.color=newVal?'#00e676':'rgba(255,255,255,0.5)';
+            el.style.border=newVal?'1px solid rgba(0,200,100,0.4)':'1px solid rgba(255,255,255,0.1)';
         });
     }
     function lapDelete(){
@@ -794,98 +724,64 @@
             loadLobbyAdminUsers();
         }
     }
-    function lapToggleHidden(u){
-        db.ref('players/'+u+'/hidden').once('value').then(s=>{
-            db.ref('players/'+u+'/hidden').set(!s.val()).then(loadLobbyAdminUsers);
-        });
-    }
-    function lapDeleteUser(u){
-        if(confirm('Удалить '+u+'?')){ db.ref('players/'+u).remove().then(loadLobbyAdminUsers); }
+    function lapDeleteUser(uid){
+        if(confirm('Удалить игрока?')){ db.ref('players/'+uid).remove().then(loadLobbyAdminUsers); }
     }
 
-    
     async function claimDaily(){
-        const snap = await db.ref('players/'+currentUser).once('value');
-        const d = snap.val()||{};
+        const snap=await db.ref('players/'+currentUid).once('value');
+        const d=snap.val()||{};
         if(d.dailyEnabled===false) return;
-        const now = new Date().toDateString();
+        const now=new Date().toDateString();
         if(d.lastDaily===now){ alert('Награда уже получена сегодня!'); return; }
-        const amt = (await db.ref('settings/dailyAmount').once('value')).val()||10;
-        const newBal = (d.balance||0)+amt;
-        await db.ref('players/'+currentUser).update({
-            balance: newBal,
-            lastDaily: now,
-            history: [...(d.history||[]), 'Ежедневная награда +'+amt+' АР']
-        });
-        document.getElementById('daily-btn').textContent = '✅ ПОЛУЧЕНО ('+amt+' АР)';
+        const amt=(await db.ref('settings/dailyAmount').once('value')).val()||10;
+        await db.ref('players/'+currentUid).update({balance:(d.balance||0)+amt,lastDaily:now,history:[...(d.history||[]),'Ежедневная награда +'+amt+' АР']});
+        document.getElementById('daily-btn').textContent='✅ ПОЛУЧЕНО ('+amt+' АР)';
         document.getElementById('daily-btn').style.opacity='0.5';
         document.getElementById('daily-btn').disabled=true;
     }
 
-    
-    const playlist = [
-        { name: "Бэм Бэм Бэм", file: "bam_bam_bam_1.mp3" },
-        { name: "Nobody", file: "nobody.mp3" },
-        { name: "Баклажан", file: "baclachn.mp3" },
-        { name: "Пау Пау Пау", file: "pay_pay_pay.mp3" },
-        { name: "Bad Piggies", file: "bad_piggies.mp3" },
-        { name: "Ананасовый сироп", file: "ananasevi_sirop_1.mp3" },
-        { name: "Концерт Артура №1", file: "consert_artyra№1.mp3" },
-        { name: "Концерт Артура №2", file: "consert_artyra№2.mp3" },
-        { name: "Концерт Артура №3", file: "consert_artyra№3.mp3" },
-        { name: "баблгам №1", file: "bablgam_1.mp3" },
-        { name: "баблгам №2", file: "bablgam_2.mp3" },
-        { name: "Angry Birds", file: "angry_birds.mp3" },
-        { name: "оркестр-БЭМ", file: "orcestr_BAM_1.mp3" },
-        { name: "птички", file: "ptichki_1.mp3" }
+    const playlist=[
+        {name:"Бэм Бэм Бэм",file:"bam_bam_bam_1.mp3"},{name:"Nobody",file:"nobody.mp3"},
+        {name:"Баклажан",file:"baclachn.mp3"},{name:"Пау Пау Пау",file:"pay_pay_pay.mp3"},
+        {name:"Bad Piggies",file:"bad_piggies.mp3"},{name:"Ананасовый сироп",file:"ananasevi_sirop_1.mp3"},
+        {name:"Концерт Артура №1",file:"consert_artyra№1.mp3"},{name:"Концерт Артура №2",file:"consert_artyra№2.mp3"},
+        {name:"Концерт Артура №3",file:"consert_artyra№3.mp3"},{name:"баблгам №1",file:"bablgam_1.mp3"},
+        {name:"баблгам №2",file:"bablgam_2.mp3"},{name:"Angry Birds",file:"angry_birds.mp3"},
+        {name:"оркестр-БЭМ",file:"orcestr_BAM_1.mp3"},{name:"птички",file:"ptichki_1.mp3"}
     ];
-    let currentTrackIdx = parseInt(localStorage.getItem('musicTrack') || '0'), mOn = true;
-    let bgMusic = new Audio(playlist[currentTrackIdx].file);
-    bgMusic.loop = localStorage.getItem('musicLoop') === '1'; bgMusic.volume = 0.3;
-    bgMusic.onended = () => { if (!bgMusic.loop) playTrack((currentTrackIdx + 1) % playlist.length); };
-
-    function renderPlaylist() {
-        document.getElementById('music-playlist').innerHTML = playlist.map((t, i) => `
-            <div class="music-item ${i === currentTrackIdx ? 'active' : ''}">
+    let currentTrackIdx=parseInt(localStorage.getItem('musicTrack')||'0'), mOn=true;
+    let bgMusic=new Audio(playlist[currentTrackIdx].file);
+    bgMusic.loop=localStorage.getItem('musicLoop')==='1'; bgMusic.volume=0.3;
+    bgMusic.onended=()=>{ if(!bgMusic.loop) playTrack((currentTrackIdx+1)%playlist.length); };
+    function renderPlaylist(){
+        document.getElementById('music-playlist').innerHTML=playlist.map((t,i)=>`
+            <div class="music-item ${i===currentTrackIdx?'active':''}">
                 <label style="flex:1;cursor:pointer;" onclick="playTrack(${i})">${t.name}</label>
-                <input type="checkbox" class="loop-checkbox" id="loop-${i}" onclick="updateLoop(${i})" ${i === currentTrackIdx && bgMusic.loop ? 'checked' : ''}>
+                <input type="checkbox" class="loop-checkbox" id="loop-${i}" onclick="updateLoop(${i})" ${i===currentTrackIdx&&bgMusic.loop?'checked':''}>
             </div>`).join('');
     }
-    function updateLoop(i) {
-        if (i === currentTrackIdx) {
-            bgMusic.loop = document.getElementById('loop-' + i).checked;
-            localStorage.setItem('musicLoop', bgMusic.loop ? '1' : '0');
-        }
-    }
-    function playTrack(i) {
-        bgMusic.pause(); currentTrackIdx = i;
-        localStorage.setItem('musicTrack', i);
-        bgMusic = new Audio(playlist[i].file);
-        bgMusic.loop = document.getElementById('loop-' + i) ? document.getElementById('loop-' + i).checked : false;
-        localStorage.setItem('musicLoop', bgMusic.loop ? '1' : '0');
-        bgMusic.volume = document.getElementById('music-vol').value;
-        if (mOn) bgMusic.play().catch(() => {});
-        bgMusic.onended = () => { if (!bgMusic.loop) playTrack((currentTrackIdx + 1) % playlist.length); };
+    function updateLoop(i){ if(i===currentTrackIdx){ bgMusic.loop=document.getElementById('loop-'+i).checked; localStorage.setItem('musicLoop',bgMusic.loop?'1':'0'); } }
+    function playTrack(i){
+        bgMusic.pause(); currentTrackIdx=i; localStorage.setItem('musicTrack',i);
+        bgMusic=new Audio(playlist[i].file);
+        bgMusic.loop=document.getElementById('loop-'+i)?document.getElementById('loop-'+i).checked:false;
+        localStorage.setItem('musicLoop',bgMusic.loop?'1':'0');
+        bgMusic.volume=document.getElementById('music-vol').value;
+        if(mOn) bgMusic.play().catch(()=>{});
+        bgMusic.onended=()=>{ if(!bgMusic.loop) playTrack((currentTrackIdx+1)%playlist.length); };
         renderPlaylist();
     }
-    function applyVolume() { bgMusic.volume = mOn ? document.getElementById('music-vol').value : 0; }
-    function toggleMute() {
-        mOn = !mOn;
-        if (mOn) { bgMusic.volume = document.getElementById('music-vol').value; bgMusic.play().catch(() => {}); }
-        else bgMusic.pause();
-        document.getElementById('m-toggle').className = mOn ? 'mute-toggle on' : 'mute-toggle off';
-        document.getElementById('m-toggle').textContent = mOn ? '🎵 МУЗЫКА: ВКЛ' : '🎵 МУЗЫКА: ВЫКЛ';
+    function applyVolume(){ bgMusic.volume=mOn?document.getElementById('music-vol').value:0; }
+    function toggleMute(){
+        mOn=!mOn;
+        if(mOn){ bgMusic.volume=document.getElementById('music-vol').value; bgMusic.play().catch(()=>{}); } else bgMusic.pause();
+        document.getElementById('m-toggle').className=mOn?'mute-toggle on':'mute-toggle off';
+        document.getElementById('m-toggle').textContent=mOn?'🎵 МУЗЫКА: ВКЛ':'🎵 МУЗЫКА: ВЫКЛ';
     }
-    function toggleMusicPanel(e) {
-        e.stopPropagation();
-        const p = document.getElementById('music-panel');
-        const open = p.style.display === 'block';
-        p.style.display = open ? 'none' : 'block';
-        if (!open) renderPlaylist();
-    }
-    function closeMusicPanel() { document.getElementById('music-panel').style.display = 'none'; }
+    function toggleMusicPanel(e){ e.stopPropagation(); const p=document.getElementById('music-panel'); const open=p.style.display==='block'; p.style.display=open?'none':'block'; if(!open) renderPlaylist(); }
+    function closeMusicPanel(){ document.getElementById('music-panel').style.display='none'; }
     document.addEventListener('click', closeMusicPanel);
-
 
 </script>
 </body>

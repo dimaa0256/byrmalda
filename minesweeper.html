@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Nunito', sans-serif; }
@@ -324,6 +325,7 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
 
     const playlist = [
         { name: "Бэм Бэм Бэм", file: "bam_bam_bam_1.mp3" },
@@ -388,21 +390,41 @@
     }
     bgMusic.onended = () => { if (!bgMusic.loop) playTrack((currentTrackIdx + 1) % playlist.length); };
 
-    function login() {
-        const u = document.getElementById('username').value.trim();
-        const p = document.getElementById('password').value;
-        if (!u || !p) return;
-        db.ref('players/' + u).once('value').then(s => {
-            if (!s.exists()) {
-                db.ref('players/' + u).set({ balance: 5, password: p, history: ["Регистрация"], usedPromos: {} })
-                    .then(() => { user = u; go(); });
-            } else if (s.val().password === p) { user = u; go(); }
-            else alert("Неверный пароль!");
+
+    function toEmail(u){ return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app'; }
+
+    function login(){
+        const u=document.getElementById('username').value.trim();
+        const p=document.getElementById('password').value;
+        if(!u||!p) return;
+        db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
+            if(snap.exists()){
+                auth.signInWithEmailAndPassword(toEmail(u),p)
+                    .then(cred=>{ uid=cred.user.uid; user=u; go(); })
+                    .catch(e=>alert(e.code==='auth/wrong-password'?'Неверный пароль!':'Ошибка входа'));
+            } else {
+                auth.createUserWithEmailAndPassword(toEmail(u),p)
+                    .then(cred=>{
+                        uid=cred.user.uid; user=u;
+                        db.ref('usernames/'+u.toLowerCase()).set(uid);
+                        db.ref('players/'+uid).set({username:u,balance:5,history:['Регистрация'],usedPromos:{}});
+                        go();
+                    })
+                    .catch(e=>alert('Ошибка: '+e.message));
+            }
         });
     }
 
+    auth.onAuthStateChanged(firebaseUser=>{
+        if(firebaseUser && !user){
+            uid=firebaseUser.uid;
+            db.ref('players/'+uid+'/username').once('value').then(s=>{
+                if(s.exists()){ user=s.val(); go(); }
+            });
+        }
+    });
+
     function go() {
-        localStorage.setItem('lastUser', user);
         localStorage.setItem('lobbyUser', user);
         document.getElementById('auth-section').style.display = 'none';
         
@@ -410,12 +432,12 @@
             const ua=navigator.userAgent; const mobile=/Mobi|Android|iPhone|iPad/i.test(ua);
             let browser='Unknown'; if(ua.includes('Chrome')&&!ua.includes('Edg'))browser='Chrome'; else if(ua.includes('Firefox'))browser='Firefox'; else if(ua.includes('Safari')&&!ua.includes('Chrome'))browser='Safari'; else if(ua.includes('Edg'))browser='Edge';
             let platform='Unknown'; if(/Win/.test(navigator.platform))platform='Windows'; else if(/Mac/.test(navigator.platform))platform='macOS'; else if(/Linux/.test(navigator.platform))platform='Linux'; else if(/iPhone|iPad/.test(ua))platform='iOS'; else if(/Android/.test(ua))platform='Android';
-            db.ref('players/'+user).update({lastSeen:Date.now(),deviceInfo:{browser,platform,mobile,userAgent:ua.substring(0,120)}});
+            db.ref('players/'+uid).update({lastSeen:Date.now(),deviceInfo:{browser,platform,mobile,userAgent:ua.substring(0,120)}});
         } catch(e){}
         document.getElementById('game-section').style.display = 'block';
         document.getElementById('display-name').innerText = user.toUpperCase();
         applyVolumes(); renderPlaylist(); buildGrid();
-        db.ref('players/' + user).on('value', snap => {
+        db.ref('players/' + uid).on('value', snap => {
             const d = snap.val(); if (!d) return;
             currentBalance = d.balance;
             const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=(d.admin||d.verified)?'':'none';
@@ -456,16 +478,16 @@
     }
 
     async function startGame() {
-        const snap = await db.ref('players/' + user).once('value');
+        const snap = await db.ref('players/' + uid).once('value');
         const d = snap.val();
         if (d.balance < COST) { alert('Недостаточно АР! Нужно ' + COST + ' АР.'); return; }
 
         
         await db.ref('players/' + user + '/balance').set(d.balance - COST);
         db.ref('players/' + user + '/gamesCount').once('value').then(s=>db.ref('players/' + user + '/gamesCount').set((s.val()||0)+1));
-        db.ref('players/' + user).once('value').then(s=>{
+        db.ref('players/' + uid).once('value').then(s=>{
             const d=s.val()||{};
-            db.ref('players/' + user).update({questMinesGames:(d.questMinesGames||0)+1, questDayGames:(d.questDayGames||0)+1});
+            db.ref('players/' + uid).update({questMinesGames:(d.questMinesGames||0)+1, questDayGames:(d.questDayGames||0)+1});
         });
 
         generateBoard();
@@ -559,10 +581,10 @@
     async function cashout() {
         if (!gameActive || openedCount < UNLOCK_AT) return;
         gameActive = false;
-        const snap = await db.ref('players/' + user).once('value');
+        const snap = await db.ref('players/' + uid).once('value');
         const d = snap.val();
         const won = sessionCoins;
-        await db.ref('players/' + user).update({
+        await db.ref('players/' + uid).update({
             balance: d.balance + won,
             history: (d.history || []).concat(['💰 САПЁР: вывод +' + won + ' АР']).slice(-50),
             questMinesWins: (d.questMinesWins||0)+1,
@@ -591,7 +613,7 @@
             document.getElementById('result-text').textContent = 'БОМБА!';
             document.getElementById('result-sub').textContent = 'Ты потерял ' + COST + ' АР';
             
-            db.ref('players/' + user).once('value').then(s => {
+            db.ref('players/' + uid).once('value').then(s => {
                 const d = s.val();
                 db.ref('players/' + user + '/history').set(
                     (d.history || []).concat(['💥 САПЁР: бомба −' + COST + ' АР']).slice(-50)
@@ -619,9 +641,9 @@
         db.ref('players/' + user + '/usedPromos/' + code).once('value').then(snap => {
             if (snap.exists() && snap.val() === true) { alert("⛔ Ты уже использовал этот промокод!"); return; }
             const reward = promoCodes[code];
-            db.ref('players/' + user).once('value').then(s => {
+            db.ref('players/' + uid).once('value').then(s => {
                 const d = s.val();
-                db.ref('players/' + user).update({
+                db.ref('players/' + uid).update({
                     balance: (d.balance || 0) + reward,
                     ['usedPromos/' + code]: true,
                     history: (d.history || []).concat(['🎁 ПРОМО «' + code + '» +' + reward + ' АР']).slice(-15)
@@ -718,11 +740,7 @@
     }
     function toggleMute(t) { if (t === 'music') mOn = !mOn; applyVolumes(); }
 
-    
-    try {
-        const _lu = localStorage.getItem('lobbyUser');
-        if (_lu) { user = _lu; go(); }
-    } catch(e) { console.error('autologin error', e); }
+
 
     function openGameQuests(){
         if(!user){ alert('Войди в аккаунт!'); return; }
@@ -767,7 +785,7 @@
         return [...pick(QUEST_POOL_G.easy,3),...pick(QUEST_POOL_G.medium,2),...pick(QUEST_POOL_G.hard,1)];
     }
     function renderGameQuests(){
-        db.ref('players/'+user).once('value').then(s=>{
+        db.ref('players/'+uid).once('value').then(s=>{
             const d=s.val()||{};
             const today=new Date().toDateString();
             const done=d.questsDone||{};
@@ -795,12 +813,12 @@
         });
     }
     async function claimGameQuest(qid,today){
-        const s=await db.ref('players/'+user).once('value');
+        const s=await db.ref('players/'+uid).once('value');
         const d=s.val()||{}; const key=today+'_'+qid;
         if((d.questsDone||{})[key]) return;
         const q=[...QUEST_POOL_G.easy,...QUEST_POOL_G.medium,...QUEST_POOL_G.hard].find(x=>x.id===qid);
         if(!q||!q.check(d)) return;
-        await db.ref('players/'+user).update({
+        await db.ref('players/'+uid).update({
             balance:(d.balance||0)+q.reward,
             ['questsDone/'+key]:true,
             history:[...(d.history||[]),'📋 Квест: '+q.text+' +'+q.reward+' АР'].slice(-50)
@@ -810,7 +828,7 @@
 
 
     
-    setInterval(()=>{ if(user) db.ref('players/'+user+'/lastSeen').set(Date.now()); }, 30000);
+    setInterval(()=>{ if(uid) db.ref('players/'+uid+'/lastSeen').set(Date.now()); }, 30000);
 
 </script>
     

@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <style>
         :root { --gold:#ffd700; --blue:#0088ff; --red:#ff3300; --green:#00e676; }
         * { box-sizing:border-box; margin:0; padding:0; }
@@ -252,6 +253,7 @@
 const firebaseConfig = { apiKey:"AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s", databaseURL:"https://dima256-default-rtdb.europe-west1.firebasedatabase.app", projectId:"dima256", appId:"1:208400853144:web:78eb608f5aacd57e8848ed" };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const auth = firebase.auth();
 
 
 (function(){
@@ -270,619 +272,37 @@ const db = firebase.database();
 })();
 
 
-let user = '';
-function login() {
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value;
-    if (!u||!p) return;
-    db.ref('players/'+u).once('value').then(s=>{
-        if (!s.exists()) db.ref('players/'+u).set({balance:5,password:p,history:['Регистрация'],usedPromos:{}}).then(()=>{user=u;go();});
-        else if (s.val().password===p){user=u;go();}
-        else alert('Неверный пароль!');
-    });
-}
-function go(){
-    localStorage.setItem('lobbyUser',user); localStorage.setItem('lastUser',user);
-    try{
-        const ua=navigator.userAgent; const mobile=/Mobi|Android|iPhone|iPad/i.test(ua);
-        let browser='Unknown'; if(ua.includes('Chrome')&&!ua.includes('Edg'))browser='Chrome'; else if(ua.includes('Firefox'))browser='Firefox'; else if(ua.includes('Safari')&&!ua.includes('Chrome'))browser='Safari'; else if(ua.includes('Edg'))browser='Edge';
-        let platform='Unknown'; if(/Win/.test(navigator.platform))platform='Windows'; else if(/Mac/.test(navigator.platform))platform='macOS'; else if(/Linux/.test(navigator.platform))platform='Linux'; else if(/iPhone|iPad/.test(ua))platform='iOS'; else if(/Android/.test(ua))platform='Android';
-        db.ref('players/'+user).update({lastSeen:Date.now(),deviceInfo:{browser,platform,mobile,userAgent:ua.substring(0,120)}});
-    }catch(e){}
-    document.getElementById('auth-section').style.display='none';
-    document.getElementById('game-section').style.display='block';
-    document.getElementById('display-name').innerText=user.toUpperCase();
-    db.ref('players/'+user).once('value').then(s=>{ const d=s.val()||{}; const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=(d.admin||d.verified)?'':'none'; });
-    initCanvas(); initSpeedSlider(); applyVolumes(); renderPlaylist();
-    db.ref('players/'+user).on('value',snap=>{
-        const d=snap.val(); if(!d)return;
-        document.getElementById('balance').innerText=d.balance;
-        document.getElementById('history').innerHTML=(d.history||[]).slice().reverse().map(h=>'<div style="padding:2px 0;border-bottom:1px solid rgba(255,180,0,0.06);">> '+h+'</div>').join('');
-    });
-}
-try {
-    const _lu=localStorage.getItem('lobbyUser');
-    if(_lu){user=_lu;setTimeout(go,100);}
-} catch(e){ console.error('autologin error',e); }
-
-
-let speedRatio = 0.5; 
-const speedNames = ['ЧЕРЕПАХА','ТИХО','СРЕДНЯЯ','БЫСТРО','ТУРБО'];
-
-function initSpeedSlider(){
-    const track = document.getElementById('speed-track');
-    updateSpeedVisual();
-
-    function getR(e){
-        const rect=track.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        return Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
-    }
-    function onMove(e){ e.preventDefault(); speedRatio=getR(e); updateSpeedVisual(); }
-    function onUp(){ track.removeEventListener('mousemove',onMove); track.removeEventListener('touchmove',onMove); }
-
-    track.addEventListener('mousedown',e=>{ speedRatio=getR(e); updateSpeedVisual(); track.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp,{once:true}); });
-    track.addEventListener('touchstart',e=>{ speedRatio=getR(e); updateSpeedVisual(); track.addEventListener('touchmove',onMove,{passive:false}); document.addEventListener('touchend',onUp,{once:true}); },{passive:false});
-}
-
-function updateSpeedVisual(){
-    const fill=document.getElementById('speed-fill');
-    const cursor=document.getElementById('speed-cursor');
-    const label=document.getElementById('speed-val-label');
-    const pct=speedRatio*100;
-    
-    const r=Math.round(speedRatio*255);
-    const g=Math.round((1-speedRatio)*200+55);
-    const color=`rgb(${r},${g},40)`;
-    fill.style.width=pct+'%';
-    fill.style.background=`linear-gradient(90deg,#00c853,${color})`;
-    cursor.style.left=`calc(${pct}% - 14px)`;
-    cursor.style.background=color;
-    cursor.style.color='#fff';
-    cursor.style.boxShadow=`0 0 10px ${color}`;
-    const idx=Math.floor(speedRatio*4.99);
-    label.textContent=speedNames[Math.max(0,Math.min(4,idx))];
-    label.style.color=color;
-}
-
-
-const canvas=document.getElementById('sky');
-const ctx=canvas.getContext('2d');
-let gameRunning=false, animId=null;
-let planeY, planeVY;
-let planeWorldY = 0; 
-let winnings=0, bet=5;
-let distance=0;
-let islandSafeZone=false;
-let tokens=[], islands=[], particles=[], clouds=[];
-let bgOffset=0, frameCount=0;
-let tokenSpawnTimer=0, islandSpawnTimer=0;
-let takeoffPhase=false, takeoffProgress=0;
-let firstTokenSpawned=false;
-let exploding=false;
-const PLANE_X_RATIO=0.30;
-
-function initCanvas(){
-    canvas.width=canvas.offsetWidth;
-    canvas.height=canvas.offsetHeight;
-    spawnClouds();
-    drawIdle();
-}
-
-function spawnClouds(){
-    clouds=[];
-    for(let i=0;i<6;i++) clouds.push({x:Math.random()*canvas.width,y:20+Math.random()*canvas.height*0.55,w:35+Math.random()*55,spd:0.15+Math.random()*0.25,a:0.08+Math.random()*0.12});
-}
-
-
-function drawBg(off){
-    const g=ctx.createLinearGradient(0,0,0,canvas.height);
-    g.addColorStop(0,'#040b14'); g.addColorStop(0.55,'#08182e'); g.addColorStop(1,'#0b2244');
-    ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
-    
-    ctx.fillStyle='rgba(255,255,255,0.55)';
-    const starOff = (off * 0.03) % (canvas.width + 10);
-    for(let i=0;i<35;i++){
-        const sx=((i*137 + starOff) % (canvas.width+10) + canvas.width+10) % (canvas.width+10);
-        const sy=(i*71)%(canvas.height*0.65);
-        ctx.beginPath(); ctx.arc(sx,sy,i%4===0?1.4:0.7,0,Math.PI*2); ctx.fill();
-    }
-}
-
-function drawClouds(par){
-    clouds.forEach(c=>{
-        const x=((c.x-bgOffset*par)%(canvas.width+c.w)+canvas.width+c.w)%(canvas.width+c.w)-c.w;
-        ctx.save(); ctx.globalAlpha=c.a; ctx.fillStyle='#7a9abf';
-        ctx.beginPath();
-        ctx.arc(x,c.y,c.w*0.32,0,Math.PI*2); ctx.arc(x+c.w*0.28,c.y-c.w*0.09,c.w*0.25,0,Math.PI*2); ctx.arc(x+c.w*0.55,c.y,c.w*0.28,0,Math.PI*2);
-        ctx.fill(); ctx.restore();
-    });
-}
-
-function drawGround(yPos){
-    
-    const gg=ctx.createLinearGradient(0,yPos,0,canvas.height);
-    gg.addColorStop(0,'#1a4a1a'); gg.addColorStop(0.3,'#2d6b2d'); gg.addColorStop(1,'#0a200a');
-    ctx.fillStyle=gg; ctx.fillRect(0,yPos,canvas.width,canvas.height-yPos);
-    
-    ctx.fillStyle='#444'; ctx.fillRect(0,yPos,canvas.width,6);
-    ctx.strokeStyle='rgba(255,255,0,0.4)'; ctx.lineWidth=2; ctx.setLineDash([20,15]);
-    ctx.beginPath(); ctx.moveTo(0,yPos+3); ctx.lineTo(canvas.width,yPos+3); ctx.stroke();
-    ctx.setLineDash([]);
-}
-
-function drawWater(wy){
-    wy = (wy !== undefined) ? wy : canvas.height-16;
-    const wg=ctx.createLinearGradient(0,wy-8,0,canvas.height);
-    wg.addColorStop(0,'#0a4a8a'); wg.addColorStop(1,'#051530');
-    ctx.save(); ctx.globalAlpha=0.75; ctx.fillStyle=wg;
-    ctx.beginPath(); ctx.moveTo(0,wy);
-    for(let x=0;x<=canvas.width;x+=18){
-        ctx.lineTo(x,wy+Math.sin((x+frameCount*1.8)*0.09)*3.5);
-    }
-    ctx.lineTo(canvas.width,canvas.height); ctx.lineTo(0,canvas.height); ctx.closePath(); ctx.fill(); ctx.restore();
-}
-
-function drawIslands(camY){
-    camY = camY || 0;
-    islandSafeZone=false;
-    islands.forEach(isl=>{
-        if(!isl.visible)return;
-        const ix=((isl.x-bgOffset)%(canvas.width*5)+canvas.width*5)%(canvas.width*5);
-        if(ix<-isl.w||ix>canvas.width+isl.w)return;
-        const iy = (isl.worldY || 0) - camY - 8; 
-        ctx.save(); ctx.globalAlpha=isl.a||1;
-        
-        ctx.fillStyle='rgba(0,80,150,0.5)';
-        ctx.beginPath(); ctx.ellipse(ix,iy+10,isl.w*0.65,8,0,0,Math.PI*2); ctx.fill();
-        
-        const sg=ctx.createRadialGradient(ix,iy+5,0,ix,iy+5,isl.w*0.5);
-        sg.addColorStop(0,'#d4a843'); sg.addColorStop(1,'#7a540f');
-        ctx.fillStyle=sg;
-        ctx.beginPath(); ctx.ellipse(ix,iy+6,isl.w/2,9,0,0,Math.PI*2); ctx.fill();
-        
-        ctx.fillStyle='#2a7a2a';
-        ctx.beginPath(); ctx.ellipse(ix,iy+2,isl.w*0.3,6,0,0,Math.PI*2); ctx.fill();
-        
-        ctx.strokeStyle='#5a3a00'; ctx.lineWidth=2;
-        ctx.beginPath(); ctx.moveTo(ix+2,iy+2); ctx.bezierCurveTo(ix,iy-6,ix-6,iy-10,ix-5,iy-16); ctx.stroke();
-        
-        ctx.fillStyle='#1a6b1a';
-        [[-10,-2],[0,-6],[8,-1],[-6,-6],[4,-6]].forEach(([dx,dy])=>{
-            ctx.beginPath(); ctx.ellipse(ix-5+dx,iy-16+dy,6,3,Math.atan2(dy,dx),0,Math.PI*2); ctx.fill();
-        });
-        ctx.restore();
-        
-        const px=canvas.width*PLANE_X_RATIO;
-        if(Math.abs(px-ix)<isl.w/2+12&&planeWorldY>-40) islandSafeZone=true;
-    });
-}
-
-function drawTokens(camY){
-    camY = camY || 0;
-    const planeScreenX = canvas.width * PLANE_X_RATIO;
-    tokens.forEach(t=>{
-        if(t.collected)return;
-        
-        const tx = t.x - bgOffset;
-        
-        if(tx < -40) return;
-        
-        if(tx > canvas.width + 40) return;
-        const ty = t.y - camY;
-        if(ty < -40 || ty > canvas.height + 40) return;
-
-        ctx.save(); ctx.globalAlpha=t.a||1;
-        const pos=t.value>0||(t.type==='mult'&&t.value>1);
-        const col=pos?'#00e676':'#ff4444';
-        ctx.shadowColor=col; ctx.shadowBlur=14;
-        if(t.type==='mult'){
-            ctx.fillStyle=col+'30'; ctx.strokeStyle=col; ctx.lineWidth=2;
-            ctx.beginPath(); ctx.arc(tx,ty,17,0,Math.PI*2); ctx.fill(); ctx.stroke();
+let user='', uid='';
+function login(){
+    const u=document.getElementById('username').value.trim();
+    const p=document.getElementById('password').value;
+    if(!u||!p) return;
+    db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
+        if(snap.exists()){
+            auth.signInWithEmailAndPassword(u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app',p)
+                .then(cred=>{ uid=cred.user.uid; user=u; go(); })
+                .catch(e=>alert(e.code==='auth/wrong-password'?'Неверный пароль!':'Ошибка входа'));
         } else {
-            ctx.fillStyle=col+'30'; ctx.strokeStyle=col; ctx.lineWidth=1.5;
-            ctx.beginPath();
-            ctx.moveTo(tx,ty-15); ctx.lineTo(tx+12,ty); ctx.lineTo(tx,ty+15); ctx.lineTo(tx-12,ty);
-            ctx.closePath(); ctx.fill(); ctx.stroke();
+            auth.createUserWithEmailAndPassword(u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app',p)
+                .then(cred=>{
+                    uid=cred.user.uid; user=u;
+                    db.ref('usernames/'+u.toLowerCase()).set(uid);
+                    db.ref('players/'+uid).set({username:u,balance:5,history:['Регистрация'],usedPromos:{}});
+                    go();
+                })
+                .catch(e=>alert('Ошибка: '+e.message));
         }
-        ctx.shadowBlur=0; ctx.fillStyle=col;
-        ctx.font='bold 11px Fredoka One,cursive'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(t.label,tx,ty);
-        ctx.restore();
-
-        
-        const spd = 0.5 + speedRatio * 1.5;
-        const hitX = 18 + spd * 8;
-        const hitY = 22;
-        if(Math.abs(planeScreenX - tx) < hitX && Math.abs(planeWorldY - t.y) < hitY) collectToken(t);
     });
 }
 
-function collectToken(t){
-    t.collected=true;
-    
-    let isPositive;
-    if(t.type==='mult') isPositive = t.value >= 1.0;
-    else isPositive = t.value > 0;
-
-    if(t.type==='mult') winnings=Math.max(0,Math.round(winnings*t.value*10)/10);
-    else winnings=Math.max(0,winnings+t.value);
-
-    spawnParticles(canvas.width*PLANE_X_RATIO,planeY,isPositive);
-    updateWinDisplay(winnings,isPositive);
-    
-    if(isPositive) planeVY=Math.min(planeVY,-1.8); 
-    else planeVY+=1.6;                              
-}
-
-function updateWinDisplay(v,up){
-    const el=document.getElementById('win-val');
-    el.textContent=v.toFixed(1)+' АР';
-    el.className='win-val '+(up?'bump':'drop');
-    setTimeout(()=>el.className='win-val',400);
-}
-
-function spawnParticles(x,y,pos){
-    const col=pos?'#ffd700':'#ff4444';
-    for(let i=0;i<7;i++) particles.push({x,y,vx:(Math.random()-.5)*3,vy:-1-Math.random()*2,a:1,col,life:40});
-}
-
-function drawParticles(){
-    particles=particles.filter(p=>p.life>0);
-    particles.forEach(p=>{
-        p.x+=p.vx; p.y+=p.vy; p.vy+=0.06; p.life--; p.a=p.life/40;
-        ctx.save(); ctx.globalAlpha=p.a; ctx.fillStyle=p.col;
-        ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2); ctx.fill(); ctx.restore();
-    });
-}
-
-
-function drawPlane(x,y,tilt){
-    ctx.save(); ctx.translate(x,y); ctx.rotate(tilt);
-    
-    ctx.fillStyle='#d0d8f0';
-    ctx.beginPath();
-    ctx.moveTo(-28,0); ctx.bezierCurveTo(-20,-6,10,-7,28,-2); ctx.bezierCurveTo(32,0,28,2,10,3); ctx.bezierCurveTo(-2,4,-20,5,-28,0); ctx.closePath(); ctx.fill();
-    
-    ctx.fillStyle='#88bbee';
-    ctx.beginPath();
-    ctx.moveTo(18,-2); ctx.bezierCurveTo(26,-2,30,0,28,-2); ctx.bezierCurveTo(24,-5,12,-5,10,-3); ctx.closePath(); ctx.fill();
-    
-    ctx.fillStyle='#e8ecf8';
-    ctx.beginPath();
-    ctx.moveTo(28,-2); ctx.bezierCurveTo(32,-1,34,0,32,1); ctx.bezierCurveTo(30,2,26,2,24,1); ctx.closePath(); ctx.fill();
-    
-    ctx.fillStyle='#8899cc';
-    ctx.beginPath();
-    ctx.moveTo(4,0); ctx.lineTo(-8,-22); ctx.lineTo(-16,-22); ctx.lineTo(-12,0); ctx.closePath(); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(4,0); ctx.lineTo(-8,22); ctx.lineTo(-16,22); ctx.lineTo(-12,0); ctx.closePath(); ctx.fill();
-    
-    ctx.fillStyle='#aabbdd';
-    ctx.beginPath(); ctx.moveTo(-16,-22); ctx.lineTo(-14,-28); ctx.lineTo(-20,-22); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(-16,22); ctx.lineTo(-14,28); ctx.lineTo(-20,22); ctx.closePath(); ctx.fill();
-    
-    ctx.fillStyle='#6677aa';
-    ctx.beginPath();
-    ctx.moveTo(-24,0); ctx.lineTo(-32,-12); ctx.lineTo(-28,0); ctx.closePath(); ctx.fill();
-    
-    ctx.fillStyle='#7788bb';
-    ctx.beginPath(); ctx.moveTo(-22,0); ctx.lineTo(-30,-8); ctx.lineTo(-28,0); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(-22,0); ctx.lineTo(-30,8); ctx.lineTo(-28,0); ctx.closePath(); ctx.fill();
-    
-    ctx.fillStyle='#bbddff';
-    for(let i=0;i<4;i++){ ctx.beginPath(); ctx.ellipse(14-i*7,-2,2.5,3.5,0,0,Math.PI*2); ctx.fill(); }
-    
-    ctx.shadowColor='#4488ff'; ctx.shadowBlur=8;
-    ctx.fillStyle='#1a55cc';
-    ctx.beginPath(); ctx.ellipse(-4,12,4,2.5,0.2,0,Math.PI*2); ctx.fill();
-    
-    ctx.shadowColor='#ff8800'; ctx.shadowBlur=10;
-    ctx.fillStyle='rgba(255,120,0,0.7)';
-    ctx.beginPath(); ctx.ellipse(-8,12,3,1.5,0.2,0,Math.PI*2); ctx.fill();
-    ctx.restore();
-}
-
-function drawIdle(){
-    if(gameRunning)return;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    drawBg(0); drawClouds(0.5);
-    drawGround(canvas.height*0.72);
-    drawWater();
-    drawPlane(canvas.width*PLANE_X_RATIO,canvas.height*0.65,0);
-    ctx.fillStyle='rgba(100,180,255,0.45)';
-    ctx.font='bold 11px Nunito'; ctx.textAlign='center';
-    ctx.fillText('Выбери ставку и скорость',canvas.width/2,canvas.height-8);
-}
-
-
-function spawnToken(){
-    const rf=Math.min(distance/900,0.82);
-    const isNeg=Math.random()<(0.25+rf*0.45);
-    const isMult=Math.random()<0.38;
-    let value,label,type;
-    if(isMult){
-        type='mult';
-        if(isNeg){ value=0.3+Math.random()*0.4; label='×'+value.toFixed(1); }
-        else {
-            const opts=rf>0.5?[1.3,1.5,1.8,2]:[1.5,2,2.5,3,4,5];
-            value=opts[Math.floor(Math.random()*opts.length)];
-            label='×'+value;
-        }
-    } else {
-        type='ar';
-        if(isNeg){ value=-(1+Math.floor(Math.random()*Math.max(1,bet*0.35))); label=value+' АР'; }
-        else {
-            const base=Math.ceil(bet*(0.25+Math.random()*0.55));
-            value=rf>0.5?Math.ceil(base*(1+Math.random()*1.5)):base;
-            label='+'+value+' АР';
-        }
+auth.onAuthStateChanged(firebaseUser=>{
+    if(firebaseUser && !user){
+        uid=firebaseUser.uid;
+        db.ref('players/'+uid+'/username').once('value').then(s=>{
+            if(s.exists()){ user=s.val(); go(); }
+        });
     }
-    
-    
-    const tokenX = bgOffset + canvas.width + 10 + Math.random() * 20;
-    
-    const tokenWorldY = planeWorldY + (Math.random()-0.5) * canvas.height * 0.8;
-    tokens.push({x:tokenX, y:tokenWorldY, type,value,label,collected:false,a:1});
-}
-
-function spawnIsland(){
-    const rf=Math.min(distance/900,0.82);
-    const visible=Math.random()<0.85; 
-    islands.push({x:bgOffset+canvas.width+70+Math.random()*60, worldY:0, w:45+Math.random()*30,visible,a:1});
-}
-
-
-
-let cameraY = 0; 
-
-function gameLoop(){
-    if(!gameRunning)return;
-    frameCount++;
-    const spd = 0.5 + speedRatio * 1.5;
-    bgOffset += spd;
-    distance += spd;
-
-    if(takeoffPhase){
-        
-        const riseSpeed = 2.5 + speedRatio * 2.5;
-        planeWorldY -= riseSpeed;
-        planeVY = -riseSpeed; 
-        
-        const peakY = -(250 + speedRatio * 350);
-        if(planeWorldY <= peakY){
-            planeWorldY = peakY;
-            takeoffPhase = false;
-            planeVY = 0; 
-            firstTokenSpawned = false; 
-        }
-    } else {
-        planeVY += 0.003 + speedRatio * 0.002; 
-        planeWorldY += planeVY;
-    }
-
-    
-    cameraY = planeWorldY - canvas.height * 0.50;
-
-    
-    const screenY = planeWorldY - cameraY;
-
-    
-    
-    if(!takeoffPhase && distance >= 29000 && !exploding){
-        exploding = true;
-        spawnParticles(canvas.width*PLANE_X_RATIO, screenY, false);
-        spawnParticles(canvas.width*PLANE_X_RATIO, screenY, false);
-        spawnParticles(canvas.width*PLANE_X_RATIO, screenY, false);
-        planeVY = 5; 
-        setTimeout(()=>{ endGame(false); }, 1200);
-    }
-    if(!takeoffPhase && planeWorldY >= 0){
-        if(islandSafeZone) endGame(true);
-        else endGame(false);
-        return;
-    }
-
-    
-    if(!takeoffPhase){
-        
-        if(!firstTokenSpawned){
-            firstTokenSpawned = true;
-            tokens.push({
-                x: bgOffset + canvas.width + 30,
-                y: planeWorldY,
-                type:'ar', value: Math.ceil(bet*0.3), label:'+'+Math.ceil(bet*0.3)+' АР',
-                collected:false, a:1, isFirst:true
-            });
-        }
-        tokenSpawnTimer++;
-        if(tokenSpawnTimer >= 22){ spawnToken(); tokenSpawnTimer=0; }
-
-        islandSpawnTimer++;
-        const irate = 280; 
-        if(islandSpawnTimer>=irate){ spawnIsland(); islandSpawnTimer=0; }
-    }
-
-    
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    drawBg(bgOffset);
-    drawClouds(0.28);
-
-    
-    const groundScreenY = 0 - cameraY; 
-    if(takeoffPhase){
-        
-        drawGround(groundScreenY - canvas.height * 0.15);
-    }
-    if(groundScreenY < canvas.height){
-        drawWater(Math.max(0, groundScreenY));
-    }
-
-    drawIslands(cameraY);
-    if(!takeoffPhase){
-        
-        const first = tokens.find(t=>!t.collected && t.isFirst);
-        if(first) first.y = planeWorldY;
-        drawTokens(cameraY);
-    }
-    drawParticles();
-
-    const tilt = Math.max(-0.35, Math.min(0.25, planeVY * 0.07));
-    drawPlane(canvas.width * PLANE_X_RATIO, screenY, tilt);
-
-
-
-    ctx.font='bold 11px Nunito'; ctx.textAlign='right';
-    ctx.fillStyle = distance > 25000 ? 'rgba(255,100,100,0.9)' : 'rgba(150,200,255,0.7)';
-    ctx.fillText('📏 '+Math.floor(distance)+'м', canvas.width-8, 14);
-    if(distance > 20000){
-        ctx.fillStyle='rgba(255,80,80,0.9)';
-        ctx.fillText('💥 '+Math.max(0,29000-Math.floor(distance))+'м до взрыва', canvas.width-8, 26);
-    }
-
-    animId=requestAnimationFrame(gameLoop);
-}
-
-
-async function startGame(){
-    bet=parseInt(document.getElementById('bet-input').value)||5;
-    if(bet<3){alert('Минимальная ставка 3 АР!');return;}
-    const snap=await db.ref('players/'+user).once('value');
-    const d=snap.val();
-    if(d.balance<bet){alert('Недостаточно АР!');return;}
-    await db.ref('players/'+user+'/balance').set(d.balance-bet);
-    db.ref('players/'+user+'/gamesCount').once('value').then(s=>db.ref('players/'+user+'/gamesCount').set((s.val()||0)+1));
-    db.ref('players/'+user).once('value').then(s=>{
-        const d=s.val()||{};
-        db.ref('players/'+user).update({questFlightGames:(d.questFlightGames||0)+1, questDayGames:(d.questDayGames||0)+1});
-    });
-
-    divingActive=false; diveBtn.disabled=false; diveBtn.textContent='⬇️ НЫРНУТЬ НА ОСТРОВ';
-    firstTokenSpawned=false;
-    exploding=false;
-    gameRunning=true; winnings=bet; distance=0; bgOffset=0; frameCount=0;
-    tokens=[]; islands=[]; particles=[]; tokenSpawnTimer=0; islandSpawnTimer=0;
-    islandSafeZone=false; takeoffPhase=true; takeoffProgress=0;
-
-    
-    planeWorldY = 0; 
-    planeY = canvas.height * 0.88;
-    planeVY = 0;
-    cameraY = 0;
-
-    updateWinDisplay(bet,true);
-    document.getElementById('start-btn').style.display='none';
-    document.getElementById('dive-btn').style.display='block';
-    document.getElementById('bet-input').disabled=true;
-    document.getElementById('speed-track').style.pointerEvents='none';
-    document.getElementById('speed-track').style.opacity='0.45';
-
-    gameLoop();
-}
-
-
-const diveBtn=document.getElementById('dive-btn');
-let divingActive=false;
-function startDive(){
-    if(!gameRunning||divingActive)return;
-    divingActive=true;
-    diveBtn.disabled=true;
-    diveBtn.textContent='⬇️ ПАДАЮ...';
-    setInterval(()=>{ if(gameRunning && divingActive) planeVY+=0.12; },50);
-}
-diveBtn.addEventListener('click',startDive);
-diveBtn.addEventListener('touchstart',e=>{e.preventDefault();startDive();},{passive:false});
-
-async function endGame(landed){
-    
-    db.ref('players/'+user).once('value').then(s=>{
-        const d=s.val()||{};
-        const updates={questMaxDist: Math.max(d.questMaxDist||0, Math.floor(distance))};
-        if(landed && winnings>bet) updates.questDayEarned=(d.questDayEarned||0)+(Math.round(winnings)-bet);
-        db.ref('players/'+user).update(updates);
-    });
-    gameRunning=false; cancelAnimationFrame(animId);
-    document.getElementById('start-btn').style.display='block';
-    document.getElementById('dive-btn').style.display='none';
-    document.getElementById('bet-input').disabled=false;
-    document.getElementById('speed-track').style.pointerEvents='auto';
-    document.getElementById('speed-track').style.opacity='1';
-
-    const snap=await db.ref('players/'+user).once('value');
-    const d=snap.val();
-
-    const profit = Math.round(winnings) - bet; 
-    if(landed&&winnings>0){
-        await db.ref('players/'+user).update({balance:d.balance+Math.round(winnings),history:(d.history||[]).concat(['✈️ ПОЛЁТ: '+(profit>=0?'+':'')+profit+' АР']).slice(-50)});
-        document.getElementById('result-icon').textContent='🏝️';
-        document.getElementById('result-text').textContent='ПОСАДКА!';
-        document.getElementById('result-sub').textContent=(profit>0?'Профит: +'+profit+' АР':profit===0?'Вернул ставку':'Потеря: '+profit+' АР');
-    } else if(landed){
-        await db.ref('players/'+user).update({balance:d.balance+Math.round(winnings),history:(d.history||[]).concat(['✈️ ПОЛЁТ: '+profit+' АР']).slice(-50)});
-        document.getElementById('result-icon').textContent='🏝️';
-        document.getElementById('result-text').textContent='ПОСАДКА!';
-        document.getElementById('result-sub').textContent=(profit>=0?'Профит: +'+profit+' АР':'Потеря: '+Math.abs(profit)+' АР');
-    } else {
-        await db.ref('players/'+user+'/history').set((d.history||[]).concat(['✈️ ПОЛЁТ: утонул −'+bet+' АР']).slice(-50));
-        document.getElementById('result-icon').textContent='💦';
-        document.getElementById('result-text').textContent='УПАЛ В ВОДУ!';
-        document.getElementById('result-sub').textContent='Потеря: '+bet+' АР';
-    }
-    document.getElementById('result-overlay').classList.add('show');
-    drawIdle();
-}
-
-function hideResult(){document.getElementById('result-overlay').classList.remove('show');drawIdle();}
-
-
-const playlist=[
-    {name:"Бэм Бэм Бэм",file:"bam_bam_bam_1.mp3"},{name:"Nobody",file:"nobody.mp3"},
-    {name:"Баклажан",file:"baclachn.mp3"},{name:"Пау Пау Пау",file:"pay_pay_pay.mp3"},
-    {name:"Bad Piggies",file:"bad_piggies.mp3"},{name:"Ананасовый сироп",file:"ananasevi_sirop_1.mp3"},
-    {name:"Концерт Артура №1",file:"consert_artyra№1.mp3"},{name:"Концерт Артура №2",file:"consert_artyra№2.mp3"},
-    {name:"Концерт Артура №3",file:"consert_artyra№3.mp3"},{name:"баблгам №1",file:"bablgam_1.mp3"},
-    {name:"баблгам №2",file:"bablgam_2.mp3"},{name:"Angry Birds",file:"angry_birds.mp3"},
-    {name:"оркестр-БЭМ",file:"orcestr_BAM_1.mp3"},{name:"птички",file:"ptichki_1.mp3"}
-];
-let currentTrackIdx=parseInt(localStorage.getItem('musicTrack')||'0');
-let bgMusic=new Audio(playlist[currentTrackIdx].file);
-bgMusic.loop=localStorage.getItem('musicLoop')==='1'; bgMusic.volume=0.3;
-let mOn=true;
-bgMusic.onended=()=>{if(!bgMusic.loop)playTrack((currentTrackIdx+1)%playlist.length);};
-document.addEventListener('click',function sm(){if(mOn)bgMusic.play().catch(()=>{});document.removeEventListener('click',sm);},{once:true});
-
-function renderPlaylist(){
-    document.getElementById('music-playlist').innerHTML=playlist.map((t,i)=>`
-        <div class="music-item ${i===currentTrackIdx?'active':''}">
-            <label style="flex:1;cursor:pointer;" onclick="playTrack(${i})">${t.name}</label>
-            <input type="checkbox" class="loop-checkbox" id="loop-${i}" onclick="updateLoop(${i})" ${i===currentTrackIdx&&bgMusic.loop?'checked':''}>
-        </div>`).join('');
-}
-function updateLoop(i){if(i===currentTrackIdx){bgMusic.loop=document.getElementById('loop-'+i).checked;localStorage.setItem('musicLoop',bgMusic.loop?'1':'0');}}
-function playTrack(i){
-    bgMusic.pause(); currentTrackIdx=i; localStorage.setItem('musicTrack',i);
-    bgMusic=new Audio(playlist[i].file);
-    bgMusic.loop=document.getElementById('loop-'+i)?document.getElementById('loop-'+i).checked:false;
-    localStorage.setItem('musicLoop',bgMusic.loop?'1':'0');
-    bgMusic.volume=document.getElementById('music-vol').value;
-    if(mOn)bgMusic.play().catch(()=>{});
-    bgMusic.onended=()=>{if(!bgMusic.loop)playTrack((currentTrackIdx+1)%playlist.length);};
-    renderPlaylist();
-}
-function applyVolumes(){
-    const v=document.getElementById('music-vol')?document.getElementById('music-vol').value:0.3;
-    bgMusic.volume=mOn?v:0;
-    if(mOn)bgMusic.play().catch(()=>{}); else bgMusic.pause();
-    const mt=document.getElementById('m-toggle');
-    if(mt){mt.className=mOn?'mute-toggle on':'mute-toggle off';mt.textContent=mOn?'🎵 МУЗЫКА: ВКЛ':'🎵 МУЗЫКА: ВЫКЛ';}
-}
-function toggleMute(){mOn=!mOn;applyVolumes();}
-function toggleSettings(e){e.stopPropagation();document.getElementById('settings-panel').style.display='block';renderPlaylist();}
-function closePanels(){
-    document.getElementById('settings-panel').style.display='none';
-    document.getElementById('admin-panel').style.display='none';
-    document.getElementById('admin-profile-panel').style.display='none';
-}
+});
 
 function openAdmin(e){
     e.stopPropagation();
@@ -997,9 +417,9 @@ function promptPromo(){
     db.ref('players/'+user+'/usedPromos/'+code).once('value').then(snap=>{
         if(snap.exists()&&snap.val()===true){alert('⛔ Уже использован!');return;}
         const r=codes[code];
-        db.ref('players/'+user).once('value').then(s=>{
+        db.ref('players/'+uid).once('value').then(s=>{
             const d=s.val();
-            db.ref('players/'+user).update({balance:(d.balance||0)+r,['usedPromos/'+code]:true,history:(d.history||[]).concat(['🎁 ПРОМО «'+code+'» +'+r+' АР']).slice(-50)});
+            db.ref('players/'+uid).update({balance:(d.balance||0)+r,['usedPromos/'+code]:true,history:(d.history||[]).concat(['🎁 ПРОМО «'+code+'» +'+r+' АР']).slice(-50)});
             alert('✅ +'+r+' АР!');
         });
     });
@@ -1049,7 +469,7 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
         return [...pick(QUEST_POOL_G.easy,3),...pick(QUEST_POOL_G.medium,2),...pick(QUEST_POOL_G.hard,1)];
     }
     function renderGameQuests(){
-        db.ref('players/'+user).once('value').then(s=>{
+        db.ref('players/'+uid).once('value').then(s=>{
             const d=s.val()||{};
             const today=new Date().toDateString();
             const done=d.questsDone||{};
@@ -1077,12 +497,12 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
         });
     }
     async function claimGameQuest(qid,today){
-        const s=await db.ref('players/'+user).once('value');
+        const s=await db.ref('players/'+uid).once('value');
         const d=s.val()||{}; const key=today+'_'+qid;
         if((d.questsDone||{})[key]) return;
         const q=[...QUEST_POOL_G.easy,...QUEST_POOL_G.medium,...QUEST_POOL_G.hard].find(x=>x.id===qid);
         if(!q||!q.check(d)) return;
-        await db.ref('players/'+user).update({
+        await db.ref('players/'+uid).update({
             balance:(d.balance||0)+q.reward,
             ['questsDone/'+key]:true,
             history:[...(d.history||[]),'📋 Квест: '+q.text+' +'+q.reward+' АР'].slice(-50)
@@ -1092,7 +512,7 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
 
 
     
-    setInterval(()=>{ if(user) db.ref('players/'+user+'/lastSeen').set(Date.now()); }, 30000);
+    setInterval(()=>{ if(uid) db.ref('players/'+uid+'/lastSeen').set(Date.now()); }, 30000);
 
 </script>
     
