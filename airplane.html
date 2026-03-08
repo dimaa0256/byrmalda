@@ -42,11 +42,11 @@
         .settings-btn { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,180,0,0.2); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; transition:all .3s; }
         .settings-btn:hover{transform:rotate(45deg);}
 
-        /* SKY */
+        
         .sky-frame { border-radius:16px; overflow:hidden; position:relative; height:240px; margin-bottom:8px; background:linear-gradient(180deg,#060d1a 0%,#0a1e3a 60%,#0d2a52 100%); border:2px solid rgba(0,100,200,0.35); box-shadow:0 0 18px rgba(0,100,255,0.1),inset 0 0 30px rgba(0,0,50,0.4); }
         canvas#sky { position:absolute; inset:0; width:100%; height:100%; }
 
-        /* WIN */
+        
         .win-display { text-align:center; margin-bottom:6px; }
         .win-label { font-size:10px; font-weight:800; letter-spacing:3px; color:rgba(255,180,0,0.4); text-transform:uppercase; margin-bottom:1px; }
         .win-val { font-family:'Fredoka One',cursive; font-size:26px; color:var(--gold); text-shadow:0 0 12px rgba(255,215,0,0.6); transition:all .2s; }
@@ -54,12 +54,12 @@
         @keyframes wb{0%{transform:scale(1)}50%{transform:scale(1.14)}100%{transform:scale(1)}}
         .win-val.drop{color:#ff4444;text-shadow:0 0 12px rgba(255,0,0,0.5);}
 
-        /* BET */
+        
         .bet-row { margin-bottom:8px; }
         .bet-input { width:100%; padding:11px 16px; border-radius:12px; background:rgba(0,0,0,0.55); color:#fff; border:2px solid rgba(0,150,255,0.3); text-align:center; font-size:16px; font-family:'Fredoka One',cursive; outline:none; letter-spacing:2px; }
         .bet-input:focus{border-color:rgba(0,180,255,0.6);}
 
-        /* SPEED SLIDER */
+        
         .speed-section { margin-bottom:10px; }
         .speed-label-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
         .speed-label { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(100,180,255,0.5); text-transform:uppercase; }
@@ -69,7 +69,7 @@
         .speed-cursor { position:absolute; top:50%; transform:translateY(-50%); width:28px; height:28px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 10px currentColor; transition:left .05s; display:flex; align-items:center; justify-content:center; font-size:12px; }
         .speed-hint { font-size:9px; font-weight:800; color:rgba(100,180,255,0.35); text-align:center; letter-spacing:1px; margin-top:3px; }
 
-        /* BUTTONS */
+        
         .btn-start { width:100%; padding:14px; font-family:'Fredoka One',cursive; font-size:18px; letter-spacing:3px; color:#fff; border:none; border-radius:16px; cursor:pointer; background:linear-gradient(180deg,#0088ff 0%,#0044cc 50%,#002288 100%); box-shadow:0 5px 0 #001166,0 8px 16px rgba(0,100,255,0.35); text-shadow:0 2px 4px rgba(0,0,0,0.5); transition:all .12s; margin-bottom:8px; animation:bg 2.5s ease-in-out infinite; }
         @keyframes bg{0%,100%{box-shadow:0 5px 0 #001166,0 8px 16px rgba(0,100,255,0.35)}50%{box-shadow:0 5px 0 #001166,0 8px 28px rgba(0,180,255,0.6)}}
         .btn-start:active{transform:translateY(4px);box-shadow:0 1px 0 #001166;}
@@ -81,7 +81,7 @@
         .history-label{font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,180,0,0.35);text-align:center;margin-bottom:3px;}
         .history-box{height:44px;overflow-y:auto;font-size:11px;font-weight:700;color:rgba(255,200,80,0.55);background:rgba(0,0,0,0.4);padding:5px 10px;border-radius:12px;border:1px solid rgba(255,180,0,0.1);scrollbar-width:thin;}
 
-        /* PANELS */
+        
         #settings-panel{display:none;position:absolute;top:8px;left:8px;right:8px;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:16px;z-index:100;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,0.95);}
         .panel-title{font-family:'Fredoka One',cursive;font-size:16px;letter-spacing:2px;text-align:center;margin-bottom:11px;color:var(--gold);}
         .music-list{background:rgba(0,0,0,0.45);border:1px solid rgba(255,180,0,0.15);border-radius:12px;padding:4px;max-height:140px;overflow-y:auto;margin-bottom:9px;scrollbar-width:thin;}
@@ -96,7 +96,7 @@
         .btn-panel-close{width:100%;padding:7px;border-radius:10px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;transition:all .2s;}
         .btn-panel-close:hover{border-color:var(--gold);color:var(--gold);}
 
-        /* RESULT */
+        
         #result-overlay{display:none;position:absolute;inset:0;z-index:50;background:rgba(0,0,0,0.88);border-radius:26px;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
         #result-overlay.show{display:flex;}
         .result-icon{font-size:58px;animation:rp .5s ease;}
@@ -106,7 +106,7 @@
         .btn-result{padding:12px 32px;font-family:'Fredoka One',cursive;font-size:16px;color:#fff;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(180deg,#0088ff,#002288);box-shadow:0 4px 0 #001166;transition:all .15s;}
         .btn-result:active{transform:translateY(3px);}
 
-        /* AUTH inputs */
+        
         .auth-input{width:100%;display:block;margin:0 0 10px;padding:13px 18px;border-radius:14px;background:rgba(0,0,0,0.55);color:#fff;border:2px solid rgba(0,150,255,0.3);text-align:center;font-size:15px;font-family:'Fredoka One',cursive;outline:none;letter-spacing:2px;}
         .auth-input::placeholder{color:rgba(100,180,255,0.35);font-size:13px;}
         .btn-login{width:100%;padding:14px;font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:4px;color:#fff;background:linear-gradient(180deg,#0088ff,#002288);border:none;border-radius:14px;cursor:pointer;box-shadow:0 5px 0 #001166;}
@@ -116,17 +116,17 @@
 <div class="plane-bg" id="plane-bg"></div>
 <div class="machine" onclick="event.stopPropagation()">
 
-    <!-- AUTH -->
+    
     <div id="auth-section">
         <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
         <div class="casino-title">✈️ ПОЛЁТ</div>
         <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
-        <input type="text" id="username" class="auth-input" placeholder="ЛОГИН">
-        <input type="password" id="password" class="auth-input" placeholder="ПАРОЛЬ">
+        <input type="text" id="username" class="auth-input" placeholder="">
+        <input type="password" id="password" class="auth-input" placeholder="">
         <button onclick="login()" class="btn-login">ВОЙТИ</button>
     </div>
 
-    <!-- GAME -->
+    
     <div id="game-section" style="display:none;position:relative;">
         <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
         <div class="casino-title">✈️ ПОЛЁТ</div>
@@ -150,12 +150,12 @@
             <div class="win-val" id="win-val">0 АР</div>
         </div>
 
-        <!-- BET -->
+        
         <div class="bet-row">
-            <input type="number" id="bet-input" class="bet-input" value="3" min="3" placeholder="СТАВКА (мин. 3 АР)">
+            <input type="number" id="bet-input" class="bet-input" value="3" min="3" placeholder="">
         </div>
 
-        <!-- SPEED SLIDER -->
+        
         <div class="speed-section">
             <div class="speed-label-row">
                 <div class="speed-label">⚡ скорость</div>
@@ -174,16 +174,16 @@
             <button class="promo-btn" onclick="promptPromo()" style="flex:1;">🎁 ПРОМОКОД</button>
             <button class="promo-btn" onclick="openGameQuests()" style="flex:1;color:#cc88ff;border-color:rgba(150,0,255,0.35);">📋 КВЕСТЫ</button>
         </div>
-        <!-- CONTROL MODE OVERLAY -->
+        
         <div id="ctrl-overlay" style="display:none;position:absolute;bottom:220px;left:0;right:0;z-index:30;pointer-events:none;">
             <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 16px;pointer-events:all;">
-                <!-- Высота — слева -->
+                
                 <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
                     <div style="font-family:'Fredoka One',cursive;font-size:11px;color:#88ffaa;letter-spacing:2px;">ВЫСОТА</div>
                     <button onmousedown="startCtrl(-1)" onmouseup="stopCtrl()" ontouchstart="e=>{e.preventDefault();startCtrl(-1)}" ontouchend="stopCtrl()" style="width:60px;height:60px;border-radius:50%;background:rgba(0,150,0,0.7);color:#fff;border:2px solid #00e676;font-size:26px;cursor:pointer;">▲</button>
                     <button onmousedown="startCtrl(1)" onmouseup="stopCtrl()" ontouchstart="e=>{e.preventDefault();startCtrl(1)}" ontouchend="stopCtrl()" style="width:60px;height:60px;border-radius:50%;background:rgba(180,0,0,0.7);color:#fff;border:2px solid #ff4444;font-size:26px;cursor:pointer;">▼</button>
                 </div>
-                <!-- Скорость — справа -->
+                
                 <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
                     <div style="font-family:'Fredoka One',cursive;font-size:11px;color:#88ccff;letter-spacing:2px;">СКОРОСТЬ</div>
                     <button onclick="changeSpeed(0.1)" style="width:60px;height:60px;border-radius:50%;background:rgba(0,80,200,0.7);color:#fff;border:2px solid #0088ff;font-size:26px;cursor:pointer;">+</button>
@@ -195,7 +195,7 @@
         <div class="history-label">история</div>
         <div id="history" class="history-box"></div>
 
-        <!-- RESULT -->
+        
         <div id="result-overlay">
             <div class="result-icon" id="result-icon">💦</div>
             <div class="result-text" id="result-text">УПАЛ В ВОДУ!</div>
@@ -203,7 +203,7 @@
             <button class="btn-result" onclick="hideResult()">ЕЩЁ РАЗ</button>
         </div>
 
-        <!-- SETTINGS -->
+        
         <div id="settings-panel" onclick="event.stopPropagation()">
             <div class="panel-title">🎵 ПЛЕЙЛИСТ</div>
             <div class="music-list" id="music-playlist"></div>
@@ -212,7 +212,7 @@
             <button onclick="closePanels()" class="btn-panel-close">✕ ЗАКРЫТЬ</button>
         </div>
 
-        <!-- ADMIN -->
+        
         <div id="admin-panel" onclick="event.stopPropagation()" style="display:none;position:absolute;top:8px;left:8px;right:8px;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:20px 18px;z-index:100;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,0.95);">
             <div style="font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:2px;text-align:center;margin-bottom:14px;color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,0.4);">👑 АДМИН-ПАНЕЛЬ</div>
             <div style="max-height:170px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:12px;border:1px solid rgba(255,180,0,0.15);padding:4px;margin-bottom:8px;scrollbar-width:thin;"><div id="admin-users-list"></div></div>
@@ -220,7 +220,7 @@
             <button onclick="closePanels()" style="width:100%;padding:10px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">✕ ЗАКРЫТЬ</button>
         </div>
 
-        <!-- ADMIN PROFILE -->
+        
         <div id="admin-profile-panel" onclick="event.stopPropagation()" style="display:none;position:absolute;top:8px;left:8px;right:8px;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:20px 18px;z-index:101;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,0.95);">
             <div id="ap-name" style="font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:2px;text-align:center;margin-bottom:8px;color:#ff5555;text-shadow:0 0 10px rgba(255,60,60,0.4);">ИГРОК</div>
             <div style="width:100%;height:1px;margin:0 0 12px;background:linear-gradient(90deg,transparent,rgba(255,180,0,0.3),transparent);"></div>
@@ -248,12 +248,12 @@
 </div>
 <script>
 
-// ── FIREBASE ──
+
 const firebaseConfig = { apiKey:"AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s", databaseURL:"https://dima256-default-rtdb.europe-west1.firebasedatabase.app", projectId:"dima256", appId:"1:208400853144:web:78eb608f5aacd57e8848ed" };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ── ФОН: летящие частицы ──
+
 (function(){
     const bg = document.getElementById('plane-bg');
     const emojis = ['✈️','⭐','🌟','💫','🌙','☁️','🛩️','💨'];
@@ -269,7 +269,7 @@ const db = firebase.database();
     }
 })();
 
-// ── AUTH ──
+
 let user = '';
 function login() {
     const u = document.getElementById('username').value.trim();
@@ -305,8 +305,8 @@ try {
     if(_lu){user=_lu;setTimeout(go,100);}
 } catch(e){ console.error('autologin error',e); }
 
-// ── SPEED SLIDER ──
-let speedRatio = 0.5; // 0=slow, 1=fast
+
+let speedRatio = 0.5; 
 const speedNames = ['ЧЕРЕПАХА','ТИХО','СРЕДНЯЯ','БЫСТРО','ТУРБО'];
 
 function initSpeedSlider(){
@@ -330,7 +330,7 @@ function updateSpeedVisual(){
     const cursor=document.getElementById('speed-cursor');
     const label=document.getElementById('speed-val-label');
     const pct=speedRatio*100;
-    // Color: green→yellow→red
+    
     const r=Math.round(speedRatio*255);
     const g=Math.round((1-speedRatio)*200+55);
     const color=`rgb(${r},${g},40)`;
@@ -345,12 +345,12 @@ function updateSpeedVisual(){
     label.style.color=color;
 }
 
-// ── CANVAS ──
+
 const canvas=document.getElementById('sky');
 const ctx=canvas.getContext('2d');
 let gameRunning=false, animId=null;
 let planeY, planeVY;
-let planeWorldY = 0; // мировая Y координата самолёта
+let planeWorldY = 0; 
 let winnings=0, bet=5;
 let distance=0;
 let islandSafeZone=false;
@@ -374,12 +374,12 @@ function spawnClouds(){
     for(let i=0;i<6;i++) clouds.push({x:Math.random()*canvas.width,y:20+Math.random()*canvas.height*0.55,w:35+Math.random()*55,spd:0.15+Math.random()*0.25,a:0.08+Math.random()*0.12});
 }
 
-// ── DRAW FUNCTIONS ──
+
 function drawBg(off){
     const g=ctx.createLinearGradient(0,0,0,canvas.height);
     g.addColorStop(0,'#040b14'); g.addColorStop(0.55,'#08182e'); g.addColorStop(1,'#0b2244');
     ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
-    // stars - использем отдельный медленный offset чтобы не съезжали
+    
     ctx.fillStyle='rgba(255,255,255,0.55)';
     const starOff = (off * 0.03) % (canvas.width + 10);
     for(let i=0;i<35;i++){
@@ -400,11 +400,11 @@ function drawClouds(par){
 }
 
 function drawGround(yPos){
-    // Ground strip (shown during takeoff)
+    
     const gg=ctx.createLinearGradient(0,yPos,0,canvas.height);
     gg.addColorStop(0,'#1a4a1a'); gg.addColorStop(0.3,'#2d6b2d'); gg.addColorStop(1,'#0a200a');
     ctx.fillStyle=gg; ctx.fillRect(0,yPos,canvas.width,canvas.height-yPos);
-    // Runway
+    
     ctx.fillStyle='#444'; ctx.fillRect(0,yPos,canvas.width,6);
     ctx.strokeStyle='rgba(255,255,0,0.4)'; ctx.lineWidth=2; ctx.setLineDash([20,15]);
     ctx.beginPath(); ctx.moveTo(0,yPos+3); ctx.lineTo(canvas.width,yPos+3); ctx.stroke();
@@ -430,29 +430,29 @@ function drawIslands(camY){
         if(!isl.visible)return;
         const ix=((isl.x-bgOffset)%(canvas.width*5)+canvas.width*5)%(canvas.width*5);
         if(ix<-isl.w||ix>canvas.width+isl.w)return;
-        const iy = (isl.worldY || 0) - camY - 8; // опустили ниже
+        const iy = (isl.worldY || 0) - camY - 8; 
         ctx.save(); ctx.globalAlpha=isl.a||1;
-        // Shadow
+        
         ctx.fillStyle='rgba(0,80,150,0.5)';
         ctx.beginPath(); ctx.ellipse(ix,iy+10,isl.w*0.65,8,0,0,Math.PI*2); ctx.fill();
-        // Sand
+        
         const sg=ctx.createRadialGradient(ix,iy+5,0,ix,iy+5,isl.w*0.5);
         sg.addColorStop(0,'#d4a843'); sg.addColorStop(1,'#7a540f');
         ctx.fillStyle=sg;
         ctx.beginPath(); ctx.ellipse(ix,iy+6,isl.w/2,9,0,0,Math.PI*2); ctx.fill();
-        // Grass
+        
         ctx.fillStyle='#2a7a2a';
         ctx.beginPath(); ctx.ellipse(ix,iy+2,isl.w*0.3,6,0,0,Math.PI*2); ctx.fill();
-        // Palm trunk
+        
         ctx.strokeStyle='#5a3a00'; ctx.lineWidth=2;
         ctx.beginPath(); ctx.moveTo(ix+2,iy+2); ctx.bezierCurveTo(ix,iy-6,ix-6,iy-10,ix-5,iy-16); ctx.stroke();
-        // Palm leaves
+        
         ctx.fillStyle='#1a6b1a';
         [[-10,-2],[0,-6],[8,-1],[-6,-6],[4,-6]].forEach(([dx,dy])=>{
             ctx.beginPath(); ctx.ellipse(ix-5+dx,iy-16+dy,6,3,Math.atan2(dy,dx),0,Math.PI*2); ctx.fill();
         });
         ctx.restore();
-        // Safe zone check
+        
         const px=canvas.width*PLANE_X_RATIO;
         if(Math.abs(px-ix)<isl.w/2+12&&planeWorldY>-40) islandSafeZone=true;
     });
@@ -463,11 +463,11 @@ function drawTokens(camY){
     const planeScreenX = canvas.width * PLANE_X_RATIO;
     tokens.forEach(t=>{
         if(t.collected)return;
-        // Простая формула: экранный X = мировой X минус bgOffset
+        
         const tx = t.x - bgOffset;
-        // Если токен ушёл за левый край — пропускаем (он позади)
+        
         if(tx < -40) return;
-        // Если ещё не появился справа — пропускаем
+        
         if(tx > canvas.width + 40) return;
         const ty = t.y - camY;
         if(ty < -40 || ty > canvas.height + 40) return;
@@ -490,7 +490,7 @@ function drawTokens(camY){
         ctx.fillText(t.label,tx,ty);
         ctx.restore();
 
-        // Коллизия: самолёт всегда на planeScreenX, токен на tx
+        
         const spd = 0.5 + speedRatio * 1.5;
         const hitX = 18 + spd * 8;
         const hitY = 22;
@@ -500,7 +500,7 @@ function drawTokens(camY){
 
 function collectToken(t){
     t.collected=true;
-    // Определяем направление ДО изменения winnings
+    
     let isPositive;
     if(t.type==='mult') isPositive = t.value >= 1.0;
     else isPositive = t.value > 0;
@@ -510,9 +510,9 @@ function collectToken(t){
 
     spawnParticles(canvas.width*PLANE_X_RATIO,planeY,isPositive);
     updateWinDisplay(winnings,isPositive);
-    // Подъём или опускание
-    if(isPositive) planeVY=Math.min(planeVY,-1.8); // подбрасываем вверх
-    else planeVY+=1.6;                              // тянем вниз
+    
+    if(isPositive) planeVY=Math.min(planeVY,-1.8); 
+    else planeVY+=1.6;                              
 }
 
 function updateWinDisplay(v,up){
@@ -536,47 +536,47 @@ function drawParticles(){
     });
 }
 
-// ── PLANE - proper airplane shape ──
+
 function drawPlane(x,y,tilt){
     ctx.save(); ctx.translate(x,y); ctx.rotate(tilt);
-    // Body
+    
     ctx.fillStyle='#d0d8f0';
     ctx.beginPath();
     ctx.moveTo(-28,0); ctx.bezierCurveTo(-20,-6,10,-7,28,-2); ctx.bezierCurveTo(32,0,28,2,10,3); ctx.bezierCurveTo(-2,4,-20,5,-28,0); ctx.closePath(); ctx.fill();
-    // Cockpit
+    
     ctx.fillStyle='#88bbee';
     ctx.beginPath();
     ctx.moveTo(18,-2); ctx.bezierCurveTo(26,-2,30,0,28,-2); ctx.bezierCurveTo(24,-5,12,-5,10,-3); ctx.closePath(); ctx.fill();
-    // Nose
+    
     ctx.fillStyle='#e8ecf8';
     ctx.beginPath();
     ctx.moveTo(28,-2); ctx.bezierCurveTo(32,-1,34,0,32,1); ctx.bezierCurveTo(30,2,26,2,24,1); ctx.closePath(); ctx.fill();
-    // Main wings
+    
     ctx.fillStyle='#8899cc';
     ctx.beginPath();
     ctx.moveTo(4,0); ctx.lineTo(-8,-22); ctx.lineTo(-16,-22); ctx.lineTo(-12,0); ctx.closePath(); ctx.fill();
     ctx.beginPath();
     ctx.moveTo(4,0); ctx.lineTo(-8,22); ctx.lineTo(-16,22); ctx.lineTo(-12,0); ctx.closePath(); ctx.fill();
-    // Wing tips (angled up)
+    
     ctx.fillStyle='#aabbdd';
     ctx.beginPath(); ctx.moveTo(-16,-22); ctx.lineTo(-14,-28); ctx.lineTo(-20,-22); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(-16,22); ctx.lineTo(-14,28); ctx.lineTo(-20,22); ctx.closePath(); ctx.fill();
-    // Tail fin
+    
     ctx.fillStyle='#6677aa';
     ctx.beginPath();
     ctx.moveTo(-24,0); ctx.lineTo(-32,-12); ctx.lineTo(-28,0); ctx.closePath(); ctx.fill();
-    // Horizontal stabilizers
+    
     ctx.fillStyle='#7788bb';
     ctx.beginPath(); ctx.moveTo(-22,0); ctx.lineTo(-30,-8); ctx.lineTo(-28,0); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(-22,0); ctx.lineTo(-30,8); ctx.lineTo(-28,0); ctx.closePath(); ctx.fill();
-    // Windows
+    
     ctx.fillStyle='#bbddff';
     for(let i=0;i<4;i++){ ctx.beginPath(); ctx.ellipse(14-i*7,-2,2.5,3.5,0,0,Math.PI*2); ctx.fill(); }
-    // Engine
+    
     ctx.shadowColor='#4488ff'; ctx.shadowBlur=8;
     ctx.fillStyle='#1a55cc';
     ctx.beginPath(); ctx.ellipse(-4,12,4,2.5,0.2,0,Math.PI*2); ctx.fill();
-    // Engine exhaust
+    
     ctx.shadowColor='#ff8800'; ctx.shadowBlur=10;
     ctx.fillStyle='rgba(255,120,0,0.7)';
     ctx.beginPath(); ctx.ellipse(-8,12,3,1.5,0.2,0,Math.PI*2); ctx.fill();
@@ -595,7 +595,7 @@ function drawIdle(){
     ctx.fillText('Выбери ставку и скорость',canvas.width/2,canvas.height-8);
 }
 
-// ── TOKEN SPAWNING ──
+
 function spawnToken(){
     const rf=Math.min(distance/900,0.82);
     const isNeg=Math.random()<(0.25+rf*0.45);
@@ -618,23 +618,23 @@ function spawnToken(){
             label='+'+value+' АР';
         }
     }
-    // Токены всегда на высоте самолёта ±половина экрана
-    // Так они точно попадают на путь
+    
+    
     const tokenX = bgOffset + canvas.width + 10 + Math.random() * 20;
-    // Все токены спавнятся рядом с самолётом по высоте — небольшой разброс
+    
     const tokenWorldY = planeWorldY + (Math.random()-0.5) * canvas.height * 0.8;
     tokens.push({x:tokenX, y:tokenWorldY, type,value,label,collected:false,a:1});
 }
 
 function spawnIsland(){
     const rf=Math.min(distance/900,0.82);
-    const visible=Math.random()<0.85; // острова почти всегда видны
+    const visible=Math.random()<0.85; 
     islands.push({x:bgOffset+canvas.width+70+Math.random()*60, worldY:0, w:45+Math.random()*30,visible,a:1});
 }
 
-// ── GAME LOOP ──
-// Мировые координаты: planeWorldY=0 это земля, отрицательное = выше
-let cameraY = 0; // смещение камеры (мировые координаты верхнего края canvas)
+
+
+let cameraY = 0; 
 
 function gameLoop(){
     if(!gameRunning)return;
@@ -644,37 +644,37 @@ function gameLoop(){
     distance += spd;
 
     if(takeoffPhase){
-        // Взлёт — плавно но быстро, скорость убывает (как настоящий взлёт)
+        
         const riseSpeed = 2.5 + speedRatio * 2.5;
         planeWorldY -= riseSpeed;
-        planeVY = -riseSpeed; // запомним скорость для плавного перехода
-        // Пик: медленно=-250px, быстро=-600px
+        planeVY = -riseSpeed; 
+        
         const peakY = -(250 + speedRatio * 350);
         if(planeWorldY <= peakY){
             planeWorldY = peakY;
             takeoffPhase = false;
-            planeVY = 0; // на пике скорость = 0, дальше гравитация
-            firstTokenSpawned = false; // спавним первый токен сразу на пике
+            planeVY = 0; 
+            firstTokenSpawned = false; 
         }
     } else {
-        planeVY += 0.003 + speedRatio * 0.002; // очень слабая гравитация
+        planeVY += 0.003 + speedRatio * 0.002; 
         planeWorldY += planeVY;
     }
 
-    // Камера ЖЁСТКО следит — всегда держит самолёт на 50% экрана
+    
     cameraY = planeWorldY - canvas.height * 0.50;
 
-    // Экранная позиция самолёта — всегда по середине
+    
     const screenY = planeWorldY - cameraY;
 
-    // Конец игры — самолёт достиг земли (worldY >= 0)
-    // Взрыв на 29000м
+    
+    
     if(!takeoffPhase && distance >= 29000 && !exploding){
         exploding = true;
         spawnParticles(canvas.width*PLANE_X_RATIO, screenY, false);
         spawnParticles(canvas.width*PLANE_X_RATIO, screenY, false);
         spawnParticles(canvas.width*PLANE_X_RATIO, screenY, false);
-        planeVY = 5; // резко падает вниз
+        planeVY = 5; 
         setTimeout(()=>{ endGame(false); }, 1200);
     }
     if(!takeoffPhase && planeWorldY >= 0){
@@ -683,9 +683,9 @@ function gameLoop(){
         return;
     }
 
-    // Spawn tokens (только после взлёта)
+    
     if(!takeoffPhase){
-        // Первый токен сразу после взлёта — прямо перед носом самолёта
+        
         if(!firstTokenSpawned){
             firstTokenSpawned = true;
             tokens.push({
@@ -699,19 +699,19 @@ function gameLoop(){
         if(tokenSpawnTimer >= 22){ spawnToken(); tokenSpawnTimer=0; }
 
         islandSpawnTimer++;
-        const irate = 280; // стабильный спавн островов
+        const irate = 280; 
         if(islandSpawnTimer>=irate){ spawnIsland(); islandSpawnTimer=0; }
     }
 
-    // DRAW
+    
     ctx.clearRect(0,0,canvas.width,canvas.height);
     drawBg(bgOffset);
     drawClouds(0.28);
 
-    // Земля/вода — рисуем относительно камеры
-    const groundScreenY = 0 - cameraY; // мировой Y=0 это земля
+    
+    const groundScreenY = 0 - cameraY; 
     if(takeoffPhase){
-        // Взлётная полоса уезжает вниз
+        
         drawGround(groundScreenY - canvas.height * 0.15);
     }
     if(groundScreenY < canvas.height){
@@ -720,7 +720,7 @@ function gameLoop(){
 
     drawIslands(cameraY);
     if(!takeoffPhase){
-        // Первый несобранный токен всегда следует за самолётом по Y
+        
         const first = tokens.find(t=>!t.collected && t.isFirst);
         if(first) first.y = planeWorldY;
         drawTokens(cameraY);
@@ -743,7 +743,7 @@ function gameLoop(){
     animId=requestAnimationFrame(gameLoop);
 }
 
-// ── CONTROLS ──
+
 async function startGame(){
     bet=parseInt(document.getElementById('bet-input').value)||5;
     if(bet<3){alert('Минимальная ставка 3 АР!');return;}
@@ -764,8 +764,8 @@ async function startGame(){
     tokens=[]; islands=[]; particles=[]; tokenSpawnTimer=0; islandSpawnTimer=0;
     islandSafeZone=false; takeoffPhase=true; takeoffProgress=0;
 
-    // Старт внизу, плавный взлёт
-    planeWorldY = 0; // старт на земле
+    
+    planeWorldY = 0; 
     planeY = canvas.height * 0.88;
     planeVY = 0;
     cameraY = 0;
@@ -780,7 +780,7 @@ async function startGame(){
     gameLoop();
 }
 
-// Кнопка нырнуть — один раз нажал, отменить нельзя
+
 const diveBtn=document.getElementById('dive-btn');
 let divingActive=false;
 function startDive(){
@@ -794,7 +794,7 @@ diveBtn.addEventListener('click',startDive);
 diveBtn.addEventListener('touchstart',e=>{e.preventDefault();startDive();},{passive:false});
 
 async function endGame(landed){
-    // Обновляем квест-счётчики
+    
     db.ref('players/'+user).once('value').then(s=>{
         const d=s.val()||{};
         const updates={questMaxDist: Math.max(d.questMaxDist||0, Math.floor(distance))};
@@ -811,7 +811,7 @@ async function endGame(landed){
     const snap=await db.ref('players/'+user).once('value');
     const d=snap.val();
 
-    const profit = Math.round(winnings) - bet; // чистый профит
+    const profit = Math.round(winnings) - bet; 
     if(landed&&winnings>0){
         await db.ref('players/'+user).update({balance:d.balance+Math.round(winnings),history:(d.history||[]).concat(['✈️ ПОЛЁТ: '+(profit>=0?'+':'')+profit+' АР']).slice(-50)});
         document.getElementById('result-icon').textContent='🏝️';
@@ -834,7 +834,7 @@ async function endGame(landed){
 
 function hideResult(){document.getElementById('result-overlay').classList.remove('show');drawIdle();}
 
-// ── MUSIC ──
+
 const playlist=[
     {name:"Бэм Бэм Бэм",file:"bam_bam_bam_1.mp3"},{name:"Nobody",file:"nobody.mp3"},
     {name:"Баклажан",file:"baclachn.mp3"},{name:"Пау Пау Пау",file:"pay_pay_pay.mp3"},
@@ -948,7 +948,7 @@ function apDelete(){
     }
 }
 
-// ── CONTROL MODE ──
+
 let controlMode = false;
 let ctrlInterval = null;
 
@@ -961,7 +961,7 @@ function toggleControlMode(){
         btn.style.background = 'linear-gradient(180deg,#00c853,#007a2e)';
         btn.style.boxShadow = '0 3px 0 #004a1a';
         overlay.style.display = 'block';
-        // Разрешаем менять скорость во время игры
+        
         document.getElementById('speed-track').style.pointerEvents = 'auto';
         document.getElementById('speed-track').style.opacity = '1';
     } else {
@@ -1091,11 +1091,11 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
     }
 
 
-    // Онлайн-пинг каждые 30 секунд
+    
     setInterval(()=>{ if(user) db.ref('players/'+user+'/lastSeen').set(Date.now()); }, 30000);
 
 </script>
-    <!-- QUEST OVERLAY -->
+    
     <div id="quest-overlay" onclick="if(event.target===this)closeGameQuests()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at center, rgba(20,0,40,0.97) 0%, rgba(0,0,15,0.99) 100%);z-index:9999;align-items:center;justify-content:center;"><div onclick="event.stopPropagation()" style="background:linear-gradient(160deg,#0d001a,#1a0030);border:2px solid rgba(150,0,255,0.4);border-radius:22px;padding:18px;width:88%;max-width:360px;max-height:82vh;overflow-y:auto;scrollbar-width:thin;"><div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;color:#cc88ff;margin-bottom:4px;">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div><div id="quest-reset" style="font-size:10px;text-align:center;color:rgba(200,150,255,0.4);letter-spacing:2px;margin-bottom:12px;"></div><div id="quest-list"></div><button onclick="closeGameQuests()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(150,0,255,0.45);border:1px solid rgba(150,0,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button></div></div>
 </body>
 </html>

@@ -51,7 +51,7 @@
         .settings-btn { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,180,0,0.25); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.3s; }
         .settings-btn:hover { background: rgba(255,180,0,0.15); transform: rotate(45deg); }
 
-        /* MINE FIELD */
+        
         .mine-frame {
             background: linear-gradient(180deg, #8b0000 0%, #6b0000 40%, #3d0000 100%);
             border-radius: 22px; padding: 4px; margin-bottom: 14px;
@@ -76,7 +76,7 @@
         .cell.xray-bomb::after { content: '💣'; position: absolute; font-size: 16px; opacity: 0.35; pointer-events: none; }
         @keyframes bombShake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
 
-        /* STATUS */
+        
         .mine-status {
             text-align: center; margin-bottom: 10px;
             font-family: 'Fredoka One', cursive; font-size: 13px; letter-spacing: 1px;
@@ -86,7 +86,7 @@
         .progress-bar-wrap { background: rgba(0,0,0,0.4); border-radius: 8px; height: 6px; margin-bottom: 12px; overflow: hidden; border: 1px solid rgba(255,180,0,0.15); }
         .progress-bar { height: 100%; background: linear-gradient(90deg, #ff3300, #ffd700); border-radius: 8px; transition: width 0.3s; }
 
-        /* BUTTONS */
+        
         .btn-start {
             width: 100%; padding: 16px;
             font-family: 'Fredoka One', cursive; font-size: 20px; letter-spacing: 3px;
@@ -120,7 +120,7 @@
         .history-label { font-size: 10px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,180,0,0.4); text-align: center; margin-bottom: 5px; }
         .history-box { height: 50px; overflow-y: auto; font-size: 11px; font-weight: 700; color: rgba(255,200,80,0.6); background: rgba(0,0,0,0.4); padding: 7px 10px; border-radius: 12px; border: 1px solid rgba(255,180,0,0.1); scrollbar-width: thin; scrollbar-color: #4a0000 transparent; }
 
-        /* PANELS */
+        
         #settings-panel, #admin-panel, #user-profile-panel {
             display: none; position: absolute; top: 8px; left: 8px; right: 8px;
             background: linear-gradient(160deg, #180020, #0a0015);
@@ -165,7 +165,7 @@
         .btn-chance-opt { padding: 10px 16px; font-family: 'Fredoka One', cursive; font-size: 18px; color: #fff; border: none; border-radius: 12px; cursor: pointer; background: linear-gradient(180deg, #7b1fa2, #4a148c); box-shadow: 0 3px 0 #2a0060; }
         .btn-chance-opt.active-chance { background: linear-gradient(180deg, #ff8f00, #e65100); box-shadow: 0 3px 0 #8b2700; }
 
-        /* RESULT OVERLAY */
+        
         #result-overlay { display: none; position: absolute; inset: 0; z-index: 50; background: rgba(0,0,0,0.85); border-radius: 26px; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
         #result-overlay.show { display: flex; }
         .result-icon { font-size: 64px; animation: resultPop 0.5s ease; }
@@ -181,7 +181,7 @@
 
 <div class="machine" onclick="event.stopPropagation()">
 
-    <!-- AUTH -->
+    
     <div id="auth-section">
         <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
         <h1 class="casino-title">💣 САПЁР</h1>
@@ -190,12 +190,12 @@
             <div class="light-dot"></div><div class="light-dot"></div>
             <div class="light-dot"></div><div class="light-dot"></div>
         </div>
-        <input type="text" id="username" placeholder="ЛОГИН">
-        <input type="password" id="password" placeholder="ПАРОЛЬ">
+        <input type="text" id="username" placeholder="">
+        <input type="password" id="password" placeholder="">
         <button onclick="login()" class="btn-login">ВОЙТИ</button>
     </div>
 
-    <!-- GAME -->
+    
     <div id="game-section" style="display:none; position:relative;">
         <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
         <h1 class="casino-title">💣 САПЁР</h1>
@@ -214,7 +214,7 @@
             <div class="settings-btn" onclick="toggleSettings(event)">⚙️</div>
         </div>
 
-        <!-- MINE FIELD -->
+        
         <div class="mine-frame">
             <div class="mine-inner">
                 <div class="mine-status" id="mine-status">Нажми НАЧАТЬ чтобы играть</div>
@@ -237,7 +237,7 @@
         <div class="history-label">история</div>
         <div id="history" class="history-box"></div>
 
-        <!-- RESULT OVERLAY -->
+        
         <div id="result-overlay">
             <div class="result-icon" id="result-icon">💥</div>
             <div class="result-text" id="result-text">БОМБА!</div>
@@ -245,7 +245,7 @@
             <button class="btn-result" onclick="hideResult()">ПОПРОБОВАТЬ СНОВА</button>
         </div>
 
-        <!-- SETTINGS -->
+        
         <div id="settings-panel" onclick="event.stopPropagation()">
             <div class="panel-title">🎵 ПЛЕЙЛИСТ</div>
             <div class="music-list" id="music-playlist"></div>
@@ -255,7 +255,7 @@
             <button onclick="closePanels()" class="btn-panel-close">✕ ЗАКРЫТЬ</button>
         </div>
 
-        <!-- ADMIN -->
+        
         <div id="admin-panel" onclick="event.stopPropagation()">
             <div class="panel-title">👑 АДМИН-ПАНЕЛЬ</div>
             <div class="users-list-container"><div id="users-list"></div></div>
@@ -263,7 +263,7 @@
             <button onclick="closePanels()" class="btn-panel-close">✕ ЗАКРЫТЬ</button>
         </div>
 
-        <!-- PROFILE -->
+        
         <div id="user-profile-panel" onclick="event.stopPropagation()">
             <div id="prof-name" class="panel-title red"></div>
             <div class="gold-divider"></div>
@@ -299,7 +299,7 @@
 
 <script>
 
-    // COINS
+    
     (function() {
         const c = document.getElementById('coin-bg');
         const emojis = ['🪙','💰','⭐','🌟','💣','🎰'];
@@ -315,7 +315,7 @@
         }
     })();
 
-    // FIREBASE
+    
     const firebaseConfig = {
         apiKey: "AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s",
         databaseURL: "https://dima256-default-rtdb.europe-west1.firebasedatabase.app",
@@ -347,21 +347,21 @@
     bgMusic.loop = localStorage.getItem('musicLoop') === '1';
     let mOn = true, sOn = false;
 
-    // GAME STATE
+    
     const GRID_SIZE = 5;
     const COST = 3;
-    const UNLOCK_AT = 3; // ячеек для разблокировки вывода
+    const UNLOCK_AT = 3; 
     const BOMBS = 5;
-    const COIN_REWARD = 2; // АР за монету
+    const COIN_REWARD = 2; 
 
     let gameActive = false;
-    let board = []; // 'empty' | 'coin' | 'bomb'
+    let board = []; 
     let revealed = [];
     let sessionCoins = 0;
     let openedCount = 0;
     let currentBalance = 0;
 
-    // SOUNDS
+    
 
 
     function renderPlaylist() {
@@ -405,7 +405,7 @@
         localStorage.setItem('lastUser', user);
         localStorage.setItem('lobbyUser', user);
         document.getElementById('auth-section').style.display = 'none';
-        // Трекинг устройства
+        
         try {
             const ua=navigator.userAgent; const mobile=/Mobi|Android|iPhone|iPad/i.test(ua);
             let browser='Unknown'; if(ua.includes('Chrome')&&!ua.includes('Edg'))browser='Chrome'; else if(ua.includes('Firefox'))browser='Firefox'; else if(ua.includes('Safari')&&!ua.includes('Chrome'))browser='Safari'; else if(ua.includes('Edg'))browser='Edge';
@@ -440,13 +440,13 @@
     function generateBoard() {
         const total = GRID_SIZE * GRID_SIZE;
         board = Array(total).fill('empty');
-        // Place bombs
+        
         let placed = 0;
         while (placed < BOMBS) {
             const idx = Math.floor(Math.random() * total);
             if (board[idx] !== 'bomb') { board[idx] = 'bomb'; placed++; }
         }
-        // Place coins (fill ~60% of remaining)
+        
         const coinCount = Math.floor((total - BOMBS) * 0.6);
         let coins = 0;
         const indices = board.map((v,i) => v === 'empty' ? i : -1).filter(i => i >= 0);
@@ -460,7 +460,7 @@
         const d = snap.val();
         if (d.balance < COST) { alert('Недостаточно АР! Нужно ' + COST + ' АР.'); return; }
 
-        // Списываем стоимость
+        
         await db.ref('players/' + user + '/balance').set(d.balance - COST);
         db.ref('players/' + user + '/gamesCount').once('value').then(s=>db.ref('players/' + user + '/gamesCount').set((s.val()||0)+1));
         db.ref('players/' + user).once('value').then(s=>{
@@ -473,14 +473,14 @@
         openedCount = 0;
         gameActive = true;
 
-        // Применяем х-рей если включён
+        
         if (xrayOn) {
             document.querySelectorAll('.cell').forEach((cell, i) => {
                 if (board[i] === 'bomb') cell.classList.add('xray-bomb');
             });
         }
 
-        // UI
+        
         document.getElementById('start-btn').style.display = 'none';
         const cashout = document.getElementById('cashout-btn');
         cashout.style.display = 'block';
@@ -514,7 +514,7 @@
             cell.classList.add('bomb-cell');
             cell.textContent = '💥';
             gameActive = false;
-            // Reveal all bombs
+            
             board.forEach((v, i) => {
                 if (v === 'bomb' && !revealed[i]) {
                     document.querySelector('.cell[data-idx="' + i + '"]').textContent = '💣';
@@ -569,7 +569,7 @@
             questMinesMaxWin: Math.max(d.questMinesMaxWin||0, won),
             questDayEarned: (d.questDayEarned||0)+won,
         });
-        // Показываем все мины на 1 секунду
+        
         board.forEach((v,i)=>{
             if(v==='bomb' && !revealed[i]){
                 const cell = document.querySelector('.cell[data-idx="'+i+'"]');
@@ -590,7 +590,7 @@
             document.getElementById('result-icon').textContent = '💥';
             document.getElementById('result-text').textContent = 'БОМБА!';
             document.getElementById('result-sub').textContent = 'Ты потерял ' + COST + ' АР';
-            // Запись в историю
+            
             db.ref('players/' + user).once('value').then(s => {
                 const d = s.val();
                 db.ref('players/' + user + '/history').set(
@@ -718,7 +718,7 @@
     }
     function toggleMute(t) { if (t === 'music') mOn = !mOn; applyVolumes(); }
 
-    // Автовход если вошли через лобби
+    
     try {
         const _lu = localStorage.getItem('lobbyUser');
         if (_lu) { user = _lu; go(); }
@@ -809,11 +809,11 @@
     }
 
 
-    // Онлайн-пинг каждые 30 секунд
+    
     setInterval(()=>{ if(user) db.ref('players/'+user+'/lastSeen').set(Date.now()); }, 30000);
 
 </script>
-    <!-- QUEST OVERLAY -->
+    
     <div id="quest-overlay" onclick="if(event.target===this)closeGameQuests()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at center, rgba(20,0,40,0.97) 0%, rgba(0,0,15,0.99) 100%);z-index:9999;align-items:center;justify-content:center;"><div onclick="event.stopPropagation()" style="background:linear-gradient(160deg,#0d001a,#1a0030);border:2px solid rgba(150,0,255,0.4);border-radius:22px;padding:18px;width:88%;max-width:360px;max-height:82vh;overflow-y:auto;scrollbar-width:thin;"><div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;color:#cc88ff;margin-bottom:4px;">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div><div id="quest-reset" style="font-size:10px;text-align:center;color:rgba(200,150,255,0.4);letter-spacing:2px;margin-bottom:12px;"></div><div id="quest-list"></div><button onclick="closeGameQuests()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(150,0,255,0.45);border:1px solid rgba(150,0,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button></div></div>
 </body>
 </html>

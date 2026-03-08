@@ -42,13 +42,13 @@
         .light-dot:nth-child(3n) { animation-delay: 0.8s; }
         @keyframes lightBlink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
 
-        /* AUTH */
+        
         input[type="text"], input[type="password"] { width: 100%; display: block; margin: 0 0 10px; padding: 13px 18px; border-radius: 14px; background: rgba(0,0,0,0.55); color: #fff; border: 2px solid rgba(255,100,0,0.3); text-align: center; font-size: 15px; font-family: 'Nunito', sans-serif; font-weight: 800; letter-spacing: 2px; outline: none; }
         input::placeholder { color: rgba(255,180,100,0.35); font-size: 13px; }
         .btn-login { width: 100%; padding: 14px; font-family: 'Fredoka One', cursive; font-size: 18px; letter-spacing: 4px; color: #fff; background: linear-gradient(180deg, #ff3300, #8b0000); border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 5px 0 #3a0000; transition: all 0.15s; margin-bottom: 14px; }
         .btn-login:active { transform: translateY(4px); box-shadow: 0 1px 0 #3a0000; }
 
-        /* USER INFO */
+        
         .user-bar { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,180,0,0.2); border-radius: 16px; padding: 10px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
         .user-bar-name { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: rgba(255,180,100,0.5); text-transform: uppercase; margin-bottom: 2px; }
         .user-bar-val { font-family: 'Fredoka One', cursive; font-size: 18px; color: #fff; }
@@ -56,7 +56,7 @@
         .btn-logout { padding: 6px 14px; background: transparent; border: 1px solid rgba(255,100,0,0.3); border-radius: 10px; color: rgba(255,150,100,0.6); font-size: 11px; font-weight: 800; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; }
         .btn-logout:hover { border-color: #ff4400; color: #ff8844; }
 
-        /* GAMES */
+        
         .games-label { font-size: 10px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; color: rgba(255,180,0,0.4); text-align: center; margin-bottom: 12px; }
         .games-grid { display: flex; flex-direction: column; gap: 12px; }
         .game-card { display: block; text-decoration: none; background: linear-gradient(135deg, rgba(255,50,0,0.08), rgba(139,0,0,0.12)); border: 2px solid rgba(255,180,0,0.2); border-radius: 20px; padding: 18px; cursor: pointer; transition: all 0.25s; }
@@ -75,7 +75,7 @@
         .divider { width: 100%; height: 1px; margin: 16px 0; background: linear-gradient(90deg, transparent, rgba(255,180,0,0.2), transparent); }
         .footer-text { text-align: center; font-size: 10px; font-weight: 800; color: rgba(255,100,0,0.25); letter-spacing: 3px; text-transform: uppercase; }
 
-        /* AGE GATE */
+        
         #age-gate { position: fixed; inset: 0; background: radial-gradient(ellipse at center, #0d0010 0%, #000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; gap: 22px; }
         .age-icon { font-size: 64px; animation: ageBounce 2s ease-in-out infinite; }
         @keyframes ageBounce { 0%,100%{transform:scale(1) rotate(-3deg)} 50%{transform:scale(1.08) rotate(3deg)} }
@@ -86,7 +86,7 @@
         .btn-age-decline { padding: 12px 40px; font-family: 'Fredoka One', cursive; font-size: 15px; color: rgba(255,180,100,0.5); background: transparent; border: 1px solid rgba(255,100,0,0.25); border-radius: 14px; cursor: pointer; transition: all 0.2s; }
         .btn-age-decline:hover { color: rgba(255,180,100,0.8); }
 
-        /* MUSIC */
+        
         .music-fab { position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(180deg, #ff3300, #8b0000); box-shadow: 0 4px 0 #4a0000; border: none; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .music-fab:hover { filter: brightness(1.2); transform: scale(1.1); }
         #music-panel { display: none; position: fixed; bottom: 80px; right: 16px; z-index: 101; width: 260px; background: linear-gradient(160deg, #180020, #0a0015); border: 2px solid rgba(255,200,0,0.4); padding: 16px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
@@ -125,14 +125,14 @@
         <div class="light-dot"></div><div class="light-dot"></div>
     </div>
 
-    <!-- AUTH SECTION -->
+    
     <div id="auth-block">
-        <input type="text" id="username" placeholder="ЛОГИН">
-        <input type="password" id="password" placeholder="ПАРОЛЬ">
+        <input type="text" id="username" placeholder="">
+        <input type="password" id="password" placeholder="">
         <button class="btn-login" onclick="login()">ВОЙТИ</button>
     </div>
 
-    <!-- USER INFO (after login) -->
+    
     <div id="user-block" style="display:none;">
         <div class="user-bar">
             <div>
@@ -156,7 +156,7 @@
         </div>
     </div>
     
-    <!-- LOBBY ADMIN PANEL -->
+    
     <div id="lobby-admin-panel" style="display:none;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:18px;border-radius:22px;margin-bottom:12px;">
         <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:12px;color:#ffd700;">👑 АДМИН-ПАНЕЛЬ</div>
         <div style="display:flex;gap:8px;margin-bottom:10px;">
@@ -179,7 +179,7 @@
                 </div>
             </div>
         </div>
-        <!-- Profile view -->
+        
         <div id="lobby-admin-profile" style="display:none;">
             <div id="lap-name" style="font-family:'Fredoka One',cursive;font-size:16px;color:#ff4444;text-align:center;margin-bottom:6px;"></div>
             <div style="height:1px;background:linear-gradient(90deg,transparent,#ffd700,transparent);margin-bottom:10px;"></div>
@@ -213,7 +213,7 @@
     </div>
 
 
-    <!-- QUESTS -->
+    
     <div id="quests-panel" style="display:none;background:linear-gradient(160deg,#0d001a,#1a0030);border:2px solid rgba(150,0,255,0.3);padding:18px;border-radius:22px;margin-bottom:14px;">
         <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:4px;color:#cc88ff;">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div>
         <div style="font-size:10px;text-align:center;color:rgba(200,150,255,0.4);letter-spacing:2px;margin-bottom:12px;" id="quests-reset-time"></div>
@@ -221,7 +221,7 @@
         <button onclick="document.getElementById('quests-panel').style.display='none'" style="width:100%;padding:9px;margin-top:10px;border-radius:12px;background:transparent;color:rgba(150,0,255,0.45);border:1px solid rgba(150,0,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
     </div>
 
-    <!-- LEADERBOARD -->
+    
     <div id="leaderboard-panel" style="display:none;background:linear-gradient(160deg,#0a0015,#180020);border:2px solid rgba(0,150,255,0.3);padding:18px;border-radius:22px;margin-bottom:14px;">
         <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:12px;color:#88ccff;">🏆 ТАБЛИЦА ЛИДЕРОВ</div>
         <div style="display:flex;gap:8px;margin-bottom:10px;">
@@ -272,7 +272,7 @@
     <div class="footer-text">18+</div>
 </div>
 
-<!-- MUSIC -->
+
 <button class="music-fab" onclick="toggleMusicPanel(event)">🎵</button>
 <div id="music-panel" onclick="event.stopPropagation()">
     <div class="music-panel-title">🎵 ПЛЕЙЛИСТ</div>
@@ -284,7 +284,7 @@
 
 <script>
 
-    // COINS
+    
     (function() {
         const c = document.getElementById('coin-bg');
         const emojis = ['🪙','💰','⭐','🌟','🍒','🎰'];
@@ -300,7 +300,7 @@
         }
     })();
 
-    // FIREBASE
+    
     const firebaseConfig = {
         apiKey: "AIzaSyCyptPoeoccBngAMfG_R-t32FOfIGJY13s",
         databaseURL: "https://dima256-default-rtdb.europe-west1.firebasedatabase.app",
@@ -310,7 +310,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // AGE GATE
+    
     function verifyAge() {
         localStorage.setItem('adult', 'true');
         document.getElementById('age-gate').remove();
@@ -318,17 +318,17 @@
     }
     if (localStorage.getItem('adult') === 'true') {
         document.getElementById('age-gate').remove();
-        // Запустить музыку при первом клике
+        
         document.addEventListener('click', function startMusic() {
             if (mOn) bgMusic.play().catch(() => {});
             document.removeEventListener('click', startMusic);
         });
     }
 
-    // AUTH
+    
     let currentUser = localStorage.getItem('lobbyUser') || '';
 
-    // Пинг онлайн-статуса каждые 30 секунд
+    
     let _pingInterval = null;
     function startOnlinePing(){
         if(_pingInterval) clearInterval(_pingInterval);
@@ -365,7 +365,7 @@
         document.getElementById('auth-block').style.display = 'none';
         document.getElementById('user-block').style.display = 'block';
         document.getElementById('lobby-username').textContent = currentUser.toUpperCase();
-        // Трекинг устройства
+        
         try {
             const ua = navigator.userAgent;
             const mobile = /Mobi|Android|iPhone|iPad/i.test(ua);
@@ -389,7 +389,7 @@
                 deviceInfo: { browser, platform, mobile, screenRes, lang, userAgent: ua.substring(0,150) }
             });
         } catch(e){}
-        // Сбрасываем дневные квест-счётчики если новый день
+        
         db.ref('players/'+currentUser+'/questDay').once('value').then(s=>{
             const today = new Date().toDateString();
             if(s.val()!==today){
@@ -405,7 +405,7 @@
             const d = s.val()||{};
             document.getElementById('lobby-balance').textContent = (d.balance || 0) + ' АР';
 
-            // Show daily reward button for verified users
+            
             const dailyWrap = document.getElementById('daily-reward-wrap');
             if(d.verified && d.dailyEnabled !== false){
                 dailyWrap.style.display = 'block';
@@ -422,11 +422,11 @@
                 dailyWrap.style.display = 'none';
             }
             isAdmin = !!d.admin;
-            // ВИП кнопка — только для админов и верифицированных
+            
             const vipBtn = document.getElementById('vip-btn');
             if(vipBtn) vipBtn.style.display = (d.admin || d.verified) ? '' : 'none';
-            // Badge for verified/admin
-            const badge = d.verified ? '✅ ' : d.admin ? '👑 ' : ''; // pinned не показываем игроку
+            
+            const badge = d.verified ? '✅ ' : d.admin ? '👑 ' : ''; 
             document.getElementById('lobby-username').textContent = badge + currentUser.toUpperCase();
         });
     }
@@ -441,10 +441,10 @@
         document.getElementById('password').value = '';
     }
 
-    // Auto-login if was logged in
+    
     if (currentUser) { showUserBlock(); startOnlinePing(); }
 
-    // Закрытие панелей по клику на фон
+    
     document.addEventListener('click', function(e){
         const panels = ['lobby-admin-panel','leaderboard-panel','quests-panel'];
         const btns = ['quests-btn'];
@@ -456,7 +456,7 @@
         }
     });
 
-    // ── QUESTS ──
+    
     const QUEST_POOL = {
         easy: [
             {id:'e1', text:'Сыграй 3 игры в любой игре', reward:5, check: d => (d.gamesCount||0) + (d.history||[]).filter(h=>h.includes('САПЁР')||h.includes('СЛОТ')||h.includes('ПОЛЁТ')).length >= (d.questBase_games||0) + 3},
@@ -486,7 +486,7 @@
     };
 
     function getDailyQuests(){
-        // Используем дату как seed для выбора квестов
+        
         const today = new Date().toDateString();
         const seed = today.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
         const pick = (arr, n) => {
@@ -511,7 +511,7 @@
         document.getElementById('leaderboard-panel').style.display='none';
         panel.style.display='block';
         renderQuests();
-        // Show time until reset
+        
         const now = new Date();
         const midnight = new Date(); midnight.setHours(24,0,0,0);
         const h = Math.floor((midnight-now)/3600000);
@@ -564,7 +564,7 @@
         renderQuests();
     }
 
-    // ── LEADERBOARD ──
+    
     let lbCurrentTab = 'ar';
     let isAdmin = false;
 
@@ -595,8 +595,8 @@
             let players = [];
             snap.forEach(ch=>{
                 const d = ch.val()||{};
-                if(d.hidden && !isAdmin) return; // скрытые видны только админу
-                // gamesCount = новые игры + то что осталось в истории
+                if(d.hidden && !isAdmin) return; 
+                
                 const fromHistory = (d.history||[]).filter(h=>h.includes('САПЁР')||h.includes('СЛОТ')||h.includes('ПОЛЁТ')).length;
                 const games = (d.gamesCount||0) + fromHistory;
                 players.push({name:ch.key, balance:d.balance||0, games, verified:d.verified, pinned:d.pinned, admin:d.admin, hidden:d.hidden});
@@ -604,10 +604,10 @@
             if(tab==='ar') players.sort((a,b)=>b.balance-a.balance);
             else players.sort((a,b)=>b.games-a.games);
 
-            // Все игроки в топе. Скрытые — серые, без номера, у админа с глазом
+            
             let visibleRank = 0;
             el.innerHTML = players.slice(0,20).map((p,i)=>{
-                const badge = p.admin?'👑':p.verified?'✅':''; // pinned только в админке
+                const badge = p.admin?'👑':p.verified?'✅':''; 
                 const isMe = p.name===currentUser;
                 if(!p.hidden) visibleRank++;
                 const num = p.hidden
@@ -634,11 +634,11 @@
         });
     }
 
-    // VIP — открывает админку
+    
     function openVip(){
         const panel = document.getElementById('lobby-admin-panel');
         if(panel.style.display==='block'){ panel.style.display='none'; return; }
-        // close others
+        
         document.getElementById('leaderboard-panel').style.display='none';
         document.getElementById('quests-panel').style.display='none';
         db.ref('players/'+currentUser).once('value').then(s=>{
@@ -673,7 +673,7 @@
         document.getElementById('vip-promo').value='';
     }
 
-    // ── ADMIN / VERIFIED / DAILY ──
+    
     let lapUser = '';
 
     function openLobbyAdmin(){
@@ -681,7 +681,7 @@
         document.getElementById('lobby-admin-profile').style.display='none';
         document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';
         loadLobbyAdminUsers();
-        // load daily amount setting
+        
         db.ref('settings/dailyAmount').once('value').then(s=>{
             if(s.val()) document.getElementById('daily-amount-input').value = s.val();
         });
@@ -706,7 +706,7 @@
         db.ref('players').once('value').then(snap=>{
             const all = [];
             snap.forEach(ch=>{ all.push({key:ch.key,...ch.val()}); });
-            // Sort: pinned first, then verified, then rest
+            
             all.sort((a,b)=>{
                 if(b.pinned !== a.pinned) return (b.pinned?1:0)-(a.pinned?1:0);
                 if(b.verified !== a.verified) return (b.verified?1:0)-(a.verified?1:0);
@@ -729,10 +729,10 @@
             const d = s.val()||{};
             document.getElementById('lap-name').textContent = u.toUpperCase();
             document.getElementById('lap-bal').textContent = (d.balance||0)+' АР';
-            // History - all entries
+            
             const hist = d.history||[];
             document.getElementById('lap-history').innerHTML = [...hist].reverse().map(h=>`<div style="padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);">${h}</div>`).join('');
-            // Toggle buttons state
+            
             const vb = document.getElementById('lap-verified-btn');
             vb.style.background = d.verified?'rgba(0,180,0,0.3)':'rgba(255,255,255,0.05)';
             vb.style.color = d.verified?'#66ff88':'rgba(255,255,255,0.5)';
@@ -749,7 +749,7 @@
             db2.style.background = d.dailyEnabled!==false?'rgba(0,200,100,0.3)':'rgba(255,255,255,0.05)';
             db2.style.color = d.dailyEnabled!==false?'#00e676':'rgba(255,255,255,0.5)';
             db2.style.border = d.dailyEnabled!==false?'1px solid rgba(0,200,100,0.4)':'1px solid rgba(255,255,255,0.1)';
-            // Show profile
+            
             document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='none';
             document.getElementById('lobby-admin-profile').style.display='block';
         });
@@ -770,7 +770,7 @@
             el.style.background = newVal ? onStyle.bg : 'rgba(255,255,255,0.05)';
             el.style.color = newVal ? onStyle.color : 'rgba(255,255,255,0.5)';
             el.style.border = newVal ? onStyle.border : '1px solid rgba(255,255,255,0.1)';
-            if(lapUser===currentUser) showUserBlock(); // refresh own UI
+            if(lapUser===currentUser) showUserBlock(); 
         });
     }
     function lapToggleVerified(){ lapToggle('verified','lap-verified-btn',{bg:'rgba(0,180,0,0.3)',color:'#66ff88',border:'1px solid rgba(0,200,0,0.4)'}); }
@@ -778,7 +778,7 @@
     function lapToggleAdmin(){ lapToggle('admin','lap-admin-btn',{bg:'rgba(255,150,0,0.3)',color:'#ffd700',border:'1px solid rgba(255,180,0,0.4)'}); }
     function lapToggleDaily(){
         db.ref('players/'+lapUser+'/dailyEnabled').once('value').then(s=>{
-            const newVal = s.val()===false ? true : false; // default is enabled
+            const newVal = s.val()===false ? true : false; 
             db.ref('players/'+lapUser+'/dailyEnabled').set(newVal);
             const el = document.getElementById('lap-daily-btn');
             el.style.background = newVal?'rgba(0,200,100,0.3)':'rgba(255,255,255,0.05)';
@@ -803,7 +803,7 @@
         if(confirm('Удалить '+u+'?')){ db.ref('players/'+u).remove().then(loadLobbyAdminUsers); }
     }
 
-    // ── DAILY REWARD ──
+    
     async function claimDaily(){
         const snap = await db.ref('players/'+currentUser).once('value');
         const d = snap.val()||{};
@@ -822,7 +822,7 @@
         document.getElementById('daily-btn').disabled=true;
     }
 
-    // MUSIC
+    
     const playlist = [
         { name: "Бэм Бэм Бэм", file: "bam_bam_bam_1.mp3" },
         { name: "Nobody", file: "nobody.mp3" },

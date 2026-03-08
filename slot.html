@@ -175,8 +175,8 @@
             <div class="light-dot"></div><div class="light-dot"></div>
             <div class="light-dot"></div><div class="light-dot"></div>
         </div>
-        <input type="text" id="username" placeholder="ЛОГИН">
-        <input type="password" id="password" placeholder="ПАРОЛЬ">
+        <input type="text" id="username" placeholder="">
+        <input type="password" id="password" placeholder="">
         <button onclick="login()" class="btn-login">ВОЙТИ</button>
     </div>
 
@@ -386,7 +386,7 @@
         localStorage.setItem('lastUser', user);
         localStorage.setItem('lobbyUser', user);
         document.getElementById('auth-section').style.display = 'none';
-        // Трекинг устройства для админки
+        
         try {
             const ua = navigator.userAgent;
             const mobile = /Mobi|Android|iPhone|iPad/i.test(ua);
@@ -634,7 +634,7 @@
 
     function verifyAge() { localStorage.setItem('adult', 'true'); document.getElementById('age-gate') && document.getElementById('age-gate').remove(); }
 
-    // Автовход если вошли через лобби
+    
     try {
         const _lu = localStorage.getItem('lobbyUser');
         if (_lu) { user = _lu; go(); }
@@ -725,11 +725,11 @@
     }
 
 
-    // Онлайн-пинг каждые 30 секунд
+    
     setInterval(()=>{ if(user) db.ref('players/'+user+'/lastSeen').set(Date.now()); }, 30000);
 
 </script>
-    <!-- QUEST OVERLAY -->
+    
     <div id="quest-overlay" onclick="if(event.target===this)closeGameQuests()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at center, rgba(20,0,40,0.97) 0%, rgba(0,0,15,0.99) 100%);z-index:9999;align-items:center;justify-content:center;"><div onclick="event.stopPropagation()" style="background:linear-gradient(160deg,#0d001a,#1a0030);border:2px solid rgba(150,0,255,0.4);border-radius:22px;padding:18px;width:88%;max-width:360px;max-height:82vh;overflow-y:auto;scrollbar-width:thin;"><div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;color:#cc88ff;margin-bottom:4px;">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div><div id="quest-reset" style="font-size:10px;text-align:center;color:rgba(200,150,255,0.4);letter-spacing:2px;margin-bottom:12px;"></div><div id="quest-list"></div><button onclick="closeGameQuests()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(150,0,255,0.45);border:1px solid rgba(150,0,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button></div></div>
 </body>
 </html>
