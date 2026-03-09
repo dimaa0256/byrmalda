@@ -1,4 +1,4 @@
-const CACHE = 'burmalda-v1';
+const CACHE = 'burmalda-v2';
 const ASSETS = [
   '/index.html',
   '/slot.html',
