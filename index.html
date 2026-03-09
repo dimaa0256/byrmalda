@@ -2,13 +2,13 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="БУРМАЛДА">
     <meta name="theme-color" content="#ff4500">
-    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="./icon-192.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🍓 БУРМАЛДА</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
@@ -35,8 +35,9 @@
             scrollbar-width: thin; scrollbar-color: #8b0000 transparent;
         }
         .casino-title {
-            font-family: 'Fredoka One', cursive; font-size: 36px; text-align: center;
+            font-family: 'Fredoka One', cursive; font-size: 28px; text-align: center;
             margin-bottom: 4px; letter-spacing: 2px; color: #fff;
+            white-space: nowrap; overflow: hidden;
             text-shadow: 0 0 10px #ff4400, 0 0 30px #ff2200, 2px 2px 0 #8b0000, 4px 4px 0 #5a0000;
             animation: titlePop 3s ease-in-out infinite;
         }
@@ -134,7 +135,7 @@
 </div>
 
 <div class="lobby">
-    <div class="casino-title">🍓 БУРМАЛДА</div>
+    <div class="casino-title">БУРМАЛДА</div>
     <div class="lobby-subtitle">КАЗИНО</div>
     <div class="title-lights">
         <div class="light-dot"></div><div class="light-dot"></div>
@@ -806,7 +807,7 @@
 </script>
     <script>
       if('serviceWorker' in navigator){
-        navigator.serviceWorker.register('/sw.js').catch(()=>{});
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
       }
     </script>
 </body>
