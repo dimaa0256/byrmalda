@@ -467,6 +467,7 @@
         document.getElementById('game-section').style.display = 'block';
         document.getElementById('display-name').innerText = user.toUpperCase();
         fillReels(); applyVolumes(); renderPlaylist();
+        initDuel();
         db.ref('players/' + uid).on('value', snap => {
             const d = snap.val(); if (!d) return;
             document.getElementById('balance').innerText = d.balance;
@@ -554,6 +555,11 @@
             history: (d.history || []).concat([res.join('') + ' ' + (delta >= 0 ? '+' : '') + delta + ' АР']).slice(-50)
         });
         document.getElementById('spin-btn').disabled = false;
+        // Дуэль: победа = 3 одинаковых
+        if(duelData){
+            const is3 = res[0]===res[1] && res[1]===res[2];
+            if(is3) duelWin(); else duelLose();
+        }
     }
 
     function promptPromo() {
@@ -794,5 +800,74 @@
         navigator.serviceWorker.register('./sw.js').catch(()=>{});
       }
     </script>
+<script>
+    // ===== ДУЭЛЬ =====
+    let duelData = null;
+    let myDuelRole = null;
+
+    function initDuel(){
+        const params = new URLSearchParams(window.location.search);
+        const duelId = params.get('duel');
+        if(!duelId) return;
+        db.ref('duels/'+duelId).once('value').then(s=>{
+            const d = s.val();
+            if(!d || d.status !== 'active') return;
+            duelData = {...d, duelId};
+            myDuelRole = d.challenger === uid ? 'challenger' : 'opponent';
+            showDuelHUD(d);
+            db.ref('duels/'+duelId).on('value', snap=>{
+                const upd = snap.val();
+                if(upd){ duelData={...upd,duelId}; showDuelHUD(upd); }
+            });
+        });
+    }
+
+    function showDuelHUD(d){
+        let hud = document.getElementById('duel-hud');
+        if(!hud){
+            hud = document.createElement('div');
+            hud.id = 'duel-hud';
+            hud.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:200;background:rgba(20,0,15,0.97);border-bottom:2px solid rgba(255,0,80,0.5);padding:8px 20px;text-align:center;width:100%;max-width:420px;font-family:Fredoka One,cursive;box-sizing:border-box;';
+            document.body.prepend(hud);
+        }
+        const sc = d.scores||{challenger:0,opponent:0};
+        const myScore = myDuelRole==='challenger' ? sc.challenger : sc.opponent;
+        const theirScore = myDuelRole==='challenger' ? sc.opponent : sc.challenger;
+        const theirName = myDuelRole==='challenger' ? d.opponentName : d.challengerName;
+        const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт'};
+        hud.innerHTML = `<div style="font-size:10px;color:rgba(255,136,170,0.6);letter-spacing:2px;">⚔️ ДУЭЛЬ • ${gameNames[d.game]} • Раунд ${d.currentRound}/${d.rounds}</div><div style="font-size:18px;color:#ffd700;margin-top:2px;">${myScore} <span style="color:rgba(255,255,255,0.3)">:</span> ${theirScore} <span style="font-size:10px;color:rgba(255,255,255,0.4)">vs ${theirName.toUpperCase()}</span></div>`;
+    }
+
+    function duelWin(){
+        if(!duelData) return;
+        const d = duelData;
+        const sc = d.scores||{challenger:0,opponent:0};
+        const newSc = {...sc, [myDuelRole]:(sc[myDuelRole]||0)+1};
+        const newRound = (d.currentRound||1) + 1;
+        const finished = newRound > d.rounds;
+        db.ref('duels/'+d.duelId).update({scores:newSc, currentRound:finished?d.rounds:newRound, status:finished?'finished':'active'})
+        .then(()=>{ if(finished) endDuelScreen(newSc); });
+    }
+
+    function duelLose(){
+        if(!duelData) return;
+        const d = duelData;
+        const newRound = (d.currentRound||1) + 1;
+        const finished = newRound > d.rounds;
+        db.ref('duels/'+d.duelId).update({currentRound:finished?d.rounds:newRound, status:finished?'finished':'active'})
+        .then(()=>{ if(finished) endDuelScreen(d.scores||{challenger:0,opponent:0}); });
+    }
+
+    function endDuelScreen(sc){
+        const myF = sc[myDuelRole]||0;
+        const theirF = myDuelRole==='challenger' ? sc.opponent||0 : sc.challenger||0;
+        const won = myF > theirF;
+        setTimeout(()=>{
+            alert((won?'🏆 ДУЭЛЬ ВЫИГРАНА! ':'💀 ДУЭЛЬ ПРОИГРАНА ') + myF+':'+theirF);
+            window.location.href='index.html';
+        }, 800);
+    }
+
+</script>
 </body>
 </html>
