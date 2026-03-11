@@ -368,6 +368,8 @@
         const u=document.getElementById('username').value.trim();
         const p=document.getElementById('password').value;
         if(!u||!p) return;
+    if(p.length<6){ alert('Пароль слишком короткий! Минимум 6 символов.'); return; }
+    if(/^\d+$/.test(p)){ alert('Пароль не может состоять только из цифр!'); return; }
         db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
             if(snap.exists()){
                 auth.signInWithEmailAndPassword(toEmail(u),p)
@@ -758,7 +760,7 @@
                 const info=document.createElement('div');
                 info.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:10px;color:'+diffColor[type]+';font-family:Fredoka One,cursive;letter-spacing:1px;">'+diffLabel[type]+'</span><span style="font-size:12px;color:#ffd700;font-family:Fredoka One,cursive;">+'+q.reward+' \u0410\u0420</span></div><div style="font-size:12px;color:rgba(255,255,255,0.85);font-family:Nunito,sans-serif;margin-bottom:6px;">'+q.text+'</div>';
                 const btn=document.createElement('button');
-                btn.textContent=completed?'\u2705 \u0412\u042b\u041f\u041e\u041b\u041d\u0415\u041d\u041e':canClaim?'\U0001f381 \u0417\u0410\u0411\u0420\u0410\u0422\u042c':'\u23f3 \u041d\u0415 \u0412\u042b\u041f\u041e\u041b\u041d\u0415\u041d\u041e';
+                btn.textContent=completed?'\u2705 \u0412\u042b\u041f\u041e\u041b\u041d\u0415\u041d\u041e':canClaim?'🎁 \u0417\u0410\u0411\u0420\u0410\u0422\u042c':'\u23f3 \u041d\u0415 \u0412\u042b\u041f\u041e\u041b\u041d\u0415\u041d\u041e';
                 btn.disabled=!canClaim;
                 btn.style.cssText='width:100%;padding:6px;border-radius:8px;font-family:Fredoka One,cursive;font-size:11px;border:none;cursor:'+(canClaim?'pointer':'not-allowed')+';background:'+(completed?'rgba(0,200,100,0.2)':canClaim?'linear-gradient(180deg,#9c27b0,#6a0080)':'rgba(255,255,255,0.05)')+';color:'+(completed?'#66ff88':canClaim?'#fff':'rgba(255,255,255,0.3)')+';';
                 btn.onclick=()=>claimGameQuest(q.id,today);
