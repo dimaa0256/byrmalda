@@ -154,7 +154,7 @@
     <div id="auth-block">
         <input type="text" id="username" placeholder="">
         <input type="password" id="password" placeholder="">
-        <div style="font-size:11px;color:rgba(255,180,100,0.4);text-align:center;margin-top:-6px;margin-bottom:10px;font-family:Nunito,sans-serif;font-weight:700;letter-spacing:1px;">пароль: минимум 4 символа</div>
+        <div style="font-size:11px;color:rgba(255,180,100,0.4);text-align:center;margin-top:-6px;margin-bottom:10px;font-family:Nunito,sans-serif;font-weight:700;letter-spacing:1px;">пароль: минимум 6 символов</div>
         <button class="btn-login" onclick="login()">ВОЙТИ</button>
     </div>
 
@@ -437,7 +437,7 @@
         const p = document.getElementById('password').value;
         if(!u||!p){ showErr('Заполни поля'); return; }
         if(u.length<2||u.length>20){ showErr('Имя: 2–20 символов'); return; }
-        if(p.length<4){ showErr('Пароль слишком короткий! Минимум 4 символа.'); return; }
+        if(p.length<6){ showErr('Пароль слишком короткий! Минимум 6 символов.'); return; }
         showErr('');
         db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
             if(snap.exists()){
@@ -452,7 +452,15 @@
                         db.ref('players/'+uid).set({ username:u, balance:5, history:['Регистрация'], usedPromos:{} });
                         onSignedIn(cred.user, u);
                     })
-                    .catch(e=>{ showErr(e.code==='auth/weak-password'?'Пароль слишком короткий! Минимум 4 символа.':'Ошибка регистрации: '+e.message); });
+                    .catch(e=>{
+                        if(e.code==='auth/email-already-in-use'){
+                            auth.signInWithEmailAndPassword(toEmail(u), p)
+                                .then(cred=>{ onSignedIn(cred.user, u); })
+                                .catch(()=>{ showErr('Неверный пароль!'); });
+                        } else if(e.code==='auth/weak-password'){
+                            showErr('Пароль слишком короткий! Минимум 6 символов.');
+                        } else { showErr('Ошибка: '+e.message); }
+                    });
             }
         });
     }
