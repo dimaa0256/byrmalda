@@ -154,7 +154,7 @@
     <div id="auth-block">
         <input type="text" id="username" placeholder="">
         <input type="password" id="password" placeholder="">
-        <div style="font-size:11px;color:rgba(255,180,100,0.4);text-align:center;margin-top:-6px;margin-bottom:10px;font-family:Nunito,sans-serif;font-weight:700;letter-spacing:1px;">пароль: минимум 6 символов</div>
+        
         <button class="btn-login" onclick="login()">ВОЙТИ</button>
     </div>
 
@@ -275,6 +275,13 @@
         </div>
 
         <!-- Текущая дуэль -->
+        <div id="duel-active" style="display:none;background:rgba(255,150,0,0.08);border:1px solid rgba(255,150,0,0.3);border-radius:14px;padding:12px;margin-bottom:12px;text-align:center;">
+            <div style="font-family:'Fredoka One',cursive;font-size:13px;color:#ffd700;letter-spacing:2px;margin-bottom:8px;">🎮 ИДЁТ ДУЭЛЬ</div>
+            <div id="duel-active-info" style="font-size:12px;color:rgba(255,255,255,0.8);font-family:Nunito,sans-serif;margin-bottom:6px;"></div>
+            <div id="duel-score" style="font-family:'Fredoka One',cursive;font-size:20px;color:#ffd700;margin-bottom:8px;"></div>
+            <div id="duel-round-info" style="font-size:11px;color:rgba(255,200,100,0.6);font-family:Nunito,sans-serif;margin-bottom:10px;"></div>
+            <button onclick="goToDuelGame()" id="duel-play-btn" style="width:100%;padding:10px;background:linear-gradient(180deg,#ff2255,#aa0033);color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;">▶ ИГРАТЬ РАУНД</button>
+        </div>
 
         <!-- Выбор соперника -->
         <div id="duel-create" style="">
@@ -289,18 +296,11 @@
                     <button onclick="selectDuelGame('minesweeper')" id="dg-minesweeper" class="duel-game-btn">💣 САПЁР</button>
                     <button onclick="selectDuelGame('airplane')" id="dg-airplane" class="duel-game-btn">✈️ ПОЛЁТ</button>
                 </div>
-                <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,136,170,0.6);letter-spacing:2px;margin-bottom:6px;">ДО СКОЛЬКИХ ПОБЕД:</div>
-                <div style="display:flex;gap:6px;margin-bottom:10px;">
+                <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,136,170,0.6);letter-spacing:2px;margin-bottom:6px;">РАУНДОВ:</div>
+                <div style="display:flex;gap:6px;margin-bottom:12px;">
                     <button onclick="selectDuelRounds(3)" id="dr-3" class="duel-rounds-btn active-dr">×3</button>
                     <button onclick="selectDuelRounds(5)" id="dr-5" class="duel-rounds-btn">×5</button>
                     <button onclick="selectDuelRounds(10)" id="dr-10" class="duel-rounds-btn">×10</button>
-                </div>
-                <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,136,170,0.6);letter-spacing:2px;margin-bottom:6px;">СТАВКА:</div>
-                <div style="display:flex;gap:6px;margin-bottom:12px;">
-                    <button onclick="selectDuelBet(5)"  id="db-5"  class="duel-rounds-btn active-dr">5 АР</button>
-                    <button onclick="selectDuelBet(10)" id="db-10" class="duel-rounds-btn">10 АР</button>
-                    <button onclick="selectDuelBet(25)" id="db-25" class="duel-rounds-btn">25 АР</button>
-                    <button onclick="selectDuelBet(50)" id="db-50" class="duel-rounds-btn">50 АР</button>
                 </div>
                 <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;" id="duel-target-label"></div>
                 <button onclick="sendDuelInvite()" style="width:100%;padding:10px;background:linear-gradient(180deg,#ff2255,#aa0033);color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;">⚔️ ОТПРАВИТЬ ВЫЗОВ</button>
@@ -437,23 +437,40 @@
         const p = document.getElementById('password').value;
         if(!u||!p){ showErr('Заполни поля'); return; }
         if(u.length<2||u.length>20){ showErr('Имя: 2–20 символов'); return; }
-        if(p.length<6){ showErr('Пароль слишком короткий! Минимум 6 символов.'); return; }
-        if(/^\d+$/.test(p)){ showErr('Пароль не может состоять только из цифр!'); return; }
         showErr('');
+        const fp = p + '_Brm9!';
+        const isAuthErr = c => ['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c);
         db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
             if(snap.exists()){
-                auth.signInWithEmailAndPassword(toEmail(u), p)
+                // Ник есть — входим с суффиксом
+                auth.signInWithEmailAndPassword(toEmail(u), fp)
                     .then(cred=>{ onSignedIn(cred.user, u); })
-                    .catch(e=>{ showErr(e.code==='auth/wrong-password'?'Неверный пароль!':'Ошибка входа'); });
+                    .catch(e1=>{
+                        if(!isAuthErr(e1.code)){ showErr('Ошибка: '+e1.code); return; }
+                        // Пробуем старый пароль без суффикса (старые акки)
+                        auth.signInWithEmailAndPassword(toEmail(u), p)
+                            .then(cred=>{ cred.user.updatePassword(fp).catch(()=>{}); onSignedIn(cred.user, u); })
+                            .catch(()=>showErr('Неверный пароль!'));
+                    });
             } else {
-                auth.createUserWithEmailAndPassword(toEmail(u), p)
+                // Ника нет — создаём новый акк
+                auth.createUserWithEmailAndPassword(toEmail(u), fp)
                     .then(cred=>{
                         const uid = cred.user.uid;
                         db.ref('usernames/'+u.toLowerCase()).set(uid);
                         db.ref('players/'+uid).set({ username:u, balance:5, history:['Регистрация'], usedPromos:{} });
                         onSignedIn(cred.user, u);
                     })
-                    .catch(e=>{ showErr(e.code==='auth/weak-password'?'Пароль слишком короткий! Минимум 6 символов.':'Ошибка регистрации: '+e.message); });
+                    .catch(e=>{
+                        if(e.code==='auth/email-already-in-use'){
+                            // Auth есть но usernames нет — пробуем войти
+                            auth.signInWithEmailAndPassword(toEmail(u), fp)
+                                .then(cred=>{ onSignedIn(cred.user, u); })
+                                .catch(()=>auth.signInWithEmailAndPassword(toEmail(u), p)
+                                    .then(cred=>{ cred.user.updatePassword(fp).catch(()=>{}); onSignedIn(cred.user, u); })
+                                    .catch(()=>showErr('Неверный пароль!')));
+                        } else showErr('Ошибка: '+e.message);
+                    });
             }
         });
     }
@@ -524,7 +541,7 @@
             const d=s.val()||{};
             document.getElementById('lobby-balance').textContent=(d.balance||0)+' АР';
             const dailyWrap=document.getElementById('daily-reward-wrap');
-            if(d.verified&&d.dailyEnabled!==false){
+            if(d.dailyEnabled!==false){
                 dailyWrap.style.display='block';
                 const btn=document.getElementById('daily-btn');
                 if(d.lastDaily===new Date().toDateString()){ btn.textContent='✅ НАГРАДА УЖЕ ПОЛУЧЕНА'; btn.style.opacity='0.5'; btn.disabled=true; }
@@ -532,7 +549,7 @@
             } else { dailyWrap.style.display='none'; }
             isAdmin=!!d.admin;
             const vipBtn=document.getElementById('vip-btn');
-            if(vipBtn) vipBtn.style.display=(d.admin||d.verified)?'':'none';
+            if(vipBtn) vipBtn.style.display='';
             const badge=d.verified?'✅ ':d.admin?'👑 ':'';
             document.getElementById('lobby-username').textContent=badge+currentUser.toUpperCase();
         });
@@ -885,11 +902,11 @@
     // ===== ДУЭЛИ =====
     let duelGame = 'slots';
     let duelRounds = 3;
-    let duelBet = 5;
-    let duelTarget = null;
+    let duelTarget = null; // {uid, username}
     let activeDuelId = null;
     let pendingDuelId = null;
-    let _duelListening = false;
+    let duelListener = null;
+    let duelInviteListener = null;
 
     function openDuels(){
         document.getElementById('duel-panel').style.display = 'block';
@@ -906,24 +923,24 @@
             const online = Object.entries(data)
                 .filter(([k,v]) => v.username && !v.hidden && k !== currentUid && v.lastSeen && (now-v.lastSeen)<120000)
                 .map(([k,v]) => ({uid:k, username:v.username}));
+            
             if(online.length === 0){
                 list.innerHTML = '<div style="text-align:center;padding:16px;color:rgba(255,136,170,0.4);font-family:Nunito,sans-serif;font-size:12px;">Нет игроков онлайн</div>';
                 return;
             }
-            list.innerHTML = online.map(p =>
-                `<div class="duel-player-row" onclick="selectDuelTarget('${p.uid}','${p.username}')">
+            list.innerHTML = online.map(p=>`
+                <div class="duel-player-row" onclick="selectDuelTarget('${p.uid}','${p.username}')">
                     <div style="display:flex;align-items:center;gap:8px;">
                         <span style="width:7px;height:7px;border-radius:50%;background:#00e676;display:inline-block;box-shadow:0 0 6px #00e676;"></span>
-                        <span style="font-family:Fredoka One,cursive;font-size:13px;color:#fff;">${p.username.toUpperCase()}</span>
+                        <span style="font-family:'Fredoka One',cursive;font-size:13px;color:#fff;">${p.username.toUpperCase()}</span>
                     </div>
                     <span style="font-size:18px;">⚔️</span>
-                </div>`
-            ).join('');
+                </div>`).join('');
         });
     }
 
-    function selectDuelTarget(u, username){
-        duelTarget = {uid:u, username};
+    function selectDuelTarget(uid, username){
+        duelTarget = {uid, username};
         document.getElementById('duel-settings').style.display = 'block';
         document.getElementById('duel-target-label').textContent = 'Вызов: ' + username.toUpperCase();
     }
@@ -937,84 +954,79 @@
 
     function selectDuelRounds(n){
         duelRounds = n;
-        [3,5,10].forEach(r=>{ document.getElementById('dr-'+r).classList.toggle('active-dr', r===n); });
-    }
-
-    function selectDuelBet(n){
-        duelBet = n;
-        [5,10,25,50].forEach(b=>{ document.getElementById('db-'+b).classList.toggle('active-dr', b===n); });
+        [3,5,10].forEach(r=>{
+            document.getElementById('dr-'+r).classList.toggle('active-dr', r===n);
+        });
     }
 
     function sendDuelInvite(){
         if(!duelTarget){ alert('Выбери соперника!'); return; }
-        db.ref('players/'+currentUid+'/balance').once('value').then(s=>{
-            if((s.val()||0) < duelBet){ alert('Недостаточно АР! Нужно '+duelBet+' АР.'); return; }
-            const duelId = db.ref('duels').push().key;
-            db.ref('duels/'+duelId).set({
-                challenger: currentUid,
-                challengerName: currentUser,
-                opponent: duelTarget.uid,
-                opponentName: duelTarget.username,
-                game: duelGame,
-                winsNeeded: duelRounds,
-                bet: duelBet,
-                status: 'pending',
-                scores: {challenger:0, opponent:0},
-                createdAt: Date.now()
-            }).then(()=>{
-                activeDuelId = duelId;
-                document.getElementById('duel-settings').style.display = 'none';
-                // Слушаем — как только opponent примет, challenger идёт в игру
-                db.ref('duels/'+duelId).on('value', snap=>{
-                    const d = snap.val(); if(!d) return;
-                    if(d.status === 'active'){
-                        db.ref('duels/'+duelId).off('value');
-                        const urls = {slots:'slot.html', minesweeper:'minesweeper.html', airplane:'airplane.html'};
-                        window.location.href = urls[d.game] + '?duel=' + duelId;
-                    }
+        const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт'};
+        const duelId = db.ref('duels').push().key;
+        db.ref('duels/'+duelId).set({
+            challenger: currentUid,
+            challengerName: currentUser,
+            opponent: duelTarget.uid,
+            opponentName: duelTarget.username,
+            game: duelGame,
+            rounds: duelRounds,
+            status: 'pending',
+            scores: {challenger:0, opponent:0},
+            currentRound: 1,
+            createdAt: Date.now()
+        }).then(()=>{
+            activeDuelId = duelId;
+            alert('⚔️ Вызов отправлен ' + duelTarget.username.toUpperCase() + '!');
+            document.getElementById('duel-settings').style.display = 'none';
+            checkActiveDuel();
+            // Удалить вызов через 60 секунд если не принят
+            setTimeout(()=>{
+                db.ref('duels/'+duelId+'/status').once('value').then(s=>{
+                    if(s.val()==='pending') db.ref('duels/'+duelId).remove();
                 });
-                setTimeout(()=>{
-                    db.ref('duels/'+duelId+'/status').once('value').then(s=>{
-                        if(s.val()==='pending') db.ref('duels/'+duelId).remove();
-                    });
-                }, 60000);
-            });
+            }, 60000);
         });
     }
 
     function checkActiveDuel(){
-        if(!currentUid || _duelListening) return;
-        _duelListening = true;
-        db.ref('duels').orderByChild('opponent').equalTo(currentUid).on('child_added', snap=>{
+        if(!currentUid) return;
+        // Слушаем входящие вызовы
+        if(duelInviteListener) db.ref('duels').off('child_added', duelInviteListener);
+        duelInviteListener = db.ref('duels').orderByChild('opponent').equalTo(currentUid).on('child_added', snap=>{
             const d = snap.val();
             if(!d || d.status !== 'pending') return;
             pendingDuelId = snap.key;
             const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт'};
-            const text = d.challengerName.toUpperCase() + ' • ' + (gameNames[d.game]||d.game)
-                + ' • до ' + (d.winsNeeded||3) + ' побед • ' + (d.bet||0) + ' АР';
+            const text = d.challengerName.toUpperCase() + ' вызывает на ' + gameNames[d.game] + ' ×' + d.rounds;
             document.getElementById('duel-notify-text').textContent = text;
             document.getElementById('duel-notify').style.display = 'block';
             document.getElementById('duel-incoming-info').textContent = text;
             document.getElementById('duel-incoming').style.display = 'block';
         });
+
+        // Слушаем активную дуэль
+        db.ref('duels').orderByChild('challenger').equalTo(currentUid).on('child_changed', snap=>{
+            const d = snap.val();
+            if(!d) return;
+            if(d.status === 'active'){ activeDuelId = snap.key; showActiveDuel(d); }
+            if(d.status === 'finished'){ showDuelResult(d); }
+        });
+        db.ref('duels').orderByChild('opponent').equalTo(currentUid).on('child_changed', snap=>{
+            const d = snap.val();
+            if(!d) return;
+            if(d.status === 'active'){ activeDuelId = snap.key; showActiveDuel(d); }
+            if(d.status === 'finished'){ showDuelResult(d); }
+        });
     }
 
     function acceptDuel(){
         if(!pendingDuelId) return;
-        db.ref('duels/'+pendingDuelId).once('value').then(ds=>{
-            const d = ds.val(); if(!d) return;
-            db.ref('players/'+currentUid+'/balance').once('value').then(bs=>{
-                if((bs.val()||0) < (d.bet||0)){
-                    alert('Недостаточно АР! Нужно '+(d.bet||0)+' АР.');
-                    declineDuel(); return;
-                }
-                db.ref('duels/'+pendingDuelId).update({status:'active'}).then(()=>{
-                    document.getElementById('duel-notify').style.display = 'none';
-                    document.getElementById('duel-incoming').style.display = 'none';
-                    const urls = {slots:'slot.html', minesweeper:'minesweeper.html', airplane:'airplane.html'};
-                    window.location.href = urls[d.game] + '?duel=' + pendingDuelId;
-                });
-            });
+        db.ref('duels/'+pendingDuelId).update({status:'active'}).then(()=>{
+            activeDuelId = pendingDuelId;
+            pendingDuelId = null;
+            document.getElementById('duel-notify').style.display = 'none';
+            document.getElementById('duel-incoming').style.display = 'none';
+            db.ref('duels/'+activeDuelId).once('value').then(s=>showActiveDuel(s.val()));
         });
     }
 
@@ -1023,6 +1035,33 @@
         pendingDuelId = null;
         document.getElementById('duel-notify').style.display = 'none';
         document.getElementById('duel-incoming').style.display = 'none';
+    }
+
+    function showActiveDuel(d){
+        if(!d) return;
+        const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт'};
+        const sc = d.scores||{challenger:0,opponent:0};
+        const isChal = d.challenger === currentUid;
+        const myScore = isChal ? sc.challenger : sc.opponent;
+        const theirScore = isChal ? sc.opponent : sc.challenger;
+        const theirName = isChal ? d.opponentName : d.challengerName;
+        document.getElementById('duel-active-info').textContent = 'vs ' + theirName.toUpperCase() + ' • ' + gameNames[d.game];
+        document.getElementById('duel-score').textContent = myScore + ' : ' + theirScore;
+        document.getElementById('duel-round-info').textContent = 'Раунд ' + d.currentRound + ' из ' + d.rounds;
+        document.getElementById('duel-active').style.display = 'block';
+        document.getElementById('duel-panel').style.display = 'block';
+        // Сохранить в localStorage для игры
+        localStorage.setItem('activeDuel', JSON.stringify({duelId:activeDuelId,...d,myRole:isChal?'challenger':'opponent'}));
+    }
+
+    function goToDuelGame(){
+        if(!activeDuelId) return;
+        db.ref('duels/'+activeDuelId).once('value').then(s=>{
+            const d = s.val();
+            if(!d) return;
+            const urls = {slots:'slot.html', minesweeper:'minesweeper.html', airplane:'airplane.html'};
+            window.location.href = urls[d.game] + '?duel=' + activeDuelId;
+        });
     }
 
     function showDuelResult(d){
@@ -1039,7 +1078,6 @@
         document.getElementById('duel-active').style.display = 'none';
     }
 
-    
     </script>
 </body>
 </html>
