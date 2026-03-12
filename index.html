@@ -154,7 +154,7 @@
     <div id="auth-block">
         <input type="text" id="username" placeholder="">
         <input type="password" id="password" placeholder="">
-        
+        <div style="font-size:11px;color:rgba(255,180,100,0.4);text-align:center;margin-top:-6px;margin-bottom:10px;font-family:Nunito,sans-serif;font-weight:700;letter-spacing:1px;">пароль: минимум 6 символов</div>
         <button class="btn-login" onclick="login()">ВОЙТИ</button>
     </div>
 
@@ -437,40 +437,23 @@
         const p = document.getElementById('password').value;
         if(!u||!p){ showErr('Заполни поля'); return; }
         if(u.length<2||u.length>20){ showErr('Имя: 2–20 символов'); return; }
+        if(p.length<6){ showErr('Пароль слишком короткий! Минимум 6 символов.'); return; }
+        if(/^\d+$/.test(p)){ showErr('Пароль не может состоять только из цифр!'); return; }
         showErr('');
-        const fp = p + '_Brm9!';
-        const isAuthErr = c => ['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c);
         db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
             if(snap.exists()){
-                // Ник есть — входим с суффиксом
-                auth.signInWithEmailAndPassword(toEmail(u), fp)
+                auth.signInWithEmailAndPassword(toEmail(u), p)
                     .then(cred=>{ onSignedIn(cred.user, u); })
-                    .catch(e1=>{
-                        if(!isAuthErr(e1.code)){ showErr('Ошибка: '+e1.code); return; }
-                        // Пробуем старый пароль без суффикса (старые акки)
-                        auth.signInWithEmailAndPassword(toEmail(u), p)
-                            .then(cred=>{ cred.user.updatePassword(fp).catch(()=>{}); onSignedIn(cred.user, u); })
-                            .catch(()=>showErr('Неверный пароль!'));
-                    });
+                    .catch(e=>{ showErr(e.code==='auth/wrong-password'?'Неверный пароль!':'Ошибка входа'); });
             } else {
-                // Ника нет — создаём новый акк
-                auth.createUserWithEmailAndPassword(toEmail(u), fp)
+                auth.createUserWithEmailAndPassword(toEmail(u), p)
                     .then(cred=>{
                         const uid = cred.user.uid;
                         db.ref('usernames/'+u.toLowerCase()).set(uid);
                         db.ref('players/'+uid).set({ username:u, balance:5, history:['Регистрация'], usedPromos:{} });
                         onSignedIn(cred.user, u);
                     })
-                    .catch(e=>{
-                        if(e.code==='auth/email-already-in-use'){
-                            // Auth есть но usernames нет — пробуем войти
-                            auth.signInWithEmailAndPassword(toEmail(u), fp)
-                                .then(cred=>{ onSignedIn(cred.user, u); })
-                                .catch(()=>auth.signInWithEmailAndPassword(toEmail(u), p)
-                                    .then(cred=>{ cred.user.updatePassword(fp).catch(()=>{}); onSignedIn(cred.user, u); })
-                                    .catch(()=>showErr('Неверный пароль!')));
-                        } else showErr('Ошибка: '+e.message);
-                    });
+                    .catch(e=>{ showErr(e.code==='auth/weak-password'?'Пароль слишком короткий! Минимум 6 символов.':'Ошибка регистрации: '+e.message); });
             }
         });
     }
@@ -498,12 +481,18 @@
     auth.onAuthStateChanged(firebaseUser=>{
         if(firebaseUser){
             currentUid = firebaseUser.uid;
-            db.ref('players/'+currentUid+'/username').once('value').then(s=>{
-                if(s.exists()){
-                    currentUser = s.val();
+            db.ref('players/'+currentUid).once('value').then(s=>{
+                if(s.exists() && s.val().username){
+                    currentUser = s.val().username;
                     localStorage.setItem('lobbyUser', currentUser);
                     showUserBlock();
                     startOnlinePing();
+                } else {
+                    // Запись удалена — выходим из Firebase Auth тоже
+                    localStorage.removeItem('lobbyUser');
+                    localStorage.removeItem('lobbyUid');
+                    auth.signOut();
+                    currentUid = '';
                 }
             });
         }
@@ -541,7 +530,7 @@
             const d=s.val()||{};
             document.getElementById('lobby-balance').textContent=(d.balance||0)+' АР';
             const dailyWrap=document.getElementById('daily-reward-wrap');
-            if(d.dailyEnabled!==false){
+            if(d.verified&&d.dailyEnabled!==false){
                 dailyWrap.style.display='block';
                 const btn=document.getElementById('daily-btn');
                 if(d.lastDaily===new Date().toDateString()){ btn.textContent='✅ НАГРАДА УЖЕ ПОЛУЧЕНА'; btn.style.opacity='0.5'; btn.disabled=true; }
@@ -549,7 +538,7 @@
             } else { dailyWrap.style.display='none'; }
             isAdmin=!!d.admin;
             const vipBtn=document.getElementById('vip-btn');
-            if(vipBtn) vipBtn.style.display='';
+            if(vipBtn) vipBtn.style.display=(d.admin||d.verified)?'':'none';
             const badge=d.verified?'✅ ':d.admin?'👑 ':'';
             document.getElementById('lobby-username').textContent=badge+currentUser.toUpperCase();
         });
@@ -828,14 +817,25 @@
     }
     function lapDelete(){
         if(confirm('Удалить '+lapUser+'?')){
-            db.ref('players/'+lapUser).remove();
-            document.getElementById('lobby-admin-profile').style.display='none';
-            document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';
-            loadLobbyAdminUsers();
+            db.ref('players/'+lapUser+'/username').once('value').then(s=>{
+                const uname = s.val();
+                db.ref('players/'+lapUser).remove();
+                if(uname) db.ref('usernames/'+uname.toLowerCase()).remove();
+                document.getElementById('lobby-admin-profile').style.display='none';
+                document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';
+                loadLobbyAdminUsers();
+            });
         }
     }
     function lapDeleteUser(uid){
-        if(confirm('Удалить игрока?')){ db.ref('players/'+uid).remove().then(loadLobbyAdminUsers); }
+        if(confirm('Удалить игрока?')){
+            db.ref('players/'+uid+'/username').once('value').then(s=>{
+                const uname = s.val();
+                db.ref('players/'+uid).remove();
+                if(uname) db.ref('usernames/'+uname.toLowerCase()).remove();
+                loadLobbyAdminUsers();
+            });
+        }
     }
 
     async function claimDaily(){
