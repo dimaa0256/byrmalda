@@ -222,7 +222,7 @@
             <div class="light-dot"></div><div class="light-dot"></div>
             <div class="light-dot"></div><div class="light-dot"></div>
         </div>
-        <div class="vip-access" id="vip-btn" onclick="toggleAdmin(event)" style="display:none;">👑 VIP</div>
+        <div class="vip-access" id="vip-btn" onclick="toggleAdmin(event)">👑 VIP</div>
 
         <div class="info-bar">
             <div>
@@ -481,7 +481,7 @@
         db.ref('players/' + uid).on('value', snap => {
             const d = snap.val(); if (!d) return;
             currentBalance = d.balance;
-            const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=(d.admin||d.verified)?'':'none';
+            const vb=document.getElementById('vip-btn'); if(vb) vb.style.display='';
             document.getElementById('balance').innerText = d.balance;
             document.getElementById('history').innerHTML = (d.history || []).slice().reverse()
                 .map(h => '<div style="padding:2px 0;border-bottom:1px solid rgba(255,180,0,0.06);">> ' + h + '</div>').join('');

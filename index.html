@@ -516,14 +516,18 @@
     auth.onAuthStateChanged(firebaseUser=>{
         if(firebaseUser){
             currentUid = firebaseUser.uid;
-            db.ref('players/'+currentUid+'/username').once('value').then(s=>{
+            db.ref('players/'+currentUid).once('value').then(s=>{
                 if(s.exists()){
-                    currentUser = s.val();
-                    localStorage.setItem('lobbyUser', currentUser);
+                    const d = s.val();
+                    currentUser = d.username || localStorage.getItem('lobbyUser') || '';
+                    if(!d.username && currentUser) db.ref('players/'+currentUid+'/username').set(currentUser);
                 } else {
-                    // username не записан — берём из localStorage (был только что создан)
+                    // Запись игрока не существует — создаём (новый акк)
                     currentUser = localStorage.getItem('lobbyUser') || '';
-                    if(currentUser) db.ref('players/'+currentUid+'/username').set(currentUser);
+                    if(currentUser){
+                        db.ref('players/'+currentUid).set({ username:currentUser, balance:5, history:['Регистрация'], usedPromos:{} });
+                        db.ref('usernames/'+currentUser.toLowerCase()).set(currentUid);
+                    }
                 }
                 if(currentUser){ showUserBlock(); startOnlinePing(); }
             });
@@ -562,7 +566,7 @@
             const d=s.val()||{};
             document.getElementById('lobby-balance').textContent=(d.balance||0)+' АР';
             const dailyWrap=document.getElementById('daily-reward-wrap');
-            if(d.verified&&d.dailyEnabled!==false){
+            if(d.dailyEnabled!==false){
                 dailyWrap.style.display='block';
                 const btn=document.getElementById('daily-btn');
                 if(d.lastDaily===new Date().toDateString()){ btn.textContent='✅ НАГРАДА УЖЕ ПОЛУЧЕНА'; btn.style.opacity='0.5'; btn.disabled=true; }
