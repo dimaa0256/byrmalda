@@ -450,7 +450,17 @@
                         // Пробуем без суффикса (старые акки)
                         auth.signInWithEmailAndPassword(toEmail(u), p)
                             .then(cred=>{ cred.user.updatePassword(fp).catch(()=>{}); onSignedIn(cred.user, u); })
-                            .catch(()=>showErr('Неверный пароль!'));
+                            .catch(e2=>{
+                                if(!isAuthErr(e2.code)){ showErr('Ошибка: '+e2.code); return; }
+                                // Auth аккаунт удалён — пересоздаём
+                                auth.createUserWithEmailAndPassword(toEmail(u), fp)
+                                    .then(cred=>{
+                                        db.ref('usernames/'+u.toLowerCase()).set(cred.user.uid);
+                                        db.ref('players/'+cred.user.uid).set({ username:String(u), balance:5, history:['Регистрация'], usedPromos:{} });
+                                        onSignedIn(cred.user, u);
+                                    })
+                                    .catch(()=>showErr('Неверный пароль!'));
+                            });
                     });
             } else {
                 // Ника нет — создаём новый акк
@@ -545,7 +555,7 @@
             const d=s.val()||{};
             document.getElementById('lobby-balance').textContent=(d.balance||0)+' АР';
             const dailyWrap=document.getElementById('daily-reward-wrap');
-            if(d.verified&&d.dailyEnabled!==false){
+            if(d.dailyEnabled!==false){
                 dailyWrap.style.display='block';
                 const btn=document.getElementById('daily-btn');
                 if(d.lastDaily===new Date().toDateString()){ btn.textContent='✅ НАГРАДА УЖЕ ПОЛУЧЕНА'; btn.style.opacity='0.5'; btn.disabled=true; }
