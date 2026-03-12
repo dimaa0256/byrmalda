@@ -532,7 +532,7 @@
             } else { dailyWrap.style.display='none'; }
             isAdmin=!!d.admin;
             const vipBtn=document.getElementById('vip-btn');
-            if(vipBtn) vipBtn.style.display=(d.admin||d.verified)?'':'none';
+            if(vipBtn) vipBtn.style.display='';
             const badge=d.verified?'✅ ':d.admin?'👑 ':'';
             document.getElementById('lobby-username').textContent=badge+currentUser.toUpperCase();
         });
