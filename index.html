@@ -275,13 +275,6 @@
         </div>
 
         <!-- Текущая дуэль -->
-        <div id="duel-active" style="display:none;background:rgba(255,150,0,0.08);border:1px solid rgba(255,150,0,0.3);border-radius:14px;padding:12px;margin-bottom:12px;text-align:center;">
-            <div style="font-family:'Fredoka One',cursive;font-size:13px;color:#ffd700;letter-spacing:2px;margin-bottom:8px;">🎮 ИДЁТ ДУЭЛЬ</div>
-            <div id="duel-active-info" style="font-size:12px;color:rgba(255,255,255,0.8);font-family:Nunito,sans-serif;margin-bottom:6px;"></div>
-            <div id="duel-score" style="font-family:'Fredoka One',cursive;font-size:20px;color:#ffd700;margin-bottom:8px;"></div>
-            <div id="duel-round-info" style="font-size:11px;color:rgba(255,200,100,0.6);font-family:Nunito,sans-serif;margin-bottom:10px;"></div>
-            <button onclick="goToDuelGame()" id="duel-play-btn" style="width:100%;padding:10px;background:linear-gradient(180deg,#ff2255,#aa0033);color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;">▶ ИГРАТЬ РАУНД</button>
-        </div>
 
         <!-- Выбор соперника -->
         <div id="duel-create" style="">
@@ -971,7 +964,7 @@
             }).then(()=>{
                 activeDuelId = duelId;
                 document.getElementById('duel-settings').style.display = 'none';
-                // Challenger слушает — как только opponent примет, сразу идём в игру
+                // Слушаем — как только opponent примет, challenger идёт в игру
                 db.ref('duels/'+duelId).on('value', snap=>{
                     const d = snap.val(); if(!d) return;
                     if(d.status === 'active'){

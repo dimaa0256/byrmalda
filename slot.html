@@ -804,6 +804,7 @@
     // ===== ДУЭЛЬ =====
     let duelData = null;
     let myDuelRole = null;
+    let _duelEnded = false;
 
     function initDuel(){
         const params = new URLSearchParams(window.location.search);
@@ -815,17 +816,25 @@
             duelData = {...d, duelId};
             myDuelRole = d.challenger === uid ? 'challenger' : 'opponent';
             showDuelHUD(d);
-            db.ref('duels/'+duelId).on('value', snap=>{
-                const upd = snap.val(); if(!upd) return;
-                duelData = {...upd, duelId};
-                showDuelHUD(upd);
-                if(upd.status === 'finished') endDuelScreen(upd.scores||{});
+            // Слушаем изменения — только статус finished
+            db.ref('duels/'+duelId+'/scores').on('value', snap=>{
+                if(!snap.val()) return;
+                duelData.scores = snap.val();
+                showDuelHUD(duelData);
+            });
+            db.ref('duels/'+duelId+'/status').on('value', snap=>{
+                if(snap.val() === 'finished' && !_duelEnded){
+                    db.ref('duels/'+duelId).once('value').then(full=>{
+                        if(full.val()) endDuelScreen(full.val().scores||{});
+                    });
+                }
             });
         });
         // Уведомления о новых вызовах даже в игре
         db.ref('duels').orderByChild('opponent').equalTo(uid).on('child_added', snap=>{
             const d = snap.val();
-            if(!d || d.status !== 'pending' || snap.key === (new URLSearchParams(window.location.search)).get('duel')) return;
+            const curDuel = new URLSearchParams(window.location.search).get('duel');
+            if(!d || d.status !== 'pending' || snap.key === curDuel) return;
             showInGameInvite(snap.key, d);
         });
     }
@@ -839,7 +848,7 @@
             el.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#2a0020,#1a0015);border:2px solid rgba(255,0,80,0.6);border-radius:16px;padding:12px 18px;text-align:center;min-width:260px;max-width:90vw;box-shadow:0 8px 32px rgba(255,0,80,0.3);';
             document.body.appendChild(el);
         }
-        el.style.display='block';
+        el.style.display = 'block';
         el.innerHTML = `<div style="font-family:'Fredoka One',cursive;font-size:13px;color:#ff88aa;letter-spacing:2px;margin-bottom:4px;">⚔️ ВЫЗОВ!</div>
             <div style="font-size:11px;color:rgba(255,255,255,0.8);font-family:Nunito,sans-serif;margin-bottom:10px;">
                 ${d.challengerName.toUpperCase()} • ${gameNames[d.game]||d.game} • до ${d.winsNeeded||3} побед • ${d.bet||0} АР
@@ -860,7 +869,7 @@
     function declineInvite(id){
         db.ref('duels/'+id).remove();
         const el = document.getElementById('ingame-invite');
-        if(el) el.style.display='none';
+        if(el) el.style.display = 'none';
     }
 
     function showDuelHUD(d){
@@ -872,8 +881,8 @@
             document.body.prepend(hud);
         }
         const sc = d.scores||{challenger:0,opponent:0};
-        const myScore = myDuelRole==='challenger' ? sc.challenger : sc.opponent;
-        const theirScore = myDuelRole==='challenger' ? sc.opponent : sc.challenger;
+        const myScore = myDuelRole==='challenger' ? (sc.challenger||0) : (sc.opponent||0);
+        const theirScore = myDuelRole==='challenger' ? (sc.opponent||0) : (sc.challenger||0);
         const theirName = myDuelRole==='challenger' ? d.opponentName : d.challengerName;
         const winsNeeded = d.winsNeeded||d.rounds||3;
         hud.innerHTML = `<div style="font-size:10px;color:rgba(255,136,170,0.6);letter-spacing:2px;">⚔️ до ${winsNeeded} побед • ${d.bet||0} АР</div>
@@ -889,24 +898,22 @@
         newSc[myDuelRole]++;
         const winsNeeded = d.winsNeeded||d.rounds||3;
         const finished = newSc[myDuelRole] >= winsNeeded;
-        db.ref('duels/'+d.duelId).update({scores: newSc, status: finished ? 'finished' : 'active'})
-            .then(()=>{ if(finished) endDuelScreen(newSc); });
+        db.ref('duels/'+d.duelId).update({scores: newSc, status: finished ? 'finished' : 'active'});
     }
 
     function duelLose(){
         if(!duelData || duelData._done) return;
         duelData._done = true;
-        // Ждём — победитель обновит статус через duelWin(), наш on('value') поймает finished
+        // Ничего не пишем — ждём когда победитель обновит статус на finished
     }
 
     function endDuelScreen(sc){
-        if(!duelData || duelData._ended) return;
-        duelData._ended = true;
-        db.ref('duels/'+duelData.duelId).off('value');
-        const myF = sc[myDuelRole]||0;
-        const theirF = myDuelRole==='challenger' ? sc.opponent||0 : sc.challenger||0;
+        if(_duelEnded) return;
+        _duelEnded = true;
+        const myF = (sc[myDuelRole])||0;
+        const theirF = myDuelRole==='challenger' ? (sc.opponent||0) : (sc.challenger||0);
         const won = myF > theirF;
-        const bet = duelData.bet||0;
+        const bet = duelData ? (duelData.bet||0) : 0;
         db.ref('players/'+uid+'/balance').once('value').then(s=>{
             const bal = s.val()||0;
             const newBal = Math.max(0, bal + (won ? bet : -bet));
@@ -916,11 +923,11 @@
                 hist.push((won ? '⚔️ Дуэль победа +' : '⚔️ Дуэль поражение -') + bet + ' АР (' + myF + ':' + theirF + ')');
                 db.ref('players/'+uid+'/history').set(hist.slice(-50));
             });
-            setTimeout(()=>{
-                alert((won ? '🏆 ПОБЕДА! +' : '💀 ПОРАЖЕНИЕ -') + bet + ' АР   ' + myF + ':' + theirF);
-                window.location.href = 'index.html';
-            }, 500);
         });
+        setTimeout(()=>{
+            alert((won ? '🏆 ПОБЕДА! +' : '💀 ПОРАЖЕНИЕ -') + bet + ' АР   ' + myF + ':' + theirF);
+            window.location.href = 'index.html';
+        }, 500);
     }
 
 </script>
