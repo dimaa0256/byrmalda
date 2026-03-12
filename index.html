@@ -154,7 +154,7 @@
     <div id="auth-block">
         <input type="text" id="username" placeholder="">
         <input type="password" id="password" placeholder="">
-        <div style="font-size:11px;color:rgba(255,180,100,0.4);text-align:center;margin-top:-6px;margin-bottom:10px;font-family:Nunito,sans-serif;font-weight:700;letter-spacing:1px;">пароль: минимум 3 символа</div>
+        <div style="font-size:11px;color:rgba(255,180,100,0.4);text-align:center;margin-top:-6px;margin-bottom:10px;font-family:Nunito,sans-serif;font-weight:700;letter-spacing:1px;">пароль: любой, запомни его!</div>
         <button class="btn-login" onclick="login()">ВОЙТИ</button>
     </div>
 
@@ -440,15 +440,16 @@
         const p = document.getElementById('password').value;
         if(!u||!p){ showErr('Заполни поля'); return; }
         if(u.length<2||u.length>20){ showErr('Имя: 2–20 символов'); return; }
-        if(p.length<3){ showErr('Пароль слишком короткий! Минимум 3 символа.'); return; }
+        if(p.length<1){ showErr('Введи пароль'); return; }
         const fp = hashPass(p);
         showErr('⏳ Загрузка...');
 
-        // Сначала пробуем войти — если получится, то аккаунт уже есть
+        const isNewErr = c => ['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c);
+
+        // Шаг 1: пробуем войти с суффиксом (новые аккаунты)
         auth.signInWithEmailAndPassword(toEmail(u), fp)
             .then(cred => {
                 showErr('');
-                // Проверяем есть ли данные игрока в базе (на случай если были удалены)
                 db.ref('players/'+cred.user.uid).once('value').then(s => {
                     if(!s.exists()){
                         db.ref('usernames/'+u.toLowerCase()).set(cred.user.uid);
@@ -457,28 +458,37 @@
                 });
                 onSignedIn(cred.user, u);
             })
-            .catch(loginErr => {
-                if(loginErr.code === 'auth/invalid-credential' || loginErr.code === 'auth/wrong-password' || loginErr.code === 'auth/user-not-found') {
-                    // Аккаунта нет — создаём новый
-                    auth.createUserWithEmailAndPassword(toEmail(u), fp)
-                        .then(cred => {
-                            showErr('');
-                            const uid = cred.user.uid;
-                            db.ref('usernames/'+u.toLowerCase()).set(uid);
-                            db.ref('players/'+uid).set({ username:u, balance:5, history:['Регистрация'], usedPromos:{} });
-                            onSignedIn(cred.user, u);
-                        })
-                        .catch(createErr => {
-                            if(createErr.code === 'auth/email-already-in-use'){
-                                // Аккаунт есть но пароль другой (старый аккаунт без суффикса)
-                                showErr('Этот ник занят. Попробуй другой или другой пароль.');
-                            } else {
-                                showErr('Ошибка: ' + createErr.message);
-                            }
-                        });
-                } else {
-                    showErr('Ошибка входа: ' + loginErr.code);
-                }
+            .catch(e1 => {
+                if(!isNewErr(e1.code)){ showErr('Ошибка: ' + e1.code); return; }
+
+                // Шаг 2: пробуем войти БЕЗ суффикса (старые аккаунты)
+                auth.signInWithEmailAndPassword(toEmail(u), p)
+                    .then(cred => {
+                        // Старый аккаунт зашёл — обновляем пароль на новый с суффиксом
+                        cred.user.updatePassword(fp).catch(()=>{});
+                        showErr('');
+                        onSignedIn(cred.user, u);
+                    })
+                    .catch(e2 => {
+                        if(!isNewErr(e2.code)){ showErr('Ошибка: ' + e2.code); return; }
+
+                        // Шаг 3: аккаунта нет совсем — создаём новый
+                        auth.createUserWithEmailAndPassword(toEmail(u), fp)
+                            .then(cred => {
+                                showErr('');
+                                const uid = cred.user.uid;
+                                db.ref('usernames/'+u.toLowerCase()).set(uid);
+                                db.ref('players/'+uid).set({ username:u, balance:5, history:['Регистрация'], usedPromos:{} });
+                                onSignedIn(cred.user, u);
+                            })
+                            .catch(createErr => {
+                                if(createErr.code === 'auth/email-already-in-use'){
+                                    showErr('Этот ник занят. Попробуй другой пароль.');
+                                } else {
+                                    showErr('Ошибка: ' + createErr.message);
+                                }
+                            });
+                    });
             });
     }
 
