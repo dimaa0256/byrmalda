@@ -887,12 +887,12 @@
     let duelData = null;
     let myDuelRole = null;
     let _duelEnded = false;
+    let _roundBusy = false; // защита от двойного срабатывания за один раунд
 
     function initDuel(){
         const params = new URLSearchParams(window.location.search);
         const duelId = params.get('duel');
         if(!duelId) return;
-        // Скрываем кнопку ГЛАВНАЯ во время дуэли
         document.querySelectorAll('a[href="index.html"]').forEach(el => el.style.display = 'none');
         db.ref('duels/'+duelId).once('value').then(s=>{
             const d = s.val();
@@ -900,13 +900,13 @@
             duelData = {...d, duelId};
             myDuelRole = d.challenger === uid ? 'challenger' : 'opponent';
             showDuelHUD(d);
-            // Слушаем счёт
             db.ref('duels/'+duelId+'/scores').on('value', snap=>{
                 if(!snap.val() || !duelData) return;
                 duelData.scores = snap.val();
                 showDuelHUD(duelData);
+                // Сбрасываем блокировку раунда когда счёт обновился
+                _roundBusy = false;
             });
-            // Слушаем статус
             db.ref('duels/'+duelId+'/status').on('value', snap=>{
                 if(snap.val() === 'finished' && !_duelEnded){
                     db.ref('duels/'+duelId).once('value').then(full=>{
@@ -915,7 +915,6 @@
                 }
             });
         });
-        // Уведомления о новых вызовах даже в игре
         db.ref('duels').orderByChild('opponent').equalTo(uid).on('child_added', snap=>{
             const d = snap.val();
             const curDuel = new URLSearchParams(window.location.search).get('duel');
@@ -975,8 +974,8 @@
     }
 
     function duelWin(){
-        if(!duelData || duelData._done) return;
-        duelData._done = true;
+        if(!duelData || _roundBusy || _duelEnded) return;
+        _roundBusy = true;
         const d = duelData;
         const sc = d.scores||{challenger:0,opponent:0};
         const newSc = {challenger: sc.challenger||0, opponent: sc.opponent||0};
@@ -987,9 +986,11 @@
     }
 
     function duelLose(){
-        if(!duelData || duelData._done) return;
-        duelData._done = true;
-        // Ждём — победитель обновит статус, наш listener поймает finished
+        if(!duelData || _roundBusy || _duelEnded) return;
+        _roundBusy = true;
+        // Ждём — победитель обновит счёт, наш listener сбросит _roundBusy
+        // Если оба проиграли (напр. сапёр) — сбрасываем через секунду
+        setTimeout(()=>{ _roundBusy = false; }, 2000);
     }
 
     function endDuelScreen(sc){
