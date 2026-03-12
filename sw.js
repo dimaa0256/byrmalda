@@ -28,11 +28,18 @@ self.addEventListener('activate', e => {
 // Network first — всегда берём свежие данные, кэш только если офлайн
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  const url = e.request.url;
+  // Не кэшируем Firebase, внешние API и не-200 ответы
+  if (url.includes('firebaseio.com') || url.includes('googleapis.com') ||
+      url.includes('firebaseapp.com') || !url.startsWith('http')) return;
   e.respondWith(
     fetch(e.request)
       .then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
+        // Кэшируем только успешные полные ответы (не 206 Partial)
+        if (res.ok && res.status === 200 && res.type !== 'opaque') {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone)).catch(()=>{});
+        }
         return res;
       })
       .catch(() => caches.match(e.request))

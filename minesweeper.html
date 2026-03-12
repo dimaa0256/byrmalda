@@ -222,7 +222,7 @@
             <div class="light-dot"></div><div class="light-dot"></div>
             <div class="light-dot"></div><div class="light-dot"></div>
         </div>
-        <div class="vip-access" id="vip-btn" onclick="toggleAdmin(event)" style="display:none;">👑 VIP</div>
+        <div class="vip-access" id="vip-btn" onclick="toggleAdmin(event)" >👑 VIP</div>
 
         <div class="info-bar">
             <div>
@@ -482,7 +482,7 @@
         db.ref('players/' + uid).on('value', snap => {
             const d = snap.val(); if (!d) return;
             currentBalance = d.balance;
-            const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=(d.admin||d.verified)?'':'none';
+            const vb=document.getElementById('vip-btn'); if(vb) vb.style.display='';
             document.getElementById('balance').innerText = d.balance;
             document.getElementById('history').innerHTML = (d.history || []).slice().reverse()
                 .map(h => '<div style="padding:2px 0;border-bottom:1px solid rgba(255,180,0,0.06);">> ' + h + '</div>').join('');
@@ -892,18 +892,21 @@
         const params = new URLSearchParams(window.location.search);
         const duelId = params.get('duel');
         if(!duelId) return;
+        // Скрываем кнопку ГЛАВНАЯ во время дуэли
+        document.querySelectorAll('a[href="index.html"]').forEach(el => el.style.display = 'none');
         db.ref('duels/'+duelId).once('value').then(s=>{
             const d = s.val();
             if(!d || d.status !== 'active') return;
             duelData = {...d, duelId};
             myDuelRole = d.challenger === uid ? 'challenger' : 'opponent';
             showDuelHUD(d);
-            // Слушаем изменения — только статус finished
+            // Слушаем счёт
             db.ref('duels/'+duelId+'/scores').on('value', snap=>{
-                if(!snap.val()) return;
+                if(!snap.val() || !duelData) return;
                 duelData.scores = snap.val();
                 showDuelHUD(duelData);
             });
+            // Слушаем статус
             db.ref('duels/'+duelId+'/status').on('value', snap=>{
                 if(snap.val() === 'finished' && !_duelEnded){
                     db.ref('duels/'+duelId).once('value').then(full=>{
@@ -966,9 +969,9 @@
         const myScore = myDuelRole==='challenger' ? (sc.challenger||0) : (sc.opponent||0);
         const theirScore = myDuelRole==='challenger' ? (sc.opponent||0) : (sc.challenger||0);
         const theirName = myDuelRole==='challenger' ? d.opponentName : d.challengerName;
-        const winsNeeded = d.winsNeeded||d.rounds||3;
+        const winsNeeded = d.winsNeeded||3;
         hud.innerHTML = `<div style="font-size:10px;color:rgba(255,136,170,0.6);letter-spacing:2px;">⚔️ до ${winsNeeded} побед • ${d.bet||0} АР</div>
-            <div style="font-size:20px;color:#ffd700;margin-top:2px;">${myScore} <span style="color:rgba(255,255,255,0.3)">:</span> ${theirScore} <span style="font-size:10px;color:rgba(255,255,255,0.4)">vs ${theirName.toUpperCase()}</span></div>`;
+            <div style="font-size:20px;color:#ffd700;margin-top:2px;">${myScore} <span style="color:rgba(255,255,255,0.3)">:</span> ${theirScore} <span style="font-size:10px;color:rgba(255,255,255,0.4)">vs ${(theirName||'').toUpperCase()}</span></div>`;
     }
 
     function duelWin(){
@@ -978,7 +981,7 @@
         const sc = d.scores||{challenger:0,opponent:0};
         const newSc = {challenger: sc.challenger||0, opponent: sc.opponent||0};
         newSc[myDuelRole]++;
-        const winsNeeded = d.winsNeeded||d.rounds||3;
+        const winsNeeded = d.winsNeeded||3;
         const finished = newSc[myDuelRole] >= winsNeeded;
         db.ref('duels/'+d.duelId).update({scores: newSc, status: finished ? 'finished' : 'active'});
     }
@@ -986,13 +989,13 @@
     function duelLose(){
         if(!duelData || duelData._done) return;
         duelData._done = true;
-        // Ничего не пишем — ждём когда победитель обновит статус на finished
+        // Ждём — победитель обновит статус, наш listener поймает finished
     }
 
     function endDuelScreen(sc){
         if(_duelEnded) return;
         _duelEnded = true;
-        const myF = (sc[myDuelRole])||0;
+        const myF = sc[myDuelRole]||0;
         const theirF = myDuelRole==='challenger' ? (sc.opponent||0) : (sc.challenger||0);
         const won = myF > theirF;
         const bet = duelData ? (duelData.bet||0) : 0;

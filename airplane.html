@@ -149,7 +149,7 @@
         <div class="casino-title">✈️ ПОЛЁТ</div>
         <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
         <div style="text-align:center;margin-bottom:8px;">
-            <button onclick="openAdmin(event)" style="padding:5px 22px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ffd700;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:20px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'" id="vip-btn" style="display:none;">👑 ВИП</button>
+            <button onclick="openAdmin(event)" style="padding:5px 22px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ffd700;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:20px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'" id="vip-btn" >👑 ВИП</button>
         </div>
 
         <div class="info-bar">
@@ -337,7 +337,7 @@ function go(){
     document.getElementById('auth-section').style.display='none';
     document.getElementById('game-section').style.display='block';
     document.getElementById('display-name').innerText=user.toUpperCase();
-    db.ref('players/'+uid).once('value').then(s=>{ const d=s.val()||{}; const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=(d.admin||d.verified)?'':'none'; });
+    db.ref('players/'+uid).once('value').then(s=>{ const d=s.val()||{}; const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=''; });
     initCanvas(); initSpeedSlider(); applyVolumes(); renderPlaylist();
     initDuel();
     db.ref('players/'+uid).on('value',snap=>{
@@ -1176,18 +1176,21 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
         const params = new URLSearchParams(window.location.search);
         const duelId = params.get('duel');
         if(!duelId) return;
+        // Скрываем кнопку ГЛАВНАЯ во время дуэли
+        document.querySelectorAll('a[href="index.html"]').forEach(el => el.style.display = 'none');
         db.ref('duels/'+duelId).once('value').then(s=>{
             const d = s.val();
             if(!d || d.status !== 'active') return;
             duelData = {...d, duelId};
             myDuelRole = d.challenger === uid ? 'challenger' : 'opponent';
             showDuelHUD(d);
-            // Слушаем изменения — только статус finished
+            // Слушаем счёт
             db.ref('duels/'+duelId+'/scores').on('value', snap=>{
-                if(!snap.val()) return;
+                if(!snap.val() || !duelData) return;
                 duelData.scores = snap.val();
                 showDuelHUD(duelData);
             });
+            // Слушаем статус
             db.ref('duels/'+duelId+'/status').on('value', snap=>{
                 if(snap.val() === 'finished' && !_duelEnded){
                     db.ref('duels/'+duelId).once('value').then(full=>{
@@ -1250,9 +1253,9 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
         const myScore = myDuelRole==='challenger' ? (sc.challenger||0) : (sc.opponent||0);
         const theirScore = myDuelRole==='challenger' ? (sc.opponent||0) : (sc.challenger||0);
         const theirName = myDuelRole==='challenger' ? d.opponentName : d.challengerName;
-        const winsNeeded = d.winsNeeded||d.rounds||3;
+        const winsNeeded = d.winsNeeded||3;
         hud.innerHTML = `<div style="font-size:10px;color:rgba(255,136,170,0.6);letter-spacing:2px;">⚔️ до ${winsNeeded} побед • ${d.bet||0} АР</div>
-            <div style="font-size:20px;color:#ffd700;margin-top:2px;">${myScore} <span style="color:rgba(255,255,255,0.3)">:</span> ${theirScore} <span style="font-size:10px;color:rgba(255,255,255,0.4)">vs ${theirName.toUpperCase()}</span></div>`;
+            <div style="font-size:20px;color:#ffd700;margin-top:2px;">${myScore} <span style="color:rgba(255,255,255,0.3)">:</span> ${theirScore} <span style="font-size:10px;color:rgba(255,255,255,0.4)">vs ${(theirName||'').toUpperCase()}</span></div>`;
     }
 
     function duelWin(){
@@ -1262,7 +1265,7 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
         const sc = d.scores||{challenger:0,opponent:0};
         const newSc = {challenger: sc.challenger||0, opponent: sc.opponent||0};
         newSc[myDuelRole]++;
-        const winsNeeded = d.winsNeeded||d.rounds||3;
+        const winsNeeded = d.winsNeeded||3;
         const finished = newSc[myDuelRole] >= winsNeeded;
         db.ref('duels/'+d.duelId).update({scores: newSc, status: finished ? 'finished' : 'active'});
     }
@@ -1270,13 +1273,13 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
     function duelLose(){
         if(!duelData || duelData._done) return;
         duelData._done = true;
-        // Ничего не пишем — ждём когда победитель обновит статус на finished
+        // Ждём — победитель обновит статус, наш listener поймает finished
     }
 
     function endDuelScreen(sc){
         if(_duelEnded) return;
         _duelEnded = true;
-        const myF = (sc[myDuelRole])||0;
+        const myF = sc[myDuelRole]||0;
         const theirF = myDuelRole==='challenger' ? (sc.opponent||0) : (sc.challenger||0);
         const won = myF > theirF;
         const bet = duelData ? (duelData.bet||0) : 0;
