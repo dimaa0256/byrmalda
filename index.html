@@ -481,18 +481,12 @@
     auth.onAuthStateChanged(firebaseUser=>{
         if(firebaseUser){
             currentUid = firebaseUser.uid;
-            db.ref('players/'+currentUid).once('value').then(s=>{
-                if(s.exists() && s.val().username){
-                    currentUser = s.val().username;
+            db.ref('players/'+currentUid+'/username').once('value').then(s=>{
+                if(s.exists()){
+                    currentUser = String(s.val());
                     localStorage.setItem('lobbyUser', currentUser);
                     showUserBlock();
                     startOnlinePing();
-                } else {
-                    // Запись удалена — выходим из Firebase Auth тоже
-                    localStorage.removeItem('lobbyUser');
-                    localStorage.removeItem('lobbyUid');
-                    auth.signOut();
-                    currentUid = '';
                 }
             });
         }
@@ -753,13 +747,13 @@
             all.sort((a,b)=>{
                 if(b.pinned!==a.pinned) return (b.pinned?1:0)-(a.pinned?1:0);
                 if(b.verified!==a.verified) return (b.verified?1:0)-(a.verified?1:0);
-                return (a.username||a.key).localeCompare(b.username||b.key);
+                return String(a.username||a.key).localeCompare(String(b.username||b.key));
             });
             const el=document.getElementById('lobby-admin-users');
             el.innerHTML=all.map(u=>`
                 <div onclick="openLobbyProfile('${u.key}')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-radius:8px;" onmouseover="this.style.background='rgba(255,180,0,0.08)'" onmouseout="this.style.background='transparent'">
                     <span style="font-size:14px;">${u.pinned?'📌':u.admin?'👑':u.verified?'✅':'👤'}</span>
-                    <span style="flex:1;font-family:'Fredoka One',cursive;font-size:14px;color:${u.admin?'#ffd700':u.verified?'#66ff88':'rgba(255,255,255,0.8)'}">${u.username||u.key}</span>
+                    <span style="flex:1;font-family:'Fredoka One',cursive;font-size:14px;color:${u.admin?'#ffd700':u.verified?'#66ff88':'rgba(255,255,255,0.8)'}">${String(u.username||u.key)}</span>
                     <span style="color:rgba(255,180,0,0.7);font-size:12px;font-family:Nunito,sans-serif;">${u.balance||0} АР</span>
                     <span onclick="event.stopPropagation();lapDeleteUser('${u.key}')" style="color:rgba(255,80,80,0.6);cursor:pointer;font-size:16px;padding:0 4px;">✖</span>
                 </div>`).join('');
@@ -817,25 +811,14 @@
     }
     function lapDelete(){
         if(confirm('Удалить '+lapUser+'?')){
-            db.ref('players/'+lapUser+'/username').once('value').then(s=>{
-                const uname = s.val();
-                db.ref('players/'+lapUser).remove();
-                if(uname) db.ref('usernames/'+uname.toLowerCase()).remove();
-                document.getElementById('lobby-admin-profile').style.display='none';
-                document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';
-                loadLobbyAdminUsers();
-            });
+            db.ref('players/'+lapUser).remove();
+            document.getElementById('lobby-admin-profile').style.display='none';
+            document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';
+            loadLobbyAdminUsers();
         }
     }
     function lapDeleteUser(uid){
-        if(confirm('Удалить игрока?')){
-            db.ref('players/'+uid+'/username').once('value').then(s=>{
-                const uname = s.val();
-                db.ref('players/'+uid).remove();
-                if(uname) db.ref('usernames/'+uname.toLowerCase()).remove();
-                loadLobbyAdminUsers();
-            });
-        }
+        if(confirm('Удалить игрока?')){ db.ref('players/'+uid).remove().then(loadLobbyAdminUsers); }
     }
 
     async function claimDaily(){
