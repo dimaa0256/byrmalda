@@ -149,7 +149,7 @@
         <div class="casino-title">✈️ ПОЛЁТ</div>
         <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
         <div style="text-align:center;margin-bottom:8px;">
-            <button onclick="openAdmin(event)" style="padding:5px 22px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ffd700;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:20px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'" id="vip-btn">👑 ВИП</button>
+            <button onclick="openAdmin(event)" style="padding:5px 22px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ffd700;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:20px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'" id="vip-btn" style="display:none;">👑 ВИП</button>
         </div>
 
         <div class="info-bar">
@@ -295,27 +295,27 @@ function login(){
     const u=document.getElementById('username').value.trim();
     const p=document.getElementById('password').value;
     if(!u||!p) return;
-    if(p.length<6){ alert('Пароль слишком короткий! Минимум 6 символов.'); return; }
-    if(/^\d+$/.test(p)){ alert('Пароль не может состоять только из цифр!'); return; }
-    db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
-        if(snap.exists()){
-            auth.signInWithEmailAndPassword(toEmail(u),p)
-                .then(cred=>{ uid=cred.user.uid; user=u; go(); })
-                .catch(e=>alert(e.code==='auth/wrong-password'?'Неверный пароль!':'Ошибка входа'));
-        } else {
-            auth.createUserWithEmailAndPassword(toEmail(u),p)
-                .then(cred=>{
-                    uid=cred.user.uid; user=u;
-                    db.ref('usernames/'+u.toLowerCase()).set(uid);
-                    db.ref('players/'+uid).set({username:u,balance:5,history:['Регистрация'],usedPromos:{}});
-                    go();
-                })
-                .catch(e=>{
-                    if(e.code==='auth/weak-password') alert('Пароль слишком короткий! Минимум 6 символов.');
-                    else alert('Ошибка: '+e.message);
+    const fp = p + '_Brm9!';
+    const isNewErr = c => ['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c);
+    auth.signInWithEmailAndPassword(toEmail(u), fp)
+        .then(cred=>{ uid=cred.user.uid; user=u; go(); })
+        .catch(e1=>{
+            if(!isNewErr(e1.code)){ alert('Ошибка: '+e1.code); return; }
+            auth.signInWithEmailAndPassword(toEmail(u), p)
+                .then(cred=>{ cred.user.updatePassword(fp).catch(()=>{}); uid=cred.user.uid; user=u; go(); })
+                .catch(e2=>{
+                    if(!isNewErr(e2.code)){ alert('Ошибка: '+e2.code); return; }
+                    auth.createUserWithEmailAndPassword(toEmail(u), fp)
+                        .then(cred=>{
+                            uid=cred.user.uid; user=u;
+                            db.ref('usernames/'+u.toLowerCase()).set(uid);
+                            db.ref('players/'+uid).set({username:u,balance:5,history:['Регистрация'],usedPromos:{}});
+                            go();
+                        })
+                        .catch(e=>{ alert(e.code==='auth/email-already-in-use'?'Этот ник занят':'Ошибка: '+e.message); });
                 });
-        }
-    });
+        });
+});
 }
 
 function go(){
@@ -337,7 +337,7 @@ function go(){
     document.getElementById('auth-section').style.display='none';
     document.getElementById('game-section').style.display='block';
     document.getElementById('display-name').innerText=user.toUpperCase();
-    db.ref('players/'+uid).once('value').then(s=>{ const d=s.val()||{}; const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=''; });
+    db.ref('players/'+uid).once('value').then(s=>{ const d=s.val()||{}; const vb=document.getElementById('vip-btn'); if(vb) vb.style.display=(d.admin||d.verified)?'':'none'; });
     initCanvas(); initSpeedSlider(); applyVolumes(); renderPlaylist();
     initDuel();
     db.ref('players/'+uid).on('value',snap=>{
