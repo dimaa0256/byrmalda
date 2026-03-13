@@ -887,7 +887,7 @@
     let duelData = null;
     let myDuelRole = null;
     let _duelEnded = false;
-    let _roundBusy = false; // защита от двойного срабатывания за один раунд
+    let _roundBusy = false;
 
     function initDuel(){
         const params = new URLSearchParams(window.location.search);
@@ -904,14 +904,24 @@
                 if(!snap.val() || !duelData) return;
                 duelData.scores = snap.val();
                 showDuelHUD(duelData);
-                // Сбрасываем блокировку раунда когда счёт обновился
                 _roundBusy = false;
             });
             db.ref('duels/'+duelId+'/status').on('value', snap=>{
                 if(snap.val() === 'finished' && !_duelEnded){
                     db.ref('duels/'+duelId).once('value').then(full=>{
-                        if(full.val()) endDuelScreen(full.val().scores||{});
+                        if(full.val()) endDuelScreen(full.val().scores||{}, full.val().draw);
                     });
+                }
+            });
+            // Слушаем голоса за ничью
+            db.ref('duels/'+duelId+'/drawVotes').on('value', snap=>{
+                const votes = snap.val()||{};
+                const count = Object.keys(votes).length;
+                const myVoted = !!votes[myDuelRole];
+                updateDrawBtn(count, myVoted);
+                // Оба проголосовали — ничья
+                if(votes.challenger && votes.opponent && !_duelEnded){
+                    db.ref('duels/'+duelId).update({status:'finished', draw:true});
                 }
             });
         });
@@ -961,7 +971,7 @@
         if(!hud){
             hud = document.createElement('div');
             hud.id = 'duel-hud';
-            hud.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:500;background:rgba(20,0,15,0.97);border-bottom:2px solid rgba(255,0,80,0.5);padding:8px 20px;text-align:center;width:100%;max-width:420px;font-family:Fredoka One,cursive;box-sizing:border-box;';
+            hud.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:500;background:rgba(20,0,15,0.97);border-bottom:2px solid rgba(255,0,80,0.5);padding:6px 16px 8px;text-align:center;width:100%;max-width:420px;font-family:Fredoka One,cursive;box-sizing:border-box;';
             document.body.prepend(hud);
         }
         const sc = d.scores||{challenger:0,opponent:0};
@@ -970,7 +980,25 @@
         const theirName = myDuelRole==='challenger' ? d.opponentName : d.challengerName;
         const winsNeeded = d.winsNeeded||3;
         hud.innerHTML = `<div style="font-size:10px;color:rgba(255,136,170,0.6);letter-spacing:2px;">⚔️ до ${winsNeeded} побед • ${d.bet||0} АР</div>
-            <div style="font-size:20px;color:#ffd700;margin-top:2px;">${myScore} <span style="color:rgba(255,255,255,0.3)">:</span> ${theirScore} <span style="font-size:10px;color:rgba(255,255,255,0.4)">vs ${(theirName||'').toUpperCase()}</span></div>`;
+            <div style="font-size:20px;color:#ffd700;margin-top:1px;">${myScore} <span style="color:rgba(255,255,255,0.3)">:</span> ${theirScore} <span style="font-size:10px;color:rgba(255,255,255,0.4)">vs ${(theirName||'').toUpperCase()}</span></div>
+            <button id="draw-btn" onclick="voteDrawDuel()" style="margin-top:5px;padding:3px 14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:1px;">🏳 ЗАКОНЧИТЬ ИГРУ <span id="draw-votes"></span></button>`;
+    }
+
+    function updateDrawBtn(count, myVoted){
+        const btn = document.getElementById('draw-btn');
+        const votes = document.getElementById('draw-votes');
+        if(!btn) return;
+        if(myVoted){
+            btn.style.color = '#ffaa44';
+            btn.style.borderColor = 'rgba(255,170,68,0.5)';
+            btn.style.background = 'rgba(255,170,68,0.1)';
+        }
+        if(votes) votes.textContent = count > 0 ? '('+count+'/2)' : '';
+    }
+
+    function voteDrawDuel(){
+        if(!duelData || _duelEnded) return;
+        db.ref('duels/'+duelData.duelId+'/drawVotes/'+myDuelRole).set(true);
     }
 
     function duelWin(){
@@ -988,28 +1016,35 @@
     function duelLose(){
         if(!duelData || _roundBusy || _duelEnded) return;
         _roundBusy = true;
-        // Ждём — победитель обновит счёт, наш listener сбросит _roundBusy
-        // Если оба проиграли (напр. сапёр) — сбрасываем через секунду
         setTimeout(()=>{ _roundBusy = false; }, 2000);
     }
 
-    function endDuelScreen(sc){
+    function endDuelScreen(sc, draw){
         if(_duelEnded) return;
         _duelEnded = true;
+        if(draw){
+            setTimeout(()=>{
+                alert('🏳 Дуэль завершена по соглашению. Ничья!');
+                window.location.href = 'index.html';
+            }, 300);
+            return;
+        }
         const myF = sc[myDuelRole]||0;
         const theirF = myDuelRole==='challenger' ? (sc.opponent||0) : (sc.challenger||0);
         const won = myF > theirF;
         const bet = duelData ? (duelData.bet||0) : 0;
-        db.ref('players/'+uid+'/balance').once('value').then(s=>{
-            const bal = s.val()||0;
-            const newBal = Math.max(0, bal + (won ? bet : -bet));
-            db.ref('players/'+uid+'/balance').set(newBal);
-            db.ref('players/'+uid+'/history').once('value').then(hs=>{
-                const hist = hs.val()||[];
-                hist.push((won ? '⚔️ Дуэль победа +' : '⚔️ Дуэль поражение -') + bet + ' АР (' + myF + ':' + theirF + ')');
-                db.ref('players/'+uid+'/history').set(hist.slice(-50));
+        if(bet > 0){
+            db.ref('players/'+uid+'/balance').once('value').then(s=>{
+                const bal = s.val()||0;
+                const newBal = Math.max(0, bal + (won ? bet : -bet));
+                db.ref('players/'+uid+'/balance').set(newBal);
+                db.ref('players/'+uid+'/history').once('value').then(hs=>{
+                    const hist = hs.val()||[];
+                    hist.push((won ? '⚔️ Дуэль победа +' : '⚔️ Дуэль поражение -') + bet + ' АР (' + myF + ':' + theirF + ')');
+                    db.ref('players/'+uid+'/history').set(hist.slice(-50));
+                });
             });
-        });
+        }
         setTimeout(()=>{
             alert((won ? '🏆 ПОБЕДА! +' : '💀 ПОРАЖЕНИЕ -') + bet + ' АР   ' + myF + ':' + theirF);
             window.location.href = 'index.html';
