@@ -419,7 +419,7 @@ let distance=0;
 let islandSafeZone=false;
 let tokens=[], islands=[], particles=[], clouds=[];
 let bgOffset=0, frameCount=0;
-let tokenSpawnDist=0, islandSpawnDist=0;
+let tokenSpawnDist=0, islandSpawnDist=0, lastNegCount=0, lastPosCount=0;
 let takeoffPhase=false, takeoffProgress=0;
 let firstTokenSpawned=false;
 let exploding=false;
@@ -659,9 +659,22 @@ function drawIdle(){
 }
 
 
-function spawnToken(){
+function spawnToken(idx, groupSize){
     const rf=Math.min(distance/900,0.82);
-    const isNeg=Math.random()<(0.25+rf*0.45);
+    // Базовая вероятность негатива растёт с дистанцией
+    let negChance = 0.3 + rf * 0.35;
+    // Если подряд много + — повышаем шанс минуса
+    if(lastPosCount >= 3) negChance = Math.min(0.85, negChance + 0.3);
+    // Если подряд много - — снижаем шанс минуса
+    if(lastNegCount >= 3) negChance = Math.max(0.1, negChance - 0.35);
+    // В группе чередуем: чётный индекс = тенденция к +, нечётный = к -
+    if(groupSize > 1 && idx !== undefined){
+        if(idx % 2 === 0) negChance = Math.max(0.1, negChance - 0.2);
+        else negChance = Math.min(0.9, negChance + 0.2);
+    }
+    const isNeg = Math.random() < negChance;
+    if(isNeg){ lastNegCount++; lastPosCount=0; }
+    else { lastPosCount++; lastNegCount=0; }
     const isMult=Math.random()<0.38;
     let value,label,type;
     if(isMult){
@@ -762,9 +775,8 @@ function gameLoop(){
         // Спавн по дистанции — токены всегда на одинаковом расстоянии друг от друга
         tokenSpawnDist += spd;
         if(tokenSpawnDist >= 55){
-            // Спавним 2-3 токена сразу с разным Y
             const count = 2 + (Math.random() < 0.4 ? 1 : 0);
-            for(let i=0;i<count;i++) spawnToken();
+            for(let i=0;i<count;i++) spawnToken(i, count);
             tokenSpawnDist=0;
         }
 
@@ -830,7 +842,7 @@ async function startGame(){
     firstTokenSpawned=false;
     exploding=false;
     gameRunning=true; winnings=bet; distance=0; bgOffset=0; frameCount=0;
-    tokens=[]; islands=[]; particles=[]; tokenSpawnDist=0; islandSpawnDist=0;
+    tokens=[]; islands=[]; particles=[]; tokenSpawnDist=0; islandSpawnDist=0; lastNegCount=0; lastPosCount=0;
     islandSafeZone=false; takeoffPhase=true; takeoffProgress=0;
 
     
