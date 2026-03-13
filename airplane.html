@@ -419,7 +419,7 @@ let distance=0;
 let islandSafeZone=false;
 let tokens=[], islands=[], particles=[], clouds=[];
 let bgOffset=0, frameCount=0;
-let tokenSpawnTimer=0, islandSpawnTimer=0;
+let tokenSpawnDist=0, islandSpawnDist=0;
 let takeoffPhase=false, takeoffProgress=0;
 let firstTokenSpawned=false;
 let exploding=false;
@@ -683,7 +683,7 @@ function spawnToken(){
     }
     
     
-    const tokenX = bgOffset + canvas.width + 10 + Math.random() * 20;
+    const tokenX = bgOffset + canvas.width + 80 + Math.random() * 120;
     
     const tokenWorldY = planeWorldY + (Math.random()-0.5) * canvas.height * 0.8;
     tokens.push({x:tokenX, y:tokenWorldY, type,value,label,collected:false,a:1});
@@ -758,12 +758,12 @@ function gameLoop(){
                 collected:false, a:1, isFirst:true
             });
         }
-        tokenSpawnTimer++;
-        if(tokenSpawnTimer >= 22){ spawnToken(); tokenSpawnTimer=0; }
+        // Спавн по дистанции — токены всегда на одинаковом расстоянии друг от друга
+        tokenSpawnDist += spd;
+        if(tokenSpawnDist >= 350){ spawnToken(); tokenSpawnDist=0; }
 
-        islandSpawnTimer++;
-        const irate = 280; 
-        if(islandSpawnTimer>=irate){ spawnIsland(); islandSpawnTimer=0; }
+        islandSpawnDist += spd;
+        if(islandSpawnDist >= 8000){ spawnIsland(); islandSpawnDist=0; }
     }
 
     
@@ -824,7 +824,7 @@ async function startGame(){
     firstTokenSpawned=false;
     exploding=false;
     gameRunning=true; winnings=bet; distance=0; bgOffset=0; frameCount=0;
-    tokens=[]; islands=[]; particles=[]; tokenSpawnTimer=0; islandSpawnTimer=0;
+    tokens=[]; islands=[]; particles=[]; tokenSpawnDist=0; islandSpawnDist=0;
     islandSafeZone=false; takeoffPhase=true; takeoffProgress=0;
 
     
@@ -1171,12 +1171,12 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
     let duelData = null;
     let myDuelRole = null;
     let _duelEnded = false;
-    let _roundBusy = false; // защита от двойного срабатывания за один раунд
 
     function initDuel(){
         const params = new URLSearchParams(window.location.search);
         const duelId = params.get('duel');
         if(!duelId) return;
+        // Скрываем кнопку ГЛАВНАЯ во время дуэли
         document.querySelectorAll('a[href="index.html"]').forEach(el => el.style.display = 'none');
         db.ref('duels/'+duelId).once('value').then(s=>{
             const d = s.val();
@@ -1184,13 +1184,13 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
             duelData = {...d, duelId};
             myDuelRole = d.challenger === uid ? 'challenger' : 'opponent';
             showDuelHUD(d);
+            // Слушаем счёт
             db.ref('duels/'+duelId+'/scores').on('value', snap=>{
                 if(!snap.val() || !duelData) return;
                 duelData.scores = snap.val();
                 showDuelHUD(duelData);
-                // Сбрасываем блокировку раунда когда счёт обновился
-                _roundBusy = false;
             });
+            // Слушаем статус
             db.ref('duels/'+duelId+'/status').on('value', snap=>{
                 if(snap.val() === 'finished' && !_duelEnded){
                     db.ref('duels/'+duelId).once('value').then(full=>{
@@ -1199,6 +1199,7 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
                 }
             });
         });
+        // Уведомления о новых вызовах даже в игре
         db.ref('duels').orderByChild('opponent').equalTo(uid).on('child_added', snap=>{
             const d = snap.val();
             const curDuel = new URLSearchParams(window.location.search).get('duel');
@@ -1258,8 +1259,8 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
     }
 
     function duelWin(){
-        if(!duelData || _roundBusy || _duelEnded) return;
-        _roundBusy = true;
+        if(!duelData || duelData._done) return;
+        duelData._done = true;
         const d = duelData;
         const sc = d.scores||{challenger:0,opponent:0};
         const newSc = {challenger: sc.challenger||0, opponent: sc.opponent||0};
@@ -1270,11 +1271,9 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
     }
 
     function duelLose(){
-        if(!duelData || _roundBusy || _duelEnded) return;
-        _roundBusy = true;
-        // Ждём — победитель обновит счёт, наш listener сбросит _roundBusy
-        // Если оба проиграли (напр. сапёр) — сбрасываем через секунду
-        setTimeout(()=>{ _roundBusy = false; }, 2000);
+        if(!duelData || duelData._done) return;
+        duelData._done = true;
+        // Ждём — победитель обновит статус, наш listener поймает finished
     }
 
     function endDuelScreen(sc){
