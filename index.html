@@ -301,13 +301,20 @@
                     <button onclick="selectDuelRounds(3)" id="dr-3" class="duel-rounds-btn active-dr">×3</button>
                     <button onclick="selectDuelRounds(5)" id="dr-5" class="duel-rounds-btn">×5</button>
                     <button onclick="selectDuelRounds(10)" id="dr-10" class="duel-rounds-btn">×10</button>
+                    <button onclick="selectDuelRounds('custom')" id="dr-custom" class="duel-rounds-btn">✏️</button>
                 </div>
-                <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,136,170,0.6);letter-spacing:2px;margin-bottom:6px;">СТАВКА:</div>
-                <div style="display:flex;gap:6px;margin-bottom:12px;">
-                    <button onclick="selectDuelBet(0)"  id="db-0"  class="duel-rounds-btn active-dr">0 АР</button>
-                    <button onclick="selectDuelBet(5)"  id="db-5"  class="duel-rounds-btn">5 АР</button>
-                    <button onclick="selectDuelBet(10)" id="db-10" class="duel-rounds-btn">10 АР</button>
-                    <button onclick="selectDuelBet(25)" id="db-25" class="duel-rounds-btn">25 АР</button>
+                <div id="dr-custom-wrap" style="display:none;margin-bottom:10px;">
+                    <input id="dr-custom-input" type="number" min="1" max="99" placeholder="Кол-во побед" oninput="duelRounds=parseInt(this.value)||1" style="width:100%;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,0.4);color:#fff;border:1px solid rgba(255,0,80,0.3);font-family:'Fredoka One',cursive;font-size:14px;text-align:center;box-sizing:border-box;outline:none;">
+                </div>
+                <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,136,170,0.6);letter-spacing:2px;margin-bottom:6px;">СТАВКА (АР):</div>
+                <div style="display:flex;gap:6px;margin-bottom:10px;">
+                    <button onclick="selectDuelBet(5)"  id="db-5"  class="duel-rounds-btn active-dr">5</button>
+                    <button onclick="selectDuelBet(10)" id="db-10" class="duel-rounds-btn">10</button>
+                    <button onclick="selectDuelBet(25)" id="db-25" class="duel-rounds-btn">25</button>
+                    <button onclick="selectDuelBet('custom')" id="db-custom" class="duel-rounds-btn">✏️</button>
+                </div>
+                <div id="db-custom-wrap" style="display:none;margin-bottom:12px;">
+                    <input id="db-custom-input" type="number" min="0" max="9999" placeholder="Своя ставка" oninput="duelBet=parseInt(this.value)||0" style="width:100%;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,0.4);color:#fff;border:1px solid rgba(255,0,80,0.3);font-family:'Fredoka One',cursive;font-size:14px;text-align:center;box-sizing:border-box;outline:none;">
                 </div>
                 <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;" id="duel-target-label"></div>
                 <button onclick="sendDuelInvite()" style="width:100%;padding:10px;background:linear-gradient(180deg,#ff2255,#aa0033);color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;">⚔️ ОТПРАВИТЬ ВЫЗОВ</button>
@@ -913,7 +920,7 @@
     // ===== ДУЭЛИ =====
     let duelGame = 'slots';
     let duelRounds = 3;
-    let duelBet = 0;
+    let duelBet = 5;
     let duelTarget = null; // {uid, username}
     let activeDuelId = null;
     let pendingDuelId = null;
@@ -965,17 +972,35 @@
     }
 
     function selectDuelRounds(n){
-        duelRounds = n;
-        [3,5,10].forEach(r=>{
-            document.getElementById('dr-'+r).classList.toggle('active-dr', r===n);
-        });
+        const customWrap = document.getElementById('dr-custom-wrap');
+        if(n === 'custom'){
+            [3,5,10].forEach(r=>document.getElementById('dr-'+r).classList.remove('active-dr'));
+            document.getElementById('dr-custom').classList.add('active-dr');
+            customWrap.style.display = 'block';
+            document.getElementById('dr-custom-input').focus();
+            duelRounds = parseInt(document.getElementById('dr-custom-input').value)||1;
+        } else {
+            duelRounds = n;
+            [3,5,10].forEach(r=>document.getElementById('dr-'+r).classList.toggle('active-dr', r===n));
+            document.getElementById('dr-custom').classList.remove('active-dr');
+            customWrap.style.display = 'none';
+        }
     }
 
     function selectDuelBet(n){
-        duelBet = n;
-        [0,5,10,25].forEach(b=>{
-            document.getElementById('db-'+b).classList.toggle('active-dr', b===n);
-        });
+        const customWrap = document.getElementById('db-custom-wrap');
+        if(n === 'custom'){
+            [5,10,25].forEach(b=>document.getElementById('db-'+b).classList.remove('active-dr'));
+            document.getElementById('db-custom').classList.add('active-dr');
+            customWrap.style.display = 'block';
+            document.getElementById('db-custom-input').focus();
+            duelBet = parseInt(document.getElementById('db-custom-input').value)||0;
+        } else {
+            duelBet = n;
+            [5,10,25].forEach(b=>document.getElementById('db-'+b).classList.toggle('active-dr', b===n));
+            document.getElementById('db-custom').classList.remove('active-dr');
+            customWrap.style.display = 'none';
+        }
     }
 
     function sendDuelInvite(){
