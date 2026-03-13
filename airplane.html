@@ -536,7 +536,7 @@ function drawTokens(camY){
         if(ty < -40 || ty > canvas.height + 40) return;
 
         ctx.save(); ctx.globalAlpha=t.a||1;
-        const pos=t.value>0||(t.type==='mult'&&t.value>1);
+        const pos=(t.type==='mult') ? t.value>1 : t.value>0;
         const col=pos?'#00e676':'#ff4444';
         ctx.shadowColor=col; ctx.shadowBlur=14;
         if(t.type==='mult'){
@@ -684,9 +684,10 @@ function spawnToken(){
     
     
     const tokenX = bgOffset + canvas.width + 40 + Math.random() * 200;
-    
     const tokenWorldY = planeWorldY + (Math.random()-0.5) * canvas.height * 1.2;
-    tokens.push({x:tokenX, y:tokenWorldY, type,value,label,collected:false,a:1});
+    // Не спавним если слишком близко к другому токену
+    const tooClose = tokens.some(t => !t.collected && Math.abs(t.x - tokenX) < 60 && Math.abs(t.y - tokenWorldY) < 45);
+    if(!tooClose) tokens.push({x:tokenX, y:tokenWorldY, type,value,label,collected:false,a:1});
 }
 
 function spawnIsland(){
