@@ -683,9 +683,9 @@ function spawnToken(){
     }
     
     
-    const tokenX = bgOffset + canvas.width + 80 + Math.random() * 120;
+    const tokenX = bgOffset + canvas.width + 40 + Math.random() * 200;
     
-    const tokenWorldY = planeWorldY + (Math.random()-0.5) * canvas.height * 0.8;
+    const tokenWorldY = planeWorldY + (Math.random()-0.5) * canvas.height * 1.2;
     tokens.push({x:tokenX, y:tokenWorldY, type,value,label,collected:false,a:1});
 }
 
@@ -760,7 +760,12 @@ function gameLoop(){
         }
         // Спавн по дистанции — токены всегда на одинаковом расстоянии друг от друга
         tokenSpawnDist += spd;
-        if(tokenSpawnDist >= 115){ spawnToken(); tokenSpawnDist=0; }
+        if(tokenSpawnDist >= 55){
+            // Спавним 2-3 токена сразу с разным Y
+            const count = 2 + (Math.random() < 0.4 ? 1 : 0);
+            for(let i=0;i<count;i++) spawnToken();
+            tokenSpawnDist=0;
+        }
 
         islandSpawnDist += spd;
         if(islandSpawnDist >= 8000){ spawnIsland(); islandSpawnDist=0; }
