@@ -543,7 +543,19 @@
             else if(/Win/.test(navigator.platform)) platform='Windows';
             else if(/Mac/.test(navigator.platform)) platform='macOS';
             else platform='Unknown';
-            db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Лобби', deviceInfo:{browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)}});
+            fetch('https://ipapi.co/json/')
+                .then(r=>r.json())
+                .then(geo=>{
+                    db.ref('players/'+currentUid).update({
+                        lastSeen: Date.now(),
+                        currentPage: '🏠 Лобби',
+                        deviceInfo: {browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)},
+                        location: {city:geo.city||'—', region:geo.region||'—', country:geo.country_name||'—', ip:geo.ip||'—', updatedAt:Date.now()}
+                    });
+                })
+                .catch(()=>{
+                    db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Лобби', deviceInfo:{browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)}});
+                });
         } catch(e){}
         db.ref('players/'+currentUid+'/questDay').once('value').then(s=>{
             const today=new Date().toDateString();
