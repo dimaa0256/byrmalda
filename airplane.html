@@ -383,23 +383,11 @@ function initSpeedSlider(){
     }
     function onMove(e){
         if(gameRunning) return;
-        e.preventDefault();
-        speedRatio=getR(e); updateSpeedVisual();
+        e.preventDefault(); speedRatio=getR(e); updateSpeedVisual();
     }
     function onUp(){ track.removeEventListener('mousemove',onMove); track.removeEventListener('touchmove',onMove); }
-
-    track.addEventListener('mousedown',e=>{
-        if(gameRunning) return;
-        speedRatio=getR(e); updateSpeedVisual();
-        track.addEventListener('mousemove',onMove);
-        document.addEventListener('mouseup',onUp,{once:true});
-    });
-    track.addEventListener('touchstart',e=>{
-        if(gameRunning) return;
-        speedRatio=getR(e); updateSpeedVisual();
-        track.addEventListener('touchmove',onMove,{passive:false});
-        document.addEventListener('touchend',onUp,{once:true});
-    },{passive:false});
+    track.addEventListener('mousedown',e=>{ if(gameRunning) return; speedRatio=getR(e); updateSpeedVisual(); track.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp,{once:true}); });
+    track.addEventListener('touchstart',e=>{ if(gameRunning) return; speedRatio=getR(e); updateSpeedVisual(); track.addEventListener('touchmove',onMove,{passive:false}); document.addEventListener('touchend',onUp,{once:true}); },{passive:false});
 }
 
 function updateSpeedVisual(){
@@ -433,7 +421,7 @@ let distance=0;
 let islandSafeZone=false;
 let tokens=[], islands=[], particles=[], clouds=[];
 let bgOffset=0, frameCount=0, lastFrameTime=0;
-let tokenSpawnDist=0, islandSpawnDist=0, lastNegCount=0, lastPosCount=0;
+let tokenSpawnTimer=0, islandSpawnTimer=0, tokenSpawnDist=0, islandSpawnDist=0, lastNegCount=0, lastPosCount=0;
 let takeoffPhase=false, takeoffProgress=0;
 let firstTokenSpawned=false;
 let exploding=false;
@@ -675,20 +663,15 @@ function drawIdle(){
 
 function spawnToken(idx, groupSize){
     const rf=Math.min(distance/900,0.82);
-    // Базовая вероятность негатива растёт с дистанцией
     let negChance = 0.3 + rf * 0.35;
-    // Если подряд много + — повышаем шанс минуса
     if(lastPosCount >= 3) negChance = Math.min(0.85, negChance + 0.3);
-    // Если подряд много - — снижаем шанс минуса
     if(lastNegCount >= 3) negChance = Math.max(0.1, negChance - 0.35);
-    // В группе чередуем: чётный индекс = тенденция к +, нечётный = к -
     if(groupSize > 1 && idx !== undefined){
         if(idx % 2 === 0) negChance = Math.max(0.1, negChance - 0.2);
         else negChance = Math.min(0.9, negChance + 0.2);
     }
     const isNeg = Math.random() < negChance;
-    if(isNeg){ lastNegCount++; lastPosCount=0; }
-    else { lastPosCount++; lastNegCount=0; }
+    if(isNeg){ lastNegCount++; lastPosCount=0; } else { lastPosCount++; lastNegCount=0; }
     const isMult=Math.random()<0.38;
     let value,label,type;
     if(isMult){
@@ -712,7 +695,6 @@ function spawnToken(idx, groupSize){
     
     const tokenX = bgOffset + canvas.width + 40 + Math.random() * 200;
     const tokenWorldY = planeWorldY + (Math.random()-0.5) * canvas.height * 1.2;
-    // Не спавним если слишком близко к другому токену
     const tooClose = tokens.some(t => !t.collected && Math.abs(t.x - tokenX) < 60 && Math.abs(t.y - tokenWorldY) < 45);
     if(!tooClose) tokens.push({x:tokenX, y:tokenWorldY, type,value,label,collected:false,a:1});
 }
@@ -730,7 +712,6 @@ let cameraY = 0;
 function gameLoop(timestamp){
     if(!gameRunning)return;
     frameCount++;
-    // Delta нормализован к 60fps — на медленных устройствах скорость не падает
     const delta = lastFrameTime ? Math.min((timestamp - lastFrameTime) / 16.67, 2.5) : 1;
     lastFrameTime = timestamp;
     const spd = (0.5 + speedRatio * 1.5) * delta;
@@ -789,16 +770,16 @@ function gameLoop(timestamp){
                 collected:false, a:1, isFirst:true
             });
         }
-        // Спавн по дистанции — токены всегда на одинаковом расстоянии друг от друга
+        // Токены — по дистанции, 2-3 за раз с чередованием знаков
         tokenSpawnDist += spd;
         if(tokenSpawnDist >= 55){
             const count = 2 + (Math.random() < 0.4 ? 1 : 0);
             for(let i=0;i<count;i++) spawnToken(i, count);
-            tokenSpawnDist=0;
+            tokenSpawnDist = 0;
         }
-
+        // Острова — каждые ~350 единиц дистанции (как раньше по кадрам)
         islandSpawnDist += spd;
-        if(islandSpawnDist >= 350){ spawnIsland(); islandSpawnDist=0; }
+        if(islandSpawnDist >= 350){ spawnIsland(); islandSpawnDist = 0; }
     }
 
     
@@ -859,7 +840,7 @@ async function startGame(){
     firstTokenSpawned=false;
     exploding=false;
     gameRunning=true; winnings=bet; distance=0; bgOffset=0; frameCount=0; lastFrameTime=0;
-    tokens=[]; islands=[]; particles=[]; tokenSpawnDist=0; islandSpawnDist=0; lastNegCount=0; lastPosCount=0;
+    tokens=[]; islands=[]; particles=[]; tokenSpawnTimer=0; islandSpawnTimer=0; tokenSpawnDist=0; islandSpawnDist=0; lastNegCount=0; lastPosCount=0;
     islandSafeZone=false; takeoffPhase=true; takeoffProgress=0;
 
     
