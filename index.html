@@ -208,7 +208,15 @@
         </div>
         
         <div id="lobby-admin-profile" style="display:none;">
-            <div id="lap-name" style="font-family:'Fredoka One',cursive;font-size:16px;color:#ff4444;text-align:center;margin-bottom:6px;"></div>
+            <div id="lap-name" style="font-family:'Fredoka One',cursive;font-size:16px;color:#ff4444;text-align:center;margin-bottom:4px;"></div>
+            <div id="lap-rename-wrap" style="display:none;margin-bottom:6px;">
+                <div style="display:flex;gap:6px;">
+                    <input id="lap-rename-input" type="text" maxlength="20" placeholder="Новый ник" style="flex:1;padding:6px 10px;border-radius:8px;background:rgba(0,0,0,0.5);color:#fff;border:1px solid rgba(255,100,0,0.4);font-family:'Fredoka One',cursive;font-size:13px;outline:none;">
+                    <button onclick="lapRenameConfirm()" style="padding:6px 12px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;">✓</button>
+                    <button onclick="lapRenameCancel()" style="padding:6px 10px;background:rgba(180,0,0,0.15);color:#ff6666;border:1px solid rgba(200,0,0,0.2);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;">✕</button>
+                </div>
+            </div>
+            <button onclick="lapRenameOpen()" style="width:100%;padding:5px;margin-bottom:6px;background:transparent;color:rgba(255,180,0,0.5);border:1px solid rgba(255,180,0,0.2);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:1px;">✏️ ИЗМЕНИТЬ НИК</button>
             <div style="height:1px;background:linear-gradient(90deg,transparent,#ffd700,transparent);margin-bottom:10px;"></div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                 <span style="color:rgba(255,255,255,0.6);font-size:13px;font-family:Nunito,sans-serif;">Баланс:</span>
@@ -296,25 +304,11 @@
                     <button onclick="selectDuelGame('minesweeper')" id="dg-minesweeper" class="duel-game-btn">💣 САПЁР</button>
                     <button onclick="selectDuelGame('airplane')" id="dg-airplane" class="duel-game-btn">✈️ ПОЛЁТ</button>
                 </div>
-                <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,136,170,0.6);letter-spacing:2px;margin-bottom:6px;">ДО СКОЛЬКИХ ПОБЕД:</div>
-                <div style="display:flex;gap:6px;margin-bottom:10px;">
+                <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,136,170,0.6);letter-spacing:2px;margin-bottom:6px;">РАУНДОВ:</div>
+                <div style="display:flex;gap:6px;margin-bottom:12px;">
                     <button onclick="selectDuelRounds(3)" id="dr-3" class="duel-rounds-btn active-dr">×3</button>
                     <button onclick="selectDuelRounds(5)" id="dr-5" class="duel-rounds-btn">×5</button>
                     <button onclick="selectDuelRounds(10)" id="dr-10" class="duel-rounds-btn">×10</button>
-                    <button onclick="selectDuelRounds('custom')" id="dr-custom" class="duel-rounds-btn">✏️</button>
-                </div>
-                <div id="dr-custom-wrap" style="display:none;margin-bottom:10px;">
-                    <input id="dr-custom-input" type="number" min="1" max="99" placeholder="Кол-во побед" oninput="duelRounds=parseInt(this.value)||1" style="width:100%;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,0.4);color:#fff;border:1px solid rgba(255,0,80,0.3);font-family:'Fredoka One',cursive;font-size:14px;text-align:center;box-sizing:border-box;outline:none;">
-                </div>
-                <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,136,170,0.6);letter-spacing:2px;margin-bottom:6px;">СТАВКА (АР):</div>
-                <div style="display:flex;gap:6px;margin-bottom:10px;">
-                    <button onclick="selectDuelBet(5)"  id="db-5"  class="duel-rounds-btn active-dr">5</button>
-                    <button onclick="selectDuelBet(10)" id="db-10" class="duel-rounds-btn">10</button>
-                    <button onclick="selectDuelBet(25)" id="db-25" class="duel-rounds-btn">25</button>
-                    <button onclick="selectDuelBet('custom')" id="db-custom" class="duel-rounds-btn">✏️</button>
-                </div>
-                <div id="db-custom-wrap" style="display:none;margin-bottom:12px;">
-                    <input id="db-custom-input" type="number" min="0" max="9999" placeholder="Своя ставка" oninput="duelBet=parseInt(this.value)||0" style="width:100%;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,0.4);color:#fff;border:1px solid rgba(255,0,80,0.3);font-family:'Fredoka One',cursive;font-size:14px;text-align:center;box-sizing:border-box;outline:none;">
                 </div>
                 <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;" id="duel-target-label"></div>
                 <button onclick="sendDuelInvite()" style="width:100%;padding:10px;background:linear-gradient(180deg,#ff2255,#aa0033);color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;">⚔️ ОТПРАВИТЬ ВЫЗОВ</button>
@@ -844,6 +838,40 @@
             el.style.border=newVal?'1px solid rgba(0,200,100,0.4)':'1px solid rgba(255,255,255,0.1)';
         });
     }
+    function lapRenameOpen(){
+        document.getElementById('lap-rename-wrap').style.display='block';
+        const cur = document.getElementById('lap-name').textContent.toLowerCase().replace(/[^a-zа-я0-9]/gi,'');
+        document.getElementById('lap-rename-input').value = cur;
+        document.getElementById('lap-rename-input').focus();
+    }
+
+    function lapRenameCancel(){
+        document.getElementById('lap-rename-wrap').style.display='none';
+        document.getElementById('lap-rename-input').value='';
+    }
+
+    function lapRenameConfirm(){
+        const newNick = document.getElementById('lap-rename-input').value.trim();
+        if(!newNick || newNick.length < 2 || newNick.length > 20){ alert('Ник: 2–20 символов'); return; }
+        // Проверяем что новый ник не занят
+        db.ref('usernames/'+newNick.toLowerCase()).once('value').then(s=>{
+            if(s.exists() && s.val() !== lapUser){ alert('Ник уже занят!'); return; }
+            // Получаем старый ник
+            db.ref('players/'+lapUser+'/username').once('value').then(os=>{
+                const oldNick = os.val();
+                // Удаляем старый ник из usernames
+                if(oldNick) db.ref('usernames/'+String(oldNick).toLowerCase()).remove();
+                // Пишем новый
+                db.ref('usernames/'+newNick.toLowerCase()).set(lapUser);
+                db.ref('players/'+lapUser+'/username').set(newNick);
+                // Обновляем UI
+                document.getElementById('lap-name').textContent = newNick.toUpperCase();
+                lapRenameCancel();
+                loadLobbyAdminUsers();
+            });
+        });
+    }
+
     function lapDelete(){
         if(confirm('Удалить '+lapUser+'?')){
             db.ref('players/'+lapUser).remove();
@@ -920,7 +948,6 @@
     // ===== ДУЭЛИ =====
     let duelGame = 'slots';
     let duelRounds = 3;
-    let duelBet = 5;
     let duelTarget = null; // {uid, username}
     let activeDuelId = null;
     let pendingDuelId = null;
@@ -972,50 +999,15 @@
     }
 
     function selectDuelRounds(n){
-        const customWrap = document.getElementById('dr-custom-wrap');
-        if(n === 'custom'){
-            [3,5,10].forEach(r=>document.getElementById('dr-'+r).classList.remove('active-dr'));
-            document.getElementById('dr-custom').classList.add('active-dr');
-            customWrap.style.display = 'block';
-            document.getElementById('dr-custom-input').focus();
-            duelRounds = parseInt(document.getElementById('dr-custom-input').value)||1;
-        } else {
-            duelRounds = n;
-            [3,5,10].forEach(r=>document.getElementById('dr-'+r).classList.toggle('active-dr', r===n));
-            document.getElementById('dr-custom').classList.remove('active-dr');
-            customWrap.style.display = 'none';
-        }
-    }
-
-    function selectDuelBet(n){
-        const customWrap = document.getElementById('db-custom-wrap');
-        if(n === 'custom'){
-            [5,10,25].forEach(b=>document.getElementById('db-'+b).classList.remove('active-dr'));
-            document.getElementById('db-custom').classList.add('active-dr');
-            customWrap.style.display = 'block';
-            document.getElementById('db-custom-input').focus();
-            duelBet = parseInt(document.getElementById('db-custom-input').value)||0;
-        } else {
-            duelBet = n;
-            [5,10,25].forEach(b=>document.getElementById('db-'+b).classList.toggle('active-dr', b===n));
-            document.getElementById('db-custom').classList.remove('active-dr');
-            customWrap.style.display = 'none';
-        }
+        duelRounds = n;
+        [3,5,10].forEach(r=>{
+            document.getElementById('dr-'+r).classList.toggle('active-dr', r===n);
+        });
     }
 
     function sendDuelInvite(){
         if(!duelTarget){ alert('Выбери соперника!'); return; }
-        if(duelBet > 0){
-            db.ref('players/'+currentUid+'/balance').once('value').then(s=>{
-                if((s.val()||0) < duelBet){ alert('Недостаточно АР! Нужно '+duelBet+' АР.'); return; }
-                _sendDuel();
-            });
-        } else {
-            _sendDuel();
-        }
-    }
-
-    function _sendDuel(){
+        const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт'};
         const duelId = db.ref('duels').push().key;
         db.ref('duels/'+duelId).set({
             challenger: currentUid,
@@ -1023,23 +1015,17 @@
             opponent: duelTarget.uid,
             opponentName: duelTarget.username,
             game: duelGame,
-            winsNeeded: duelRounds,
-            bet: duelBet,
+            rounds: duelRounds,
             status: 'pending',
             scores: {challenger:0, opponent:0},
+            currentRound: 1,
             createdAt: Date.now()
         }).then(()=>{
             activeDuelId = duelId;
+            alert('⚔️ Вызов отправлен ' + duelTarget.username.toUpperCase() + '!');
             document.getElementById('duel-settings').style.display = 'none';
-            // Challenger слушает — как только opponent примет, идём в игру
-            db.ref('duels/'+duelId).on('value', snap=>{
-                const d = snap.val(); if(!d) return;
-                if(d.status === 'active'){
-                    db.ref('duels/'+duelId).off('value');
-                    const urls = {slots:'slot.html', minesweeper:'minesweeper.html', airplane:'airplane.html'};
-                    window.location.href = urls[d.game] + '?duel=' + duelId;
-                }
-            });
+            checkActiveDuel();
+            // Удалить вызов через 60 секунд если не принят
             setTimeout(()=>{
                 db.ref('duels/'+duelId+'/status').once('value').then(s=>{
                     if(s.val()==='pending') db.ref('duels/'+duelId).remove();
@@ -1057,7 +1043,7 @@
             if(!d || d.status !== 'pending') return;
             pendingDuelId = snap.key;
             const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт'};
-            const text = d.challengerName.toUpperCase() + ' • ' + (gameNames[d.game]||d.game) + ' • до ' + (d.winsNeeded||d.rounds||3) + ' побед • ' + (d.bet||0) + ' АР';
+            const text = d.challengerName.toUpperCase() + ' вызывает на ' + gameNames[d.game] + ' ×' + d.rounds;
             document.getElementById('duel-notify-text').textContent = text;
             document.getElementById('duel-notify').style.display = 'block';
             document.getElementById('duel-incoming-info').textContent = text;
@@ -1081,25 +1067,12 @@
 
     function acceptDuel(){
         if(!pendingDuelId) return;
-        db.ref('duels/'+pendingDuelId).once('value').then(ds=>{
-            const d = ds.val(); if(!d) return;
-            if((d.bet||0) > 0){
-                db.ref('players/'+currentUid+'/balance').once('value').then(bs=>{
-                    if((bs.val()||0) < d.bet){ alert('Недостаточно АР! Нужно '+d.bet+' АР.'); declineDuel(); return; }
-                    _acceptDuel(d);
-                });
-            } else {
-                _acceptDuel(d);
-            }
-        });
-    }
-
-    function _acceptDuel(d){
         db.ref('duels/'+pendingDuelId).update({status:'active'}).then(()=>{
+            activeDuelId = pendingDuelId;
+            pendingDuelId = null;
             document.getElementById('duel-notify').style.display = 'none';
             document.getElementById('duel-incoming').style.display = 'none';
-            const urls = {slots:'slot.html', minesweeper:'minesweeper.html', airplane:'airplane.html'};
-            window.location.href = urls[d.game] + '?duel=' + pendingDuelId;
+            db.ref('duels/'+activeDuelId).once('value').then(s=>showActiveDuel(s.val()));
         });
     }
 
