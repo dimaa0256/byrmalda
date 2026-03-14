@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙️ БУРМАЛДА — ADMIN</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+<style>
+:root {
+  --bg: #060810;
+  --surface: #0c1018;
+  --border: rgba(0,255,180,0.15);
+  --accent: #00ffb3;
+  --accent2: #ff4466;
+  --gold: #ffd700;
+  --text: rgba(255,255,255,0.88);
+  --dim: rgba(255,255,255,0.35);
+  --red: #ff4466;
+  --green: #00ffb3;
+  --blue: #4488ff;
+  --purple: #aa66ff;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { width:100%; min-height:100%; background:var(--bg); font-family:'Rajdhani',sans-serif; color:var(--text); overflow-x:hidden; }
+
+
+body::before {
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image: linear-gradient(rgba(0,255,180,0.03) 1px, transparent 1px), linear-gradient(90deg,rgba(0,255,180,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+body::after {
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background: radial-gradient(ellipse at 20% 20%, rgba(0,255,180,0.05) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, rgba(100,50,255,0.06) 0%, transparent 60%);
+}
+
+
+#auth-screen {
+  position:fixed; inset:0; z-index:1000;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at center, #0a1020 0%, #000 100%);
+}
+.auth-box {
+  background:rgba(10,16,24,0.95); border:1px solid var(--accent);
+  border-radius:20px; padding:40px 36px; width:90%; max-width:380px;
+  box-shadow: 0 0 60px rgba(0,255,180,0.1), 0 0 0 1px rgba(0,255,180,0.08);
+  text-align:center;
+}
+.auth-logo { font-family:'Orbitron',sans-serif; font-size:22px; color:var(--accent); letter-spacing:4px; margin-bottom:6px; }
+.auth-sub { font-size:13px; color:var(--dim); letter-spacing:3px; margin-bottom:28px; font-family:'Share Tech Mono',monospace; }
+.auth-input {
+  width:100%; padding:13px 16px; border-radius:10px; margin-bottom:12px;
+  background:rgba(0,255,180,0.04); border:1px solid rgba(0,255,180,0.2);
+  color:#fff; font-family:'Share Tech Mono',monospace; font-size:14px;
+  letter-spacing:2px; outline:none; text-align:center; transition:border .2s;
+}
+.auth-input:focus { border-color:var(--accent); box-shadow:0 0 12px rgba(0,255,180,0.15); }
+.auth-btn {
+  width:100%; padding:14px; border:none; border-radius:10px; cursor:pointer;
+  background:linear-gradient(135deg,#00c890,#006655); color:#000;
+  font-family:'Orbitron',sans-serif; font-size:14px; letter-spacing:3px;
+  font-weight:700; transition:all .2s; margin-top:4px;
+}
+.auth-btn:hover { filter:brightness(1.15); transform:translateY(-1px); }
+.auth-err { color:var(--red); font-size:12px; margin-top:8px; font-family:'Share Tech Mono',monospace; min-height:18px; }
+
+
+#main { position:relative; z-index:1; display:none; }
+.top-bar {
+  position:sticky; top:0; z-index:100;
+  background:rgba(6,8,16,0.95); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 24px;
+}
+.top-logo { font-family:'Orbitron',sans-serif; font-size:16px; color:var(--accent); letter-spacing:3px; }
+.top-user { font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--dim); }
+.top-logout { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--red); cursor:pointer; border:1px solid rgba(255,50,80,0.3); padding:5px 12px; border-radius:6px; background:transparent; letter-spacing:2px; transition:all .2s; }
+.top-logout:hover { background:rgba(255,50,80,0.1); }
+
+.content { padding:20px; max-width:1200px; margin:0 auto; }
+
+
+.stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:24px; }
+.stat-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:16px 18px;
+  transition:border .2s;
+}
+.stat-card:hover { border-color:rgba(0,255,180,0.3); }
+.stat-label { font-size:11px; color:var(--dim); letter-spacing:3px; font-family:'Share Tech Mono',monospace; margin-bottom:6px; }
+.stat-val { font-family:'Orbitron',sans-serif; font-size:22px; color:var(--accent); }
+.stat-val.gold { color:var(--gold); }
+.stat-val.red { color:var(--red); }
+.stat-val.blue { color:var(--blue); }
+
+
+.panels { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:700px){ .panels { grid-template-columns:1fr; } }
+
+.panel {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; overflow:hidden;
+}
+.panel-head {
+  padding:14px 18px; border-bottom:1px solid var(--border);
+  font-family:'Orbitron',sans-serif; font-size:13px; letter-spacing:2px;
+  color:var(--accent); display:flex; align-items:center; gap:8px;
+}
+.panel-body { padding:16px; }
+
+
+.player-table { width:100%; border-collapse:collapse; }
+.player-table th {
+  text-align:left; font-size:10px; letter-spacing:3px; color:var(--dim);
+  font-family:'Share Tech Mono',monospace; padding:6px 10px;
+  border-bottom:1px solid var(--border);
+}
+.player-table td { padding:8px 10px; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+.player-table tr:hover td { background:rgba(0,255,180,0.03); cursor:pointer; }
+.player-table tr.selected td { background:rgba(0,255,180,0.06); }
+
+.badge { display:inline-block; font-size:10px; letter-spacing:2px; padding:2px 7px; border-radius:4px; font-family:'Share Tech Mono',monospace; }
+.badge-admin { background:rgba(255,215,0,0.15); color:var(--gold); border:1px solid rgba(255,215,0,0.3); }
+.badge-verified { background:rgba(0,255,180,0.12); color:var(--accent); border:1px solid rgba(0,255,180,0.25); }
+.badge-hidden { background:rgba(100,100,100,0.2); color:#888; border:1px solid rgba(100,100,100,0.3); }
+.badge-pinned { background:rgba(255,180,0,0.12); color:#ffb300; border:1px solid rgba(255,180,0,0.25); }
+
+
+.profile-field { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:14px; }
+.profile-field:last-child { border-bottom:none; }
+.field-label { color:var(--dim); font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px; }
+.field-val { color:var(--text); font-weight:600; font-family:'Share Tech Mono',monospace; }
+
+.pw-wrap { display:flex; align-items:center; gap:6px; }
+.pw-text { font-family:'Share Tech Mono',monospace; font-size:13px; color:var(--text); letter-spacing:2px; }
+.pw-toggle { background:transparent; border:1px solid var(--border); color:var(--dim); border-radius:6px; padding:3px 8px; cursor:pointer; font-size:11px; transition:all .2s; }
+.pw-toggle:hover { border-color:var(--accent); color:var(--accent); }
+
+.device-box { background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--dim); margin-top:8px; line-height:1.8; }
+.device-box span { color:var(--text); }
+
+
+.toggle-row { display:flex; gap:6px; flex-wrap:wrap; margin:10px 0; }
+.tog {
+  flex:1; min-width:80px; padding:7px 6px; border-radius:8px; cursor:pointer;
+  font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1px;
+  border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04);
+  color:rgba(255,255,255,0.4); transition:all .2s;
+}
+.tog.on-green { background:rgba(0,255,180,0.15); color:var(--green); border-color:rgba(0,255,180,0.35); }
+.tog.on-gold { background:rgba(255,215,0,0.15); color:var(--gold); border-color:rgba(255,215,0,0.35); }
+.tog.on-red { background:rgba(255,50,80,0.15); color:var(--red); border-color:rgba(255,50,80,0.35); }
+
+
+.bal-row { display:flex; gap:6px; margin:8px 0; }
+.bal-btn {
+  flex:1; padding:8px; border-radius:8px; cursor:pointer; border:none;
+  font-family:'Orbitron',sans-serif; font-size:12px; letter-spacing:1px;
+  transition:all .15s;
+}
+.bal-btn.plus { background:rgba(0,255,180,0.15); color:var(--green); border:1px solid rgba(0,255,180,0.3); }
+.bal-btn.minus { background:rgba(255,50,80,0.15); color:var(--red); border:1px solid rgba(255,50,80,0.3); }
+.bal-btn:hover { filter:brightness(1.3); }
+
+
+.hist-box { background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:10px; padding:10px; max-height:160px; overflow-y:auto; scrollbar-width:thin; }
+.hist-entry { font-family:'Share Tech Mono',monospace; font-size:11px; color:rgba(255,255,255,0.5); padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+
+
+.setting-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.setting-label { font-size:13px; color:var(--text); font-weight:600; }
+.setting-sub { font-size:11px; color:var(--dim); font-family:'Share Tech Mono',monospace; letter-spacing:1px; }
+.setting-input { background:rgba(0,255,180,0.06); border:1px solid rgba(0,255,180,0.25); color:var(--accent); border-radius:8px; padding:7px 12px; font-family:'Orbitron',monospace; font-size:14px; width:90px; text-align:center; outline:none; }
+.setting-input:focus { border-color:var(--accent); }
+.save-btn { padding:8px 18px; border:none; border-radius:8px; background:linear-gradient(135deg,#00c890,#006655); color:#000; font-family:'Orbitron',sans-serif; font-size:12px; letter-spacing:2px; cursor:pointer; transition:all .2s; }
+.save-btn:hover { filter:brightness(1.15); }
+
+
+.search-bar { width:100%; padding:10px 14px; border-radius:10px; background:rgba(0,255,180,0.04); border:1px solid rgba(0,255,180,0.15); color:#fff; font-family:'Share Tech Mono',monospace; font-size:13px; outline:none; margin-bottom:12px; letter-spacing:1px; }
+.search-bar:focus { border-color:rgba(0,255,180,0.4); }
+
+
+.del-btn { padding:8px 14px; background:rgba(255,50,80,0.12); color:var(--red); border:1px solid rgba(255,50,80,0.3); border-radius:8px; cursor:pointer; font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px; transition:all .2s; }
+.del-btn:hover { background:rgba(255,50,80,0.25); }
+
+
+.online-dot { width:7px; height:7px; border-radius:50%; background:#00ffb3; display:inline-block; margin-right:4px; box-shadow:0 0 6px #00ffb3; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+
+.nav-tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.nav-tab {
+  padding:9px 18px; border-radius:10px; cursor:pointer; font-family:'Share Tech Mono',monospace;
+  font-size:12px; letter-spacing:2px; border:1px solid var(--border);
+  background:transparent; color:var(--dim); transition:all .2s;
+}
+.nav-tab.active { background:rgba(0,255,180,0.12); color:var(--accent); border-color:rgba(0,255,180,0.35); }
+.nav-tab:hover:not(.active) { border-color:rgba(0,255,180,0.25); color:rgba(255,255,255,0.6); }
+
+.section { display:none; }
+.section.active { display:block; }
+
+.notice { background:rgba(255,180,0,0.08); border:1px solid rgba(255,180,0,0.2); border-radius:10px; padding:10px 14px; font-size:12px; color:rgba(255,200,80,0.8); font-family:'Share Tech Mono',monospace; margin-bottom:12px; letter-spacing:1px; }
+</style>
+</head>
+<body>
+
+
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">БУРМАЛДА</div>
+    <div class="auth-sub">// ADMIN PANEL //</div>
+    <input class="auth-input" id="auth-login" placeholder="ИМЯ АККАУНТА" type="text" autocomplete="off">
+    <input class="auth-input" id="auth-pass" placeholder="ПАРОЛЬ" type="password">
+    <button class="auth-btn" onclick="doAuth()">ВОЙТИ В СИСТЕМУ</button>
+    <div class="auth-err" id="auth-err"></div>
+  </div>
+</div>
+
+
+<div id="main">
+  <div class="top-bar">
+    <div class="top-logo">⚙ ADMIN</div>
+    <div class="top-user" id="top-user-label"></div>
+    <button class="top-logout" onclick="doLogout()">ВЫЙТИ</button>
+  </div>
+
+  <div class="content">
+    
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card"><div class="stat-label">ИГРОКОВ</div><div class="stat-val" id="s-players">—</div></div>
+      <div class="stat-card"><div class="stat-label">ВСЕГО АР</div><div class="stat-val gold" id="s-ar">—</div></div>
+      <div class="stat-card"><div class="stat-label">ИГРОКОВ ОНЛАЙН</div><div class="stat-val" id="s-online">—</div></div>
+      <div class="stat-card"><div class="stat-label">ЕЖЕДН. НАГРАДА</div><div class="stat-val blue" id="s-daily">—</div></div>
+    </div>
+
+    
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showSection('sec-players')">👥 ИГРОКИ</button>
+      <button class="nav-tab" onclick="showSection('sec-settings')">⚙️ НАСТРОЙКИ</button>
+    </div>
+
+    
+    <div class="section active" id="sec-players">
+      <div class="panels">
+        
+        <div class="panel">
+          <div class="panel-head">👥 СПИСОК ИГРОКОВ</div>
+          <div class="panel-body">
+            <div style="display:flex;gap:6px;margin-bottom:10px;">
+              <button id="tab-new" onclick="switchPlayerTab('new')" style="flex:1;padding:7px;border-radius:8px;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;border:1px solid var(--green);background:rgba(0,255,180,0.15);color:var(--green);">🆕 НОВЫЕ</button>
+              <button id="tab-old" onclick="switchPlayerTab('old')" style="flex:1;padding:7px;border-radius:8px;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--dim);">📦 СТАРЫЕ</button>
+            </div>
+            <input class="search-bar" id="search-input" placeholder="ПОИСК..." oninput="filterPlayers()">
+            <table class="player-table">
+              <thead><tr>
+                <th></th><th>ИМЯ</th><th>АР</th><th>СТАТУС</th>
+              </tr></thead>
+              <tbody id="player-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        
+        <div class="panel" id="profile-panel">
+          <div class="panel-head">📋 ПРОФИЛЬ</div>
+          <div class="panel-body" id="profile-body">
+            <div style="color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:12px;text-align:center;padding:40px 0;letter-spacing:2px;">
+              ← ВЫБЕРИТЕ ИГРОКА
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="section" id="sec-settings">
+      <div class="panel" style="max-width:500px;">
+        <div class="panel-head">⚙️ ГЛОБАЛЬНЫЕ НАСТРОЙКИ</div>
+        <div class="panel-body">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Ежедневная награда</div>
+              <div class="setting-sub">АР начисляемые верифицированным игрокам</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input class="setting-input" id="daily-amount-input" type="number" min="1">
+              <button class="save-btn" onclick="saveDailyAmount()">SAVE</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Пароль ВИП-кнопки</div>
+              <div class="setting-sub">Для не-админов в играх и лобби</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input class="setting-input" id="admin-pass-input" type="password" placeholder="••••" style="width:110px;">
+              <button class="save-btn" onclick="saveAdminPass()">SAVE</button>
+            </div>
+          </div>
+          <div class="setting-row" style="border-bottom:none;">
+            <div>
+              <div class="setting-label">Страница лобби</div>
+              <div class="setting-sub">Перейти в основную игру</div>
+            </div>
+            <a href="index.html" style="padding:8px 16px;background:rgba(0,255,180,0.1);color:var(--accent);border:1px solid rgba(0,255,180,0.3);border-radius:8px;text-decoration:none;font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;">→ ЛОББИ</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey:"AIzaSyCYptPoeocCbngAMfG_R-t32FOfIGJY13s",
+  databaseURL:"https://dima256-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"dima256", appId:"1:208400853144:web:78eb608f5aacd57e8848ed"
+};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+
+let adminUser = '';
+let playerTab = 'new';
+let adminUid = '';
+let allPlayers = [];
+let selectedPlayer = '';
+let pwVisible = false;
+
+
+function doAuth(){
+  const u = document.getElementById('auth-login').value.trim();
+  const p = document.getElementById('auth-pass').value;
+  if(!u||!p){ document.getElementById('auth-err').textContent='Заполни поля'; return; }
+  const email = u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app';
+  auth.signInWithEmailAndPassword(email, p)
+    .then(cred=>{
+      const uid = cred.user.uid;
+      db.ref('players/'+uid).once('value').then(s=>{
+        const d=s.val()||{};
+        if(!d.admin){ auth.signOut(); document.getElementById('auth-err').textContent='Нет прав администратора'; return; }
+        adminUser=d.username||u;
+        adminUid=uid;
+        document.getElementById('auth-screen').style.display='none';
+        document.getElementById('main').style.display='block';
+        document.getElementById('top-user-label').textContent='// '+adminUser.toUpperCase()+' //';
+        init();
+      });
+    })
+    .catch(e=>{ document.getElementById('auth-err').textContent=e.code==='auth/wrong-password'?'Неверный пароль':e.code==='auth/user-not-found'?'Игрок не найден':'Ошибка входа'; });
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Enter') doAuth(); });
+
+function doLogout(){
+  auth.signOut();
+  adminUser=''; adminUid=''; allPlayers=[]; selectedPlayer='';
+  document.getElementById('main').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('auth-pass').value='';
+  document.getElementById('auth-err').textContent='';
+}
+
+
+function init(){
+  loadStats();
+  loadPlayers();
+  loadDailyAmount();
+}
+
+
+function loadStats(){
+  db.ref('players').once('value').then(s=>{
+    const data = s.val()||{};
+    const keys = Object.keys(data);
+    const totalAR = keys.reduce((a,k)=>a+(data[k].balance||0),0);
+    document.getElementById('s-players').textContent = keys.length;
+    document.getElementById('s-ar').textContent = totalAR+' АР';
+    
+    const now = Date.now();
+    const online = keys.filter(k=>data[k].lastSeen && (now-data[k].lastSeen)<120000).length;
+    document.getElementById('s-online').textContent = online || '—';
+  });
+  db.ref('settings/dailyAmount').once('value').then(s=>{
+    document.getElementById('s-daily').textContent = (s.val()||10)+' АР';
+  });
+}
+
+
+function loadPlayers(){
+  db.ref('players').on('value', s=>{
+    const data = s.val()||{};
+    allPlayers = Object.entries(data).map(([k,v])=>({key:k,...v}));
+    
+    // Если у игрока нет username — попробовать найти через usernames/
+    const noName = allPlayers.filter(p => !p.username && p.key.length > 20);
+    if(noName.length > 0){
+      db.ref('usernames').once('value').then(us=>{
+        const udata = us.val()||{};
+        // Перевернуть: uid -> username
+        const uidToName = {};
+        Object.entries(udata).forEach(([name, uid])=>{ uidToName[uid]=name; });
+        allPlayers = allPlayers.map(p=>{
+          if(!p.username && uidToName[p.key]) p.username = uidToName[p.key];
+          return p;
+        });
+        allPlayers.sort((a,b)=>{
+          const rank = p => p.pinned?0:p.admin?1:p.verified?2:3;
+          return rank(a)-rank(b) || (a.key>b.key?1:-1);
+        });
+        renderTable(allPlayers);
+        loadStats();
+      });
+    } else {
+      allPlayers.sort((a,b)=>{
+        const rank = p => p.pinned?0:p.admin?1:p.verified?2:3;
+        return rank(a)-rank(b) || (a.key>b.key?1:-1);
+      });
+      renderTable(allPlayers);
+      loadStats();
+    }
+  });
+}
+
+function renderTable(list){
+  const tbody = document.getElementById('player-tbody');
+  tbody.innerHTML = list.map(p=>{
+    const now = Date.now();
+    const isOnline = p.lastSeen && (now-p.lastSeen)<120000;
+    const badges = [
+      p.pinned ? '<span class="badge badge-pinned">📌 ЗАКРЕП</span>' : '',
+      p.admin  ? '<span class="badge badge-admin">👑 ADMIN</span>' : '',
+      p.verified?'<span class="badge badge-verified">✅ VERIFIED</span>':'',
+      p.hidden ? '<span class="badge badge-hidden">👁 СКРЫТ</span>' : '',
+    ].filter(Boolean).join(' ');
+    const displayName = p.username || (p.key.length > 20 ? '🔑 '+p.key.substring(0,8)+'…' : p.key);
+    return `<tr onclick="openProfile('${p.key}')" id="row-${p.key}" class="${selectedPlayer===p.key?'selected':''}">
+      <td>${isOnline?'<span class="online-dot"></span>':''}</td>
+      <td style="font-weight:700;color:${p.admin?'var(--gold)':p.verified?'var(--green)':'var(--text)'};font-family:Share Tech Mono,monospace;">${displayName}</td>
+      <td style="color:var(--gold);font-family:Orbitron,sans-serif;font-size:12px;">${p.balance||0}</td>
+      <td style="font-size:11px;">${badges}</td>
+    </tr>`;
+  }).join('');
+}
+
+function switchPlayerTab(tab){
+  playerTab = tab;
+  const btnNew = document.getElementById('tab-new');
+  const btnOld = document.getElementById('tab-old');
+  btnNew.style.background = tab==='new' ? 'rgba(0,255,180,0.15)' : 'transparent';
+  btnNew.style.color = tab==='new' ? 'var(--green)' : 'var(--dim)';
+  btnNew.style.borderColor = tab==='new' ? 'var(--green)' : 'rgba(255,255,255,0.1)';
+  btnOld.style.background = tab==='old' ? 'rgba(255,180,0,0.15)' : 'transparent';
+  btnOld.style.color = tab==='old' ? 'var(--gold)' : 'var(--dim)';
+  btnOld.style.borderColor = tab==='old' ? 'var(--gold)' : 'rgba(255,255,255,0.1)';
+  filterPlayers();
+}
+
+function filterPlayers(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const filtered = allPlayers.filter(p => {
+    const isNew = !!p.username;
+    if(playerTab === 'new' && !isNew) return false;
+    if(playerTab === 'old' && isNew) return false;
+    if(q) return (p.username||p.key).toLowerCase().includes(q)||p.key.toLowerCase().includes(q);
+    return true;
+  });
+  renderTable(filtered);
+}
+
+
+function openProfile(username){
+  selectedPlayer = username;
+  
+  document.querySelectorAll('.player-table tr').forEach(r=>r.classList.remove('selected'));
+  const row = document.getElementById('row-'+username);
+  if(row) row.classList.add('selected');
+
+  db.ref('players/'+username).once('value').then(s=>{
+    const d = s.val()||{};
+    renderProfile(username, d);
+  });
+}
+
+function renderProfile(u, d){
+  pwVisible = false;
+  const now = Date.now();
+  const isOnline = d.lastSeen && (now-d.lastSeen)<120000;
+  const lastSeenStr = d.lastSeen ? new Date(d.lastSeen).toLocaleString('ru-RU') : 'Неизвестно';
+
+  
+  const dev = d.deviceInfo || {};
+  const devType = dev.mobile ? '📱 Телефон/Планшет' : '🖥 Компьютер';
+  const pageNow = d.currentPage || '—';
+  const loc = d.location || {};
+  const locStr = loc.city ? `${loc.city}, ${loc.region}, ${loc.country}` : '—';
+  const locTime = loc.updatedAt ? new Date(loc.updatedAt).toLocaleString('ru-RU') : '—';
+  const devHtml = `<div class="device-box">
+    <div>📍 Сейчас: <span style="color:var(--green);">${pageNow}</span></div>
+    <div>${devType}: <span>${dev.platform||'—'}</span></div>
+    <div>🌐 Браузер: <span>${dev.browser||'—'}</span></div>
+    <div>🖥 Экран: <span>${dev.screenRes||'—'}</span></div>
+    <div>🗣 Язык: <span>${dev.lang||'—'}</span></div>
+    <div>🕐 Последний визит: <span>${lastSeenStr}</span></div>
+    <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);">
+      🗺 Местоположение: <span style="color:var(--gold);">${locStr}</span>
+    </div>
+    ${loc.ip ? `<div>🔌 IP: <span style="color:rgba(255,255,255,0.5);font-family:Share Tech Mono,monospace;">${loc.ip}</span></div>` : ''}
+    ${loc.updatedAt ? `<div style="font-size:10px;color:var(--dim);">обновлено: ${locTime}</div>` : ''}
+  </div>`;
+
+  const hist = (d.history||[]).slice().reverse();
+
+  document.getElementById('profile-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:17px;color:${d.admin?'var(--gold)':d.verified?'var(--green)':'var(--text)'};">${(d.username||u).toUpperCase()}</div>
+      ${isOnline?'<span style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--green);background:rgba(0,255,180,0.1);padding:3px 8px;border-radius:4px;border:1px solid rgba(0,255,180,0.25);">● ONLINE</span>':'<span style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--dim);background:rgba(255,255,255,0.04);padding:3px 8px;border-radius:4px;">OFFLINE</span>'}
+    </div>
+
+    <div class="profile-field">
+      <span class="field-label">БАЛАНС</span>
+      <span class="field-val" id="pf-bal" style="color:var(--gold);font-size:16px;">${d.balance||0} АР</span>
+    </div>
+
+
+    <div class="bal-row">
+      <button class="bal-btn plus" onclick="modBal('${u}',1)">+1</button>
+      <button class="bal-btn plus" onclick="modBal('${u}',10)">+10</button>
+      <button class="bal-btn plus" onclick="modBal('${u}',100)">+100</button>
+      <button class="bal-btn minus" onclick="modBal('${u}',-1)">−1</button>
+      <button class="bal-btn minus" onclick="modBal('${u}',-10)">−10</button>
+      <button class="bal-btn minus" onclick="modBal('${u}',-100)">−100</button>
+    </div>
+
+    <div class="toggle-row">
+      <button class="tog ${d.verified?'on-green':''}" id="tog-verified" onclick="toggleFlag('${u}','verified','tog-verified','on-green')">✅ ПРОВЕРЕН</button>
+      <button class="tog ${d.pinned?'on-gold':''}" id="tog-pinned" onclick="toggleFlag('${u}','pinned','tog-pinned','on-gold')">📌 ЗАКРЕП</button>
+      <button class="tog ${d.admin?'on-gold':''}" id="tog-admin" onclick="toggleFlag('${u}','admin','tog-admin','on-gold')">👑 АДМИН</button>
+      <button class="tog ${d.hidden?'on-red':''}" id="tog-hidden" onclick="toggleFlag('${u}','hidden','tog-hidden','on-red')">👁 СКРЫТ</button>
+      <button class="tog ${d.dailyEnabled!==false?'on-green':''}" id="tog-daily" onclick="toggleDaily('${u}')">🎁 НАГРАДА</button>
+    </div>
+
+    <div style="font-size:11px;color:var(--dim);letter-spacing:3px;font-family:'Share Tech Mono',monospace;margin:12px 0 6px;">УСТРОЙСТВО</div>
+    ${devHtml}
+
+    <div style="font-size:11px;color:var(--dim);letter-spacing:3px;font-family:'Share Tech Mono',monospace;margin:12px 0 6px;">ИСТОРИЯ (${hist.length})</div>
+    <div class="hist-box">${hist.length?hist.map(h=>`<div class="hist-entry">${h}</div>`).join(''):'<div class="hist-entry" style="color:var(--dim);">Пусто</div>'}</div>
+
+    <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+      <button class="del-btn" onclick="deletePlayer('${u}')">🗑 УДАЛИТЬ ИГРОКА</button>
+    </div>
+  `;
+}
+
+function togglePw(u, pw){
+  pwVisible = !pwVisible;
+  const el = document.getElementById('pf-pw');
+  const btn = el.nextElementSibling;
+  if(pwVisible){ el.textContent = pw; btn.textContent='🙈 СКРЫТЬ'; }
+  else { el.textContent='••••••••'; btn.textContent='👁 ПОКАЗАТЬ'; }
+}
+
+function modBal(u, n){
+  db.ref('players/'+u+'/balance').once('value').then(s=>{
+    const newBal = Math.max(0,(s.val()||0)+n);
+    db.ref('players/'+u+'/balance').set(newBal);
+    const el = document.getElementById('pf-bal');
+    if(el) el.textContent = newBal+' АР';
+  });
+}
+
+function toggleFlag(u, field, btnId, onClass){
+  db.ref('players/'+u+'/'+field).once('value').then(s=>{
+    const newVal = !s.val();
+    db.ref('players/'+u+'/'+field).set(newVal);
+    const btn = document.getElementById(btnId);
+    if(btn){ btn.classList.toggle(onClass, newVal); }
+  });
+}
+
+function toggleDaily(u){
+  db.ref('players/'+u+'/dailyEnabled').once('value').then(s=>{
+    const newVal = s.val()===false ? true : false;
+    db.ref('players/'+u+'/dailyEnabled').set(newVal);
+    const btn = document.getElementById('tog-daily');
+    if(btn) btn.classList.toggle('on-green', newVal);
+  });
+}
+
+function deletePlayer(u){
+  if(!confirm('Удалить игрока "'+u+'"? Это необратимо!')) return;
+  // Сначала получаем username чтобы удалить из usernames/
+  db.ref('players/'+u+'/username').once('value').then(s=>{
+    const username = s.val();
+    db.ref('players/'+u).remove();
+    if(username) db.ref('usernames/'+username.toLowerCase()).remove();
+    selectedPlayer='';
+    document.getElementById('profile-body').innerHTML='<div style="color:var(--dim);font-family:Share Tech Mono,monospace;font-size:12px;text-align:center;padding:40px 0;letter-spacing:2px;">ИГРОК УДАЛЁН</div>';
+    allPlayers = allPlayers.filter(p => p.key !== u);
+    renderTable(filterPlayers());
+  });
+}
+
+
+function loadDailyAmount(){
+  db.ref('settings/dailyAmount').once('value').then(s=>{
+    document.getElementById('daily-amount-input').value = s.val()||10;
+  });
+}
+function saveAdminPass(){
+  const val = document.getElementById('admin-pass-input').value.trim();
+  if(!val){ alert('Введи пароль'); return; }
+  db.ref('settings/adminPassword').set(val).then(()=>{
+    const btn = event.target;
+    btn.textContent='✓ СОХРАНЕНО'; btn.style.background='rgba(0,255,180,0.3)';
+    setTimeout(()=>{ btn.textContent='SAVE'; btn.style.background=''; }, 1500);
+    document.getElementById('admin-pass-input').value='';
+  });
+}
+function saveDailyAmount(){
+  const val = parseInt(document.getElementById('daily-amount-input').value)||10;
+  db.ref('settings/dailyAmount').set(val).then(()=>{
+    document.getElementById('s-daily').textContent = val+' АР';
+    const btn = event.target;
+    btn.textContent='✓ СОХРАНЕНО'; btn.style.background='rgba(0,255,180,0.3)';
+    setTimeout(()=>{ btn.textContent='SAVE'; btn.style.background=''; }, 1500);
+  });
+}
+
+
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+
+
+<script>
+
+
+window._trackDevice = function(username, dbRef){
+  try {
+    const ua = navigator.userAgent;
+    const mobile = /Mobi|Android|iPhone|iPad/i.test(ua);
+    let browser = 'Unknown';
+    if(ua.includes('Chrome') && !ua.includes('Edg')) browser='Chrome';
+    else if(ua.includes('Firefox')) browser='Firefox';
+    else if(ua.includes('Safari') && !ua.includes('Chrome')) browser='Safari';
+    else if(ua.includes('Edg')) browser='Edge';
+    else if(ua.includes('OPR')||ua.includes('Opera')) browser='Opera';
+
+    let platform = 'Unknown';
+    if(/iPhone/.test(ua)) platform='iPhone';
+    else if(/iPad/.test(ua)) platform='iPad';
+    else if(/Android/.test(ua)){
+        const m=ua.match(/Android[^;]*;\s*([^)]+)/i);
+        platform = m ? m[1].trim() : 'Android';
+    }
+    else if(/Win/.test(navigator.platform)) platform='Windows';
+    else if(/Mac/.test(navigator.platform)) platform='macOS';
+    else platform='Unknown';
+
+    dbRef.ref('players/'+username).update({
+      lastSeen: Date.now(),
+      deviceInfo: { browser, platform, mobile, userAgent: ua.substring(0,120) }
+    });
+    // Геолокация по IP для админа тоже
+    fetch('https://ipapi.co/json/').then(r=>r.json()).then(geo=>{
+      db.ref('players/'+adminUid+'/location').set({
+        city: geo.city||'—', region: geo.region||'—',
+        country: geo.country_name||'—', ip: geo.ip||'—',
+        updatedAt: Date.now()
+      });
+    }).catch(()=>{});
+    db.ref('players/'+adminUid).update({lastSeen: Date.now()
+    });
+  } catch(e){}
+};
+</script>
+</body>
+</html>
