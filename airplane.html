@@ -705,9 +705,9 @@ function spawnToken(idx, groupSize){
         }
     }
 
-    const tokenX = bgOffset + canvas.width + 40 + Math.random() * 200;
-    const tokenWorldY = planeWorldY + (Math.random() - 0.5) * canvas.height * 1.2;
-    const tooClose = tokens.some(t => !t.collected && Math.abs(t.x - tokenX) < 60 && Math.abs(t.y - tokenWorldY) < 45);
+    const tokenX = bgOffset + canvas.width + 20 + Math.random() * 80;
+    const tokenWorldY = planeWorldY + (Math.random() - 0.5) * canvas.height * 0.7;
+    const tooClose = tokens.some(t => !t.collected && Math.abs(t.x - tokenX) < 55 && Math.abs(t.y - tokenWorldY) < 40);
     if(!tooClose) tokens.push({x:tokenX, y:tokenWorldY, type, value, label, collected:false, a:1});
 }
 
