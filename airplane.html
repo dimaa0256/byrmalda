@@ -396,18 +396,20 @@ function updateSpeedVisual(){
     const label=document.getElementById('speed-val-label');
     const pct=speedRatio*100;
     
-    const r=Math.round(speedRatio*255);
-    const g=Math.round((1-speedRatio)*200+55);
-    const color=`rgb(${r},${g},40)`;
-    fill.style.width=pct+'%';
-    fill.style.background=`linear-gradient(90deg,#00c853,${color})`;
-    cursor.style.left=`calc(${pct}% - 14px)`;
-    cursor.style.background=color;
-    cursor.style.color='#fff';
-    cursor.style.boxShadow=`0 0 10px ${color}`;
-    const idx=Math.floor(speedRatio*4.99);
-    label.textContent=speedNames[Math.max(0,Math.min(4,idx))];
-    label.style.color=color;
+    // Зелёный → жёлтый → красный
+    const r = speedRatio < 0.5 ? Math.round(speedRatio*2*255) : 255;
+    const g = speedRatio < 0.5 ? 200 : Math.round((1-(speedRatio-0.5)*2)*200);
+    const color = `rgb(${r},${g},0)`;
+    fill.style.width = pct+'%';
+    fill.style.background = `linear-gradient(90deg, #00c853 0%, #ffd600 50%, #ff1744 100%)`;
+    fill.style.backgroundSize = `${Math.max(pct,1) > 0 ? (10000/pct).toFixed(1) : 100}% 100%`;
+    cursor.style.left = `calc(${pct}% - 14px)`;
+    cursor.style.background = color;
+    cursor.style.color = '#fff';
+    cursor.style.boxShadow = `0 0 12px ${color}`;
+    const idx = Math.floor(speedRatio*4.99);
+    label.textContent = speedNames[Math.max(0,Math.min(4,idx))];
+    label.style.color = color;
 }
 
 
