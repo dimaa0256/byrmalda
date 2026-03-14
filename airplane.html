@@ -381,11 +381,25 @@ function initSpeedSlider(){
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         return Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
     }
-    function onMove(e){ e.preventDefault(); speedRatio=getR(e); updateSpeedVisual(); }
+    function onMove(e){
+        if(gameRunning) return;
+        e.preventDefault();
+        speedRatio=getR(e); updateSpeedVisual();
+    }
     function onUp(){ track.removeEventListener('mousemove',onMove); track.removeEventListener('touchmove',onMove); }
 
-    track.addEventListener('mousedown',e=>{ speedRatio=getR(e); updateSpeedVisual(); track.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp,{once:true}); });
-    track.addEventListener('touchstart',e=>{ speedRatio=getR(e); updateSpeedVisual(); track.addEventListener('touchmove',onMove,{passive:false}); document.addEventListener('touchend',onUp,{once:true}); },{passive:false});
+    track.addEventListener('mousedown',e=>{
+        if(gameRunning) return;
+        speedRatio=getR(e); updateSpeedVisual();
+        track.addEventListener('mousemove',onMove);
+        document.addEventListener('mouseup',onUp,{once:true});
+    });
+    track.addEventListener('touchstart',e=>{
+        if(gameRunning) return;
+        speedRatio=getR(e); updateSpeedVisual();
+        track.addEventListener('touchmove',onMove,{passive:false});
+        document.addEventListener('touchend',onUp,{once:true});
+    },{passive:false});
 }
 
 function updateSpeedVisual(){
@@ -418,7 +432,7 @@ let winnings=0, bet=5;
 let distance=0;
 let islandSafeZone=false;
 let tokens=[], islands=[], particles=[], clouds=[];
-let bgOffset=0, frameCount=0;
+let bgOffset=0, frameCount=0, lastFrameTime=0;
 let tokenSpawnDist=0, islandSpawnDist=0, lastNegCount=0, lastPosCount=0;
 let takeoffPhase=false, takeoffProgress=0;
 let firstTokenSpawned=false;
@@ -713,10 +727,13 @@ function spawnIsland(){
 
 let cameraY = 0; 
 
-function gameLoop(){
+function gameLoop(timestamp){
     if(!gameRunning)return;
     frameCount++;
-    const spd = 0.5 + speedRatio * 1.5;
+    // Delta нормализован к 60fps — на медленных устройствах скорость не падает
+    const delta = lastFrameTime ? Math.min((timestamp - lastFrameTime) / 16.67, 2.5) : 1;
+    lastFrameTime = timestamp;
+    const spd = (0.5 + speedRatio * 1.5) * delta;
     bgOffset += spd;
     distance += spd;
 
@@ -841,7 +858,7 @@ async function startGame(){
     divingActive=false; diveBtn.disabled=false; diveBtn.textContent='⬇️ НЫРНУТЬ НА ОСТРОВ';
     firstTokenSpawned=false;
     exploding=false;
-    gameRunning=true; winnings=bet; distance=0; bgOffset=0; frameCount=0;
+    gameRunning=true; winnings=bet; distance=0; bgOffset=0; frameCount=0; lastFrameTime=0;
     tokens=[]; islands=[]; particles=[]; tokenSpawnDist=0; islandSpawnDist=0; lastNegCount=0; lastPosCount=0;
     islandSafeZone=false; takeoffPhase=true; takeoffProgress=0;
 
