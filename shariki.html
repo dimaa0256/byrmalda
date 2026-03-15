@@ -12,15 +12,9 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 
 /* Авторизация */
 #auth-section{text-align:center;}
-.casino-title{
-        font-family:'Fredoka One',cursive; font-size:34px; text-align:center;
-        margin-bottom:14px; letter-spacing:2px; color:#fff;
-        text-shadow:0 0 10px #8800ff, 0 0 30px #6600cc, 2px 2px 0 #330066, 4px 4px 0 #1a0033;
-        animation:titlePop 3s ease-in-out infinite;
-    }
-    @keyframes titlePop{0%,100%{text-shadow:0 0 10px #8800ff,0 0 30px #6600cc,2px 2px 0 #330066,4px 4px 0 #1a0033}50%{text-shadow:0 0 20px #aa44ff,0 0 50px #8800ff,2px 2px 0 #330066,4px 4px 0 #1a0033}}
+.casino-title{font-family:'Fredoka One',cursive;font-size:32px;letter-spacing:6px;color:#fff;text-align:center;margin-bottom:6px;text-shadow:0 0 20px rgba(150,100,255,0.6);}
 .title-lights{display:flex;justify-content:center;gap:8px;margin-bottom:16px;}
-.light-dot{width:8px;height:8px;border-radius:50%;background:#aa44ff;box-shadow:0 0 8px #aa44ff;animation:blink 1.2s ease-in-out infinite;}
+.light-dot{width:8px;height:8px;border-radius:50%;background:#ffd700;box-shadow:0 0 8px #ffd700;animation:blink 1.2s ease-in-out infinite;}
 .light-dot:nth-child(2){animation-delay:.2s;} .light-dot:nth-child(3){animation-delay:.4s;} .light-dot:nth-child(4){animation-delay:.6s;} .light-dot:nth-child(5){animation-delay:.8s;} .light-dot:nth-child(6){animation-delay:1s;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
 #auth-section input{width:100%;display:block;margin:0 0 10px;padding:13px 18px;border-radius:14px;background:rgba(0,0,0,0.55);color:#fff;border:2px solid rgba(255,100,0,0.3);text-align:center;font-size:15px;font-family:'Nunito',sans-serif;font-weight:800;letter-spacing:2px;outline:none;}
@@ -39,13 +33,7 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 .settings-btn:hover{background:rgba(255,180,0,0.15);transform:rotate(45deg);}
 
 /* Canvas */
-.plinko-wrap{
-        border-radius:18px; overflow:hidden;
-        background:linear-gradient(180deg,#0a0520 0%,#06031a 100%);
-        padding:3px; margin-bottom:12px;
-        box-shadow:0 0 0 2px #9944ff, 0 0 0 4px #6600aa, 0 6px 20px rgba(150,0,255,0.4), 0 0 40px rgba(100,0,200,0.15);
-        position:relative;
-    }
+.plinko-wrap{border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#06091a 0%,#0a1025 100%);border:2px solid rgba(255,180,0,0.2);box-shadow:0 0 30px rgba(100,100,255,0.08);margin-bottom:10px;}
 #plinko-canvas{display:block;width:100%;}
 
 /* Мультиплайеры */
@@ -55,20 +43,11 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 /* Управление */
 .ctrl-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
 .ctrl-label{font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.4);width:60px;flex-shrink:0;}
-.ctrl-input{flex:1;background:rgba(0,0,0,0.55);border:2px solid rgba(150,50,255,0.3);border-radius:12px;color:#fff;font-family:'Fredoka One',cursive;font-size:16px;padding:9px 12px;text-align:center;outline:none;transition:border-color .2s;}
-    .ctrl-input:focus{border-color:rgba(170,70,255,0.6);}
+.ctrl-input{flex:1;background:rgba(0,0,0,0.5);border:2px solid rgba(255,100,0,0.25);border-radius:12px;color:#fff;font-family:'Fredoka One',cursive;font-size:16px;padding:9px 12px;text-align:center;outline:none;}
 .balls-btns{display:flex;gap:5px;flex:1;}
 .ball-btn{flex:1;padding:8px 4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.4);cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;transition:all .15s;}
 .ball-btn.active{background:rgba(153,68,255,0.3);border-color:rgba(153,68,255,0.7);color:#cc88ff;}
-.btn-drop{
-        width:100%;padding:14px;border-radius:16px;
-        background:linear-gradient(180deg,#aa44ff,#7700dd);
-        border:none;color:#fff;font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:3px;cursor:pointer;
-        box-shadow:0 4px 0 #440088,0 6px 20px rgba(150,50,255,0.45);
-        margin-bottom:14px;transition:all .15s;
-    }
-    .btn-drop:active{transform:translateY(2px);box-shadow:0 2px 0 #440088,0 3px 10px rgba(150,50,255,0.3);}
-    .btn-drop:hover{background:linear-gradient(180deg,#bb55ff,#8811ee);}
+.btn-drop{width:100%;padding:14px;border-radius:16px;background:linear-gradient(180deg,#9944ff,#6600cc);border:none;color:#fff;font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:3px;cursor:pointer;box-shadow:0 4px 0 #440088,0 6px 20px rgba(150,50,255,0.4);margin-bottom:14px;}
 .btn-drop:active{transform:translateY(2px);box-shadow:0 2px 0 #440088;}
 .btn-drop:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
 
@@ -115,7 +94,7 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 <!-- АВТОРИЗАЦИЯ -->
 <div id="auth-section">
   <a href="index.html" style="display:block;text-align:center;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,180,0,0.5);text-decoration:none;margin-bottom:8px;">← ГЛАВНАЯ</a>
-  <h1 class="casino-title">🔵 ШАРИКИ</h1>
+  <h1 class="casino-title">ШАРИКИ</h1>
   <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
   <input type="text" id="username" placeholder="НИК" autocomplete="username">
   <input type="password" id="password" placeholder="ПАРОЛЬ" autocomplete="current-password">
@@ -125,7 +104,7 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 <!-- ИГРА -->
 <div id="game-section" style="display:none;">
   <a href="index.html" id="back-link" style="display:block;text-align:center;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,180,0,0.5);text-decoration:none;margin-bottom:8px;">← ГЛАВНАЯ</a>
-  <h1 class="casino-title">🔵 ШАРИКИ</h1>
+  <h1 class="casino-title">ШАРИКИ</h1>
   <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
 
   <div class="vip-access" id="vip-btn" onclick="toggleAdmin(event)">👑 VIP</div>
@@ -581,7 +560,6 @@ function dropBalls(){
     if(total>balance){alert('Недостаточно АР! Нужно '+total+' АР.');return;}
     dropping=true; pendingResults=[]; _finishScheduled=false;
     document.getElementById('drop-btn').disabled=true;
-    document.getElementById('stop-btn').disabled=false;
     // Страховка: если через 15 секунд раунд не завершился — принудительно завершаем
     clearTimeout(window._dropTimeout);
     window._dropTimeout = setTimeout(()=>{
@@ -653,7 +631,6 @@ function finishRound(){
     balls=[];
     clearTimeout(window._dropTimeout);
     document.getElementById('drop-btn').disabled=false;
-    document.getElementById('stop-btn').disabled=true;
 }
 
 function loop(){
