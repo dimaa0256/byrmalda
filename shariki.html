@@ -94,7 +94,7 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 <!-- АВТОРИЗАЦИЯ -->
 <div id="auth-section">
   <a href="index.html" style="display:block;text-align:center;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,180,0,0.5);text-decoration:none;margin-bottom:8px;">← ГЛАВНАЯ</a>
-  <h1 class="casino-title">ШАРИКИ</h1>
+  <h1 class="casino-title">🔵 ШАРИКИ</h1>
   <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
   <input type="text" id="username" placeholder="НИК" autocomplete="username">
   <input type="password" id="password" placeholder="ПАРОЛЬ" autocomplete="current-password">
@@ -104,7 +104,7 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 <!-- ИГРА -->
 <div id="game-section" style="display:none;">
   <a href="index.html" id="back-link" style="display:block;text-align:center;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,180,0,0.5);text-decoration:none;margin-bottom:8px;">← ГЛАВНАЯ</a>
-  <h1 class="casino-title">ШАРИКИ</h1>
+  <h1 class="casino-title">🔵 ШАРИКИ</h1>
   <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
 
   <div class="vip-access" id="vip-btn" onclick="toggleAdmin(event)">👑 VIP</div>
@@ -239,7 +239,6 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
   <div class="plinko-wrap">
     <canvas id="plinko-canvas"></canvas>
   </div>
-  <div class="multipliers" id="mult-row"></div>
 
   <!-- Управление -->
   <div class="ctrl-row">
@@ -531,24 +530,12 @@ function buildBallBtns(){
     });
 }
 
-function renderMultRow(){
-    const row=document.getElementById('mult-row');
-    if(!row) return;
-    row.innerHTML='';
-    MULTIPLIERS.forEach((m,i)=>{
-        const cell=document.createElement('div');
-        cell.className='mult-cell'; cell.id='mult-'+i;
-        cell.textContent=m+'x';
-        cell.style.cssText=`background:${MULT_COLORS[i]}22;border:1px solid ${MULT_COLORS[i]}66;color:${MULT_COLORS[i]};`;
-        row.appendChild(cell);
-    });
-}
+function renderMultRow(){ /* слоты на canvas */ }
 
+const _flashSlots = {};
 function flashMult(idx){
-    const el=document.getElementById('mult-'+idx);
-    if(!el) return;
-    el.style.transform='scale(1.2)'; el.style.boxShadow=`0 0 14px ${MULT_COLORS[idx]}`; el.style.background=MULT_COLORS[idx]+'55';
-    setTimeout(()=>{el.style.transform='';el.style.boxShadow='';el.style.background=MULT_COLORS[idx]+'22';},350);
+    _flashSlots[idx] = Date.now();
+    setTimeout(()=>{ delete _flashSlots[idx]; }, 400);
 }
 
 // Веса слотов: 0.1x 0.5x 1x 2x 3x 2x 1x 0.5x 0.1x
@@ -699,6 +686,11 @@ function drawFrame(){
         ctx.font=`bold ${Math.max(9,W*0.027)}px 'Fredoka One',cursive`;
         ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(s.mult+'x',s.x+s.w/2,s.y+s.h/2);
+        if(_flashSlots[s.idx]){
+            ctx.fillStyle = s.color+'88';
+            ctx.beginPath(); ctx.roundRect(s.x+1,s.y,s.w-2,s.h,[0,0,6,6]); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.fillText(s.mult+'x',s.x+s.w/2,s.y+s.h/2);
+        }
     });
 
     // Трейлы + шарики
