@@ -65,9 +65,14 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 .panel-title{font-family:'Fredoka One',cursive;font-size:16px;letter-spacing:2px;color:#ffd700;text-align:center;margin-bottom:12px;}
 .panel-title.red{color:#ff4444;}
 .music-list{max-height:180px;overflow-y:auto;scrollbar-width:thin;margin-bottom:10px;}
-.music-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.55);transition:background .15s;}
+.music-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.55);transition:background .15s;}
 .music-item:hover,.music-item.active{background:rgba(255,150,0,0.12);color:#ffd700;}
+.music-item .loop-cb{width:14px;height:14px;accent-color:#ffd700;cursor:pointer;flex-shrink:0;}
+.music-item-name{flex:1;}
 .mute-toggle{width:100%;padding:8px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;margin-bottom:8px;}
+.mute-toggle.on{background:rgba(255,180,0,0.1);border-color:rgba(255,180,0,0.3);color:#ffd700;}
+.vol-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:0 2px;}
+.vol-slider{flex:1;width:100%;accent-color:#9944ff;height:4px;cursor:pointer;}
 .vol-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .vol-slider{flex:1;accent-color:#ffd700;}
 .btn-panel-close{width:100%;padding:8px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;margin-top:6px;}
@@ -88,7 +93,7 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 .quest-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#9944ff,#ff4488);}
 </style>
 </head>
-<body onclick="closePanels()">
+<body>
 <div class="casino-machine" onclick="event.stopPropagation()">
 
 <!-- АВТОРИЗАЦИЯ -->
@@ -122,7 +127,11 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
     <div class="panel-title">🎵 ПЛЕЙЛИСТ</div>
     <div class="music-list" id="music-playlist"></div>
     <button id="m-toggle" class="mute-toggle on" onclick="toggleMute('music')">🎵 МУЗЫКА: ВКЛ</button>
-    <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()">
+    <div class="vol-row">
+      <span style="font-size:13px;">🔈</span>
+      <input type="range" class="vol-slider" id="music-vol" min="0" max="1" step="0.05" value="0.3" oninput="applyVolume()" style="flex:1;">
+      <span style="font-size:13px;">🔊</span>
+    </div>
     <button class="btn-panel-close" onclick="closePanels()">✕ ЗАКРЫТЬ</button>
   </div>
 
@@ -262,12 +271,10 @@ let bgMusic=new Audio(playlist[curTrack].file);
 bgMusic.loop=true;
 let mOn=localStorage.getItem('musicOn')!=='0';
 
-function applyVolumes(){ applyVolume(); }
 function applyVolume(){bgMusic.volume=parseFloat(document.getElementById('music-vol').value);bgMusic.muted=!mOn;}
-function toggleMute(t){
+function toggleMute(){
     mOn=!mOn; localStorage.setItem('musicOn',mOn?'1':'0');
-    const btn=document.getElementById('m-toggle');
-    if(btn){ btn.textContent=mOn?'🎵 МУЗЫКА: ВКЛ':'🔇 МУЗЫКА: ВЫКЛ'; btn.className=mOn?'mute-toggle on':'mute-toggle'; }
+    document.getElementById('m-toggle').textContent=mOn?'🎵 МУЗЫКА: ВКЛ':'🔇 МУЗЫКА: ВЫКЛ';
     applyVolume();
 }
 function playTrack(i){
@@ -278,9 +285,18 @@ function playTrack(i){
     renderPlaylist();
 }
 function renderPlaylist(){
-    document.getElementById('music-playlist').innerHTML=playlist.map((t,i)=>
-        `<div class="music-item${i===curTrack?' active':''}" onclick="playTrack(${i})">${i===curTrack?'▶ ':''}${t.name}</div>`
-    ).join('');
+    document.getElementById('music-playlist').innerHTML=playlist.map((t,i)=>{
+        const isActive=i===curTrack;
+        const loopChecked=isActive&&bgMusic.loop?'checked':'';
+        return `<div class="music-item${isActive?' active':''}" onclick="playTrack(${i})">
+            <span class="music-item-name">${isActive?'▶ ':''}${t.name}</span>
+            <input type="checkbox" class="loop-cb" ${loopChecked} onclick="event.stopPropagation();setLoop(${i},this.checked)" title="Повтор">
+        </div>`;
+    }).join('');
+}
+
+function setLoop(i, val){
+    if(i===curTrack){ bgMusic.loop=val; }
 }
 
 function toEmail(u){return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app';}
@@ -359,8 +375,8 @@ function togglePanel(id){
     closePanels();
     if(!was) el.style.display='block';
 }
-function toggleSettings(e){ e.stopPropagation(); document.getElementById('settings-panel').style.display='block'; renderPlaylist(); }
-function closePanels(){ ['settings-panel','admin-panel','user-profile-panel','quests-panel','promo-panel','lobby-admin-panel'].forEach(p=>{ const el=document.getElementById(p); if(el) el.style.display='none'; }); }
+function toggleSettings(e){e.stopPropagation();togglePanel('settings-panel');}
+document.addEventListener('click',closePanels);
 
 function toggleAdmin(e){
     e.stopPropagation();
@@ -498,7 +514,7 @@ function buildBallBtns(){
         const b=document.createElement('button');
         b.className='ball-btn'+(n===1?' active':'');
         b.textContent=n;
-        b.onclick=()=>{ if(dropping) return; ballCount=n; wrap.querySelectorAll('.ball-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+        b.onclick=()=>{ballCount=n;wrap.querySelectorAll('.ball-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');};
         wrap.appendChild(b);
     });
 }
@@ -561,8 +577,8 @@ function dropBalls(){
     const total=betVal*ballCount;
     if(total>balance){alert('Недостаточно АР! Нужно '+total+' АР.');return;}
     dropping=true; pendingResults=[]; _finishScheduled=false;
-    document.getElementById('bet-input').disabled=true;
     document.getElementById('drop-btn').disabled=true;
+    document.getElementById('stop-btn').disabled=false;
     // Страховка: если через 15 секунд раунд не завершился — принудительно завершаем
     clearTimeout(window._dropTimeout);
     window._dropTimeout = setTimeout(()=>{
@@ -634,6 +650,7 @@ function finishRound(){
     balls=[];
     clearTimeout(window._dropTimeout);
     document.getElementById('drop-btn').disabled=false;
+    document.getElementById('stop-btn').disabled=true;
 }
 
 function loop(){
