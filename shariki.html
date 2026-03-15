@@ -590,7 +590,7 @@ function dropBalls(){
     if(total>balance){alert('Недостаточно АР! Нужно '+total+' АР.');return;}
     dropping=true; pendingResults=[]; _finishScheduled=false;
     document.getElementById('drop-btn').disabled=true;
-    document.getElementById('stop-btn').disabled=false;
+    
     // Страховка: если через 15 секунд раунд не завершился — принудительно завершаем
     clearTimeout(window._dropTimeout);
     window._dropTimeout = setTimeout(()=>{
@@ -662,7 +662,7 @@ function finishRound(){
     balls=[];
     clearTimeout(window._dropTimeout);
     document.getElementById('drop-btn').disabled=false;
-    document.getElementById('stop-btn').disabled=true;
+    
 }
 
 function loop(){
