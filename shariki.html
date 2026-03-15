@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Шарики — Бурмалда</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 100%);min-height:100vh;display:flex;justify-content:center;align-items:flex-start;font-family:'Nunito',sans-serif;color:#fff;}
+.casino-machine{width:100%;max-width:400px;padding:16px 16px 32px;position:relative;}
+
+/* Авторизация */
+#auth-section{text-align:center;}
+.casino-title{font-family:'Fredoka One',cursive;font-size:32px;letter-spacing:6px;color:#fff;text-align:center;margin-bottom:6px;text-shadow:0 0 20px rgba(150,100,255,0.6);}
+.title-lights{display:flex;justify-content:center;gap:8px;margin-bottom:16px;}
+.light-dot{width:8px;height:8px;border-radius:50%;background:#ffd700;box-shadow:0 0 8px #ffd700;animation:blink 1.2s ease-in-out infinite;}
+.light-dot:nth-child(2){animation-delay:.2s;} .light-dot:nth-child(3){animation-delay:.4s;} .light-dot:nth-child(4){animation-delay:.6s;} .light-dot:nth-child(5){animation-delay:.8s;} .light-dot:nth-child(6){animation-delay:1s;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
+#auth-section input{width:100%;display:block;margin:0 0 10px;padding:13px 18px;border-radius:14px;background:rgba(0,0,0,0.55);color:#fff;border:2px solid rgba(255,100,0,0.3);text-align:center;font-size:15px;font-family:'Nunito',sans-serif;font-weight:800;letter-spacing:2px;outline:none;}
+.btn-login{width:100%;padding:14px;border-radius:16px;background:linear-gradient(180deg,#ff4400,#cc2200);border:none;color:#fff;font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:3px;cursor:pointer;box-shadow:0 4px 0 #881100,0 6px 20px rgba(255,50,0,0.4);margin-bottom:4px;}
+.btn-login:active{transform:translateY(2px);box-shadow:0 2px 0 #881100;}
+
+/* VIP */
+.vip-access{display:block;text-align:center;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:3px;color:#111;cursor:pointer;padding:5px 20px;margin:0 auto 14px;width:fit-content;background:linear-gradient(135deg,#ffd700,#ff8c00);border-radius:20px;box-shadow:0 2px 0 #8b4500,0 4px 12px rgba(255,180,0,0.5);animation:vipPulse 2s ease-in-out infinite;font-weight:900;}
+@keyframes vipPulse{0%,100%{box-shadow:0 2px 0 #8b4500,0 4px 12px rgba(255,180,0,0.5)}50%{box-shadow:0 2px 0 #8b4500,0 4px 22px rgba(255,180,0,0.9)}}
+
+/* Info bar */
+.info-bar{display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.45);padding:10px 14px;border-radius:16px;border:1px solid rgba(255,180,0,0.2);margin-bottom:14px;}
+.player-name{font-size:12px;font-weight:800;color:rgba(255,220,100,0.65);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+.balance-val{font-family:'Fredoka One',cursive;font-size:22px;color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,0.7);}
+.settings-btn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,180,0,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:all .3s;}
+.settings-btn:hover{background:rgba(255,180,0,0.15);transform:rotate(45deg);}
+
+/* Canvas */
+.plinko-wrap{border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#06091a 0%,#0a1025 100%);border:2px solid rgba(255,180,0,0.2);box-shadow:0 0 30px rgba(100,100,255,0.08);margin-bottom:10px;}
+#plinko-canvas{display:block;width:100%;}
+
+/* Мультиплайеры */
+.multipliers{display:flex;gap:3px;margin-bottom:12px;}
+.mult-cell{flex:1;padding:7px 2px;border-radius:8px;text-align:center;font-family:'Fredoka One',cursive;font-size:11px;transition:transform .2s,box-shadow .2s,background .2s;}
+
+/* Управление */
+.ctrl-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+.ctrl-label{font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.4);width:60px;flex-shrink:0;}
+.ctrl-input{flex:1;background:rgba(0,0,0,0.5);border:2px solid rgba(255,100,0,0.25);border-radius:12px;color:#fff;font-family:'Fredoka One',cursive;font-size:16px;padding:9px 12px;text-align:center;outline:none;}
+.balls-btns{display:flex;gap:5px;flex:1;}
+.ball-btn{flex:1;padding:8px 4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.4);cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;transition:all .15s;}
+.ball-btn.active{background:rgba(153,68,255,0.3);border-color:rgba(153,68,255,0.7);color:#cc88ff;}
+.btn-drop{width:100%;padding:14px;border-radius:16px;background:linear-gradient(180deg,#9944ff,#6600cc);border:none;color:#fff;font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:3px;cursor:pointer;box-shadow:0 4px 0 #440088,0 6px 20px rgba(150,50,255,0.4);margin-bottom:14px;}
+.btn-drop:active{transform:translateY(2px);box-shadow:0 2px 0 #440088;}
+.btn-drop:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+/* Кнопки промо/квесты */
+.promo-btn{flex:1;padding:9px 8px;border-radius:12px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,100,0,0.25);color:rgba(255,200,100,0.7);font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.promo-btn:hover{background:rgba(255,100,0,0.1);}
+
+/* История */
+.history-label{font-size:11px;font-weight:800;letter-spacing:3px;color:rgba(255,180,0,0.4);text-align:center;margin:10px 0 6px;}
+.history-box{background:rgba(0,0,0,0.4);border-radius:12px;border:1px solid rgba(255,100,0,0.15);padding:8px 10px;max-height:100px;overflow-y:auto;scrollbar-width:thin;font-size:11px;color:rgba(255,255,255,0.55);}
+.history-box div{padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+
+/* Панели */
+#settings-panel,#admin-panel,#user-profile-panel,#quests-panel,#promo-panel{display:none;background:rgba(10,5,25,0.97);border:1px solid rgba(255,180,0,0.2);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
+.panel-title{font-family:'Fredoka One',cursive;font-size:16px;letter-spacing:2px;color:#ffd700;text-align:center;margin-bottom:12px;}
+.panel-title.red{color:#ff4444;}
+.music-list{max-height:180px;overflow-y:auto;scrollbar-width:thin;margin-bottom:10px;}
+.music-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.55);transition:background .15s;}
+.music-item:hover,.music-item.active{background:rgba(255,150,0,0.12);color:#ffd700;}
+.mute-toggle{width:100%;padding:8px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;margin-bottom:8px;}
+.vol-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.vol-slider{flex:1;accent-color:#ffd700;}
+.btn-panel-close{width:100%;padding:8px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;margin-top:6px;}
+.users-list-container{max-height:200px;overflow-y:auto;scrollbar-width:thin;margin-bottom:8px;}
+.user-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,180,0,0.1);margin-bottom:6px;cursor:pointer;transition:background .15s;}
+.user-row:hover{background:rgba(255,180,0,0.07);}
+.btn-back{width:100%;padding:8px;border-radius:10px;background:rgba(255,180,0,0.1);border:1px solid rgba(255,180,0,0.25);color:#ffd700;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;}
+.mod-btn-pos,.mod-btn-neg{flex:1;padding:9px;border-radius:10px;border:none;font-family:'Fredoka One',cursive;font-size:15px;cursor:pointer;}
+.mod-btn-pos{background:rgba(0,180,0,0.25);color:#66ff88;}
+.mod-btn-neg{background:rgba(200,0,0,0.25);color:#ff6666;}
+.prof-balance-text{font-family:'Fredoka One',cursive;font-size:22px;color:#ffd700;}
+.gold-divider{height:1px;background:linear-gradient(90deg,transparent,#ffd700,transparent);margin:8px 0 12px;}
+.promo-row{display:flex;gap:8px;}
+.promo-input{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,180,0,0.25);border-radius:10px;color:#fff;font-family:'Fredoka One',cursive;font-size:14px;padding:9px 12px;text-align:center;outline:none;}
+.promo-apply{padding:9px 14px;border-radius:10px;background:rgba(255,180,0,0.15);border:1px solid rgba(255,180,0,0.35);color:#ffd700;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;}
+.quest-item{padding:9px 10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);margin-bottom:7px;}
+.quest-bar{height:4px;border-radius:2px;background:rgba(255,255,255,0.1);margin-top:6px;}
+.quest-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#9944ff,#ff4488);}
+</style>
+</head>
+<body>
+<div class="casino-machine" onclick="event.stopPropagation()">
+
+<!-- АВТОРИЗАЦИЯ -->
+<div id="auth-section">
+  <a href="index.html" style="display:block;text-align:center;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,180,0,0.5);text-decoration:none;margin-bottom:8px;">← ГЛАВНАЯ</a>
+  <h1 class="casino-title">ШАРИКИ</h1>
+  <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
+  <input type="text" id="username" placeholder="НИК" autocomplete="username">
+  <input type="password" id="password" placeholder="ПАРОЛЬ" autocomplete="current-password">
+  <button class="btn-login" onclick="login()">ВОЙТИ</button>
+</div>
+
+<!-- ИГРА -->
+<div id="game-section" style="display:none;">
+  <a href="index.html" id="back-link" style="display:block;text-align:center;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,180,0,0.5);text-decoration:none;margin-bottom:8px;">← ГЛАВНАЯ</a>
+  <h1 class="casino-title">ШАРИКИ</h1>
+  <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
+
+  <div class="vip-access" id="vip-btn" onclick="toggleAdmin(event)">👑 VIP</div>
+
+  <div class="info-bar">
+    <div>
+      <div class="player-name" id="display-name">PLAYER</div>
+      <div class="balance-val"><span id="balance">0</span> АР</div>
+    </div>
+    <div class="settings-btn" onclick="toggleSettings(event)">⚙️</div>
+  </div>
+
+  <!-- Настройки -->
+  <div id="settings-panel" onclick="event.stopPropagation()">
+    <div class="panel-title">🎵 ПЛЕЙЛИСТ</div>
+    <div class="music-list" id="music-playlist"></div>
+    <button id="m-toggle" class="mute-toggle" onclick="toggleMute()">🎵 МУЗЫКА: ВКЛ</button>
+    <div class="vol-row"><span style="font-size:11px;color:rgba(255,255,255,0.4);">🔈</span><input type="range" class="vol-slider" id="music-vol" min="0" max="1" step="0.05" value="0.3" oninput="applyVolume()"><span style="font-size:11px;color:rgba(255,255,255,0.4);">🔊</span></div>
+    <button class="btn-panel-close" onclick="closePanels()">✕ ЗАКРЫТЬ</button>
+  </div>
+
+
+  <div id="lobby-admin-panel" style="display:none;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:18px;border-radius:22px;margin-bottom:12px;">
+          <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:12px;color:#ffd700;">👑 АДМИН-ПАНЕЛЬ</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+              <button onclick="adminTab('users')" id="tab-users" style="flex:1;padding:8px;border-radius:10px;background:rgba(255,180,0,0.2);color:#ffd700;border:1px solid rgba(255,180,0,0.4);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">ИГРОКИ</button>
+              <button onclick="adminTab('settings')" id="tab-settings" style="flex:1;padding:8px;border-radius:10px;background:transparent;color:rgba(255,180,0,0.5);border:1px solid rgba(255,180,0,0.2);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">НАСТРОЙКИ</button>
+          </div>
+          <div id="admin-tab-users">
+              <div style="max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:12px;border:1px solid rgba(255,180,0,0.15);padding:4px;margin-bottom:8px;scrollbar-width:thin;">
+                  <div id="lobby-admin-users"></div>
+              </div>
+          </div>
+          <div id="admin-tab-settings" style="display:none;">
+              <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:12px;margin-bottom:8px;">
+                  <div style="color:#ffd700;font-family:'Fredoka One',cursive;font-size:13px;margin-bottom:8px;">🎁 ЕЖЕДНЕВНАЯ НАГРАДА</div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                      <span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:Nunito,sans-serif;">Размер:</span>
+                      <input id="daily-amount-input" type="number" value="10" min="1" style="width:70px;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,180,0,0.3);color:#fff;font-family:Nunito,sans-serif;font-size:13px;">
+                      <span style="color:rgba(255,255,255,0.5);font-size:12px;">АР</span>
+                      <button onclick="saveDailyAmount()" style="padding:4px 10px;border-radius:8px;background:rgba(255,180,0,0.2);border:1px solid rgba(255,180,0,0.4);color:#ffd700;font-size:11px;cursor:pointer;font-family:Nunito,sans-serif;">✓</button>
+                  </div>
+              </div>
+          </div>
+          
+          <div id="lobby-admin-profile" style="display:none;">
+              <div id="lap-name" style="font-family:'Fredoka One',cursive;font-size:16px;color:#ff4444;text-align:center;margin-bottom:4px;"></div>
+              <div id="lap-rename-wrap" style="display:none;margin-bottom:6px;">
+                  <div style="display:flex;gap:6px;">
+                      <input id="lap-rename-input" type="text" maxlength="20" placeholder="Новый ник" style="flex:1;padding:6px 10px;border-radius:8px;background:rgba(0,0,0,0.5);color:#fff;border:1px solid rgba(255,100,0,0.4);font-family:'Fredoka One',cursive;font-size:13px;outline:none;">
+                      <button onclick="lapRenameConfirm()" style="padding:6px 12px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;">✓</button>
+                      <button onclick="lapRenameCancel()" style="padding:6px 10px;background:rgba(180,0,0,0.15);color:#ff6666;border:1px solid rgba(200,0,0,0.2);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;">✕</button>
+                  </div>
+              </div>
+              <button onclick="lapRenameOpen()" style="width:100%;padding:5px;margin-bottom:6px;background:transparent;color:rgba(255,180,0,0.5);border:1px solid rgba(255,180,0,0.2);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:1px;">✏️ ИЗМЕНИТЬ НИК</button>
+              <div style="height:1px;background:linear-gradient(90deg,transparent,#ffd700,transparent);margin-bottom:10px;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                  <span style="color:rgba(255,255,255,0.6);font-size:13px;font-family:Nunito,sans-serif;">Баланс:</span>
+                  <span id="lap-bal" style="color:#ffd700;font-family:'Fredoka One',cursive;font-size:16px;"></span>
+              </div>
+              <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+                  <button onclick="lapMod(1)" style="flex:1;padding:7px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">+1</button>
+                  <button onclick="lapMod(10)" style="flex:1;padding:7px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">+10</button>
+                  <button onclick="lapMod(-1)" style="flex:1;padding:7px;background:rgba(180,0,0,0.2);color:#ff6666;border:1px solid rgba(200,0,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">−1</button>
+                  <button onclick="lapMod(-10)" style="flex:1;padding:7px;background:rgba(180,0,0,0.2);color:#ff6666;border:1px solid rgba(200,0,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">−10</button>
+              </div>
+              <div style="display:flex;gap:6px;margin-bottom:8px;">
+                  <button onclick="lapToggleVerified()" id="lap-verified-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;">✓ ПРОВЕРЕН</button>
+                  <button onclick="lapTogglePinned()" id="lap-pinned-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;">📌 ЗАКРЕП</button>
+                  <button onclick="lapToggleAdmin()" id="lap-admin-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;">👑 АДМИН</button>
+              </div>
+              <div style="display:flex;gap:6px;margin-bottom:8px;">
+                  <button onclick="lapToggleDaily()" id="lap-daily-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;">🎁 НАГРАДА</button>
+              </div>
+              <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,180,0,0.6);margin-bottom:6px;letter-spacing:2px;">ВСЯ ИСТОРИЯ</div>
+              <div id="lap-history" style="max-height:120px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:10px;padding:8px;font-size:11px;color:rgba(255,255,255,0.6);font-family:Nunito,sans-serif;scrollbar-width:thin;margin-bottom:8px;"></div>
+              <div style="display:flex;gap:6px;">
+                  <button onclick="document.getElementById('lobby-admin-profile').style.display='none';document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';" style="flex:1;padding:8px;background:transparent;color:#ffd700;border:1px solid rgba(255,215,0,0.3);border-radius:10px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;">← НАЗАД</button>
+                  <button onclick="lapDelete()" style="flex:1;padding:8px;background:rgba(200,0,0,0.2);color:#ff4444;border:1px solid rgba(200,0,0,0.3);border-radius:10px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;">🗑 УДАЛИТЬ</button>
+              </div>
+              <a href="admin.html" style="display:block;width:100%;padding:8px;margin-top:6px;text-align:center;background:rgba(0,255,180,0.08);color:#00ffb3;border:1px solid rgba(0,255,180,0.25);border-radius:10px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;text-decoration:none;">⚙ ПОЛНАЯ АДМИН-ПАНЕЛЬ</a>
+          </div>
+          <button onclick="document.getElementById('lobby-admin-panel').style.display='none'" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
+      </div>
+
+
+  <!-- Квесты -->
+  <div id="quests-panel" onclick="event.stopPropagation()">
+    <div class="panel-title">🎯 КВЕСТЫ</div>
+    <div id="quests-list"></div>
+    <button class="btn-panel-close" onclick="closePanels()">✕ ЗАКРЫТЬ</button>
+  </div>
+
+  <!-- Промокод -->
+  <div id="promo-panel" onclick="event.stopPropagation()">
+    <div class="panel-title">🎁 ПРОМОКОД</div>
+    <div class="promo-row">
+      <input class="promo-input" id="promo-input" type="text" placeholder="ВВЕДИ КОД">
+      <button class="promo-apply" onclick="usePromo()">✓</button>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);text-align:center;margin-top:8px;min-height:16px;" id="promo-msg"></div>
+    <button class="btn-panel-close" onclick="closePanels()">✕ ЗАКРЫТЬ</button>
+  </div>
+
+  <!-- Канвас -->
+  <div class="plinko-wrap">
+    <canvas id="plinko-canvas"></canvas>
+  </div>
+  <div class="multipliers" id="mult-row"></div>
+
+  <!-- Управление -->
+  <div class="ctrl-row">
+    <div class="ctrl-label">СТАВКА</div>
+    <input class="ctrl-input" id="bet-input" type="number" min="1" value="3">
+  </div>
+  <div class="ctrl-row">
+    <div class="ctrl-label">ШАРИКИ</div>
+    <div class="balls-btns" id="balls-btns"></div>
+  </div>
+
+  <button class="btn-drop" id="drop-btn" onclick="dropBalls()">▼ БРОСИТЬ</button>
+
+  <div style="display:flex;gap:8px;margin-bottom:4px;">
+    <button class="promo-btn" onclick="togglePanel('promo-panel')">🎁 ПРОМОКОД</button>
+    <button class="promo-btn" onclick="togglePanel('quests-panel')" style="color:#cc88ff;border-color:rgba(150,0,255,0.35);">📋 КВЕСТЫ</button>
+  </div>
+
+  <div class="history-label">история</div>
+  <div id="history" class="history-box"></div>
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyCYptPoeocCbngAMfG_R-t32FOfIGJY13s",databaseURL:"https://dima256-default-rtdb.europe-west1.firebasedatabase.app",projectId:"dima256",appId:"1:208400853144:web:78eb608f5aacd57e8848ed"};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db=firebase.database(), auth=firebase.auth();
+let uid='',user='',selU='',balance=0;
+
+// Музыка
+const playlist=[
+    {name:"Бэм Бэм Бэм",file:"bam_bam_bam_1.mp3"},{name:"Nobody",file:"nobody.mp3"},
+    {name:"Баклажан",file:"baclachn.mp3"},{name:"Пау Пау Пау",file:"pay_pay_pay.mp3"},
+    {name:"Bad Piggies",file:"bad_piggies.mp3"},{name:"Ананасовый сироп",file:"ananasevi_sirop_1.mp3"},
+    {name:"Концерт Артура №1",file:"consert_artyra№1.mp3"},{name:"Концерт Артура №2",file:"consert_artyra№2.mp3"},
+    {name:"Концерт Артура №3",file:"consert_artyra№3.mp3"},{name:"баблгам №1",file:"bablgam_1.mp3"},
+    {name:"баблгам №2",file:"bablgam_2.mp3"},{name:"Angry Birds",file:"angry_birds.mp3"},
+    {name:"оркестр-БЭМ",file:"orcestr_BAM_1.mp3"},{name:"птички",file:"ptichki_1.mp3"}
+];
+let curTrack=parseInt(localStorage.getItem('musicTrack')||'0');
+let bgMusic=new Audio(playlist[curTrack].file);
+bgMusic.loop=true;
+let mOn=localStorage.getItem('musicOn')!=='0';
+
+function applyVolume(){bgMusic.volume=parseFloat(document.getElementById('music-vol').value);bgMusic.muted=!mOn;}
+function toggleMute(){
+    mOn=!mOn; localStorage.setItem('musicOn',mOn?'1':'0');
+    document.getElementById('m-toggle').textContent=mOn?'🎵 МУЗЫКА: ВКЛ':'🔇 МУЗЫКА: ВЫКЛ';
+    applyVolume();
+}
+function playTrack(i){
+    bgMusic.pause(); curTrack=i; localStorage.setItem('musicTrack',i);
+    bgMusic=new Audio(playlist[i].file); bgMusic.loop=true;
+    bgMusic.volume=parseFloat(document.getElementById('music-vol').value);
+    if(mOn) bgMusic.play().catch(()=>{});
+    renderPlaylist();
+}
+function renderPlaylist(){
+    document.getElementById('music-playlist').innerHTML=playlist.map((t,i)=>
+        `<div class="music-item${i===curTrack?' active':''}" onclick="playTrack(${i})">${i===curTrack?'▶ ':''}${t.name}</div>`
+    ).join('');
+}
+
+function toEmail(u){return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app';}
+
+function login(){
+    const u=document.getElementById('username').value.trim();
+    const p=document.getElementById('password').value;
+    if(!u||!p) return;
+    const fp=p+'_Brm9!';
+    const isAuthErr=c=>['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c);
+    db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
+        if(snap.exists()){
+            auth.signInWithEmailAndPassword(toEmail(u),fp)
+                .then(c=>{uid=c.user.uid;user=u;go();})
+                .catch(e1=>{
+                    if(!isAuthErr(e1.code)) return;
+                    auth.signInWithEmailAndPassword(toEmail(u),p)
+                        .then(c=>{c.user.updatePassword(fp).catch(()=>{});uid=c.user.uid;user=u;go();})
+                        .catch(()=>alert('Неверный пароль!'));
+                });
+        } else {
+            auth.createUserWithEmailAndPassword(toEmail(u),fp)
+                .then(c=>{
+                    uid=c.user.uid;user=u;
+                    db.ref('usernames/'+u.toLowerCase()).set(uid);
+                    db.ref('players/'+uid).set({username:String(u),balance:5,history:['Регистрация'],usedPromos:{}});
+                    go();
+                })
+                .catch(e=>{
+                    if(e.code==='auth/email-already-in-use'){
+                        auth.signInWithEmailAndPassword(toEmail(u),fp)
+                            .then(c=>{uid=c.user.uid;user=u;go();})
+                            .catch(()=>alert('Ошибка входа'));
+                    }
+                });
+        }
+    });
+}
+
+auth.onAuthStateChanged(fu=>{
+    if(fu){uid=fu.uid;
+        db.ref('players/'+uid).once('value').then(s=>{
+            if(s.exists()&&s.val().username){user=String(s.val().username);go();}
+            else{auth.signOut();uid='';}
+        });
+    }
+});
+
+function go(){
+    document.getElementById('auth-section').style.display='none';
+    document.getElementById('game-section').style.display='block';
+    document.getElementById('display-name').textContent=user.toUpperCase();
+    db.ref('players/'+uid).on('value',s=>{
+        const d=s.val()||{};
+        balance=d.balance||0;
+        document.getElementById('balance').textContent=balance;
+        const hist=d.history||[];
+        document.getElementById('history').innerHTML=[...hist].reverse().slice(0,20).map(h=>`<div>${h}</div>`).join('')||'<div style="color:rgba(255,255,255,0.3)">Пусто</div>';
+    });
+    db.ref('players/'+uid).update({lastSeen:Date.now(),currentPage:'🔵 Шарики'});
+    localStorage.setItem('lobbyUser', user);
+    localStorage.setItem('lobbyUid', uid);
+    if(mOn) bgMusic.play().catch(()=>{});
+    renderPlaylist();
+    initGame();
+}
+
+function closePanels(){
+    ['settings-panel','admin-panel','user-profile-panel','quests-panel','promo-panel'].forEach(id=>{
+        document.getElementById(id).style.display='none';
+    });
+}
+function togglePanel(id){
+    const el=document.getElementById(id);
+    const was=el.style.display==='block';
+    closePanels();
+    if(!was) el.style.display='block';
+}
+function toggleSettings(e){e.stopPropagation();togglePanel('settings-panel');}
+document.addEventListener('click',closePanels);
+
+function toggleAdmin(e){
+    e.stopPropagation();
+    db.ref('players/'+uid+'/admin').once('value').then(s=>{
+        if(s.val()){
+            closePanels();
+            document.getElementById('admin-panel').style.display='block';
+            loadUsers();
+        } else {
+            const pwd=prompt('Пароль:');
+            db.ref('settings/adminPassword').once('value').then(ps=>{
+                if(pwd&&pwd===ps.val()){
+                    db.ref('players/'+uid+'/verified').set(true);
+                    alert('✅ VIP активирован!');
+                } else if(pwd) alert('Неверный пароль');
+            });
+        }
+    });
+}
+
+
+let selUid='';
+
+function usePromo(){
+    const code=document.getElementById('promo-input').value.trim().toLowerCase();
+    const msg=document.getElementById('promo-msg');
+    if(!code){msg.textContent='Введи код';return;}
+    const promos={mell:3,мелл:5,меллстрой:5};
+    const amt=promos[code];
+    if(!amt){msg.textContent='Неверный промокод';return;}
+    db.ref('players/'+uid+'/usedPromos/'+code).once('value').then(s=>{
+        if(s.val()){msg.textContent='Уже использован';return;}
+        db.ref('players/'+uid+'/balance').once('value').then(bs=>{
+            db.ref('players/'+uid).update({balance:(bs.val()||0)+amt,['usedPromos/'+code]:true});
+            db.ref('players/'+uid+'/history').once('value').then(hs=>{
+                const h=hs.val()||[];h.push('🎁 Промокод +'+amt+' АР');
+                db.ref('players/'+uid+'/history').set(h.slice(-50));
+            });
+            msg.textContent='✅ +'+amt+' АР получено!';
+            document.getElementById('promo-input').value='';
+        });
+    });
+}
+
+function loadQuests(){
+    db.ref('players/'+uid).once('value').then(s=>{
+        const d=s.val()||{};
+        const list=document.getElementById('quests-list');
+        const quests=[
+            {name:'Сыграть 10 партий',cur:Math.min(d.questDayGames||0,10),max:10,reward:5},
+            {name:'Заработать 20 АР',cur:Math.min(d.questDayEarned||0,20),max:20,reward:3},
+        ];
+        list.innerHTML=quests.map(q=>`
+            <div class="quest-item">
+                <div style="display:flex;justify-content:space-between;font-size:12px;">
+                    <span>${q.name}</span>
+                    <span style="color:#ffd700;">+${q.reward} АР</span>
+                </div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;">${q.cur}/${q.max}</div>
+                <div class="quest-bar"><div class="quest-fill" style="width:${Math.min(100,q.cur/q.max*100)}%"></div></div>
+            </div>`).join('');
+    });
+}
+</script>
+
+<script>
+// ===== ИГРА ШАРИКИ =====
+const ROWS=7;
+const MULTIPLIERS=[0,0.5,1,2,3,2,1,0.5,0];
+const MULT_COLORS=['#ff3355','#ff6633','#ffaa00','#aacc00','#00e676','#aacc00','#ffaa00','#ff6633','#ff3355'];
+
+let canvas,ctx,W,H,PIN_R,BALL_R;
+let pins=[],slotBounds=[];
+let balls=[],dropping=false;
+let pendingResults=[],ballCount=1,betVal=3;
+
+function initGame(){
+    canvas=document.getElementById('plinko-canvas');
+    ctx=canvas.getContext('2d');
+    resizeCanvas();
+    buildBallBtns();
+    renderMultRow();
+    window.addEventListener('resize',()=>{resizeCanvas();renderMultRow();});
+    requestAnimationFrame(loop);
+}
+
+function resizeCanvas(){
+    const wrap=canvas.parentElement;
+    W=wrap.clientWidth; H=Math.round(W*1.15);
+    canvas.width=W; canvas.height=H; canvas.style.height=H+'px';
+    calcLayout();
+}
+
+function calcLayout(){
+    PIN_R=Math.max(5,W*0.022);
+    BALL_R=PIN_R*1.7;
+    const padX=W*0.06;
+    const padTop=H*0.04;
+    const padBot=H*0.18;
+    const usableH=H-padTop-padBot;
+    const usableW=W-padX*2;
+
+    pins=[];
+    // Классическая треугольная сетка плинко
+    // Ряд row имеет (row+2) пинов, равномерно распределённых
+    const maxCols=ROWS+1;
+    const colStep=usableW/(maxCols-1);
+    const rowStep=usableH/(ROWS-1);
+
+    for(let row=0;row<ROWS;row++){
+        const count=row+2; // 2,3,4...ROWS+1
+        const rowW=colStep*(count-1);
+        const startX=(W-rowW)/2;
+        const y=padTop+row*rowStep;
+        for(let col=0;col<count;col++){
+            pins.push({x:startX+col*colStep, y});
+        }
+    }
+
+    // Слоты снизу
+    const slotH=H*0.12;
+    const slotY=H-padBot*0.1-slotH;
+    const slotW=(W-padX*2)/MULTIPLIERS.length;
+    slotBounds=MULTIPLIERS.map((m,i)=>({
+        x:padX+i*slotW, y:slotY,
+        w:slotW, h:slotH,
+        mult:m, color:MULT_COLORS[i], idx:i
+    }));
+}
+
+function buildBallBtns(){
+    const wrap=document.getElementById('balls-btns');
+    wrap.innerHTML='';
+    [1,2,3,5,10].forEach(n=>{
+        const b=document.createElement('button');
+        b.className='ball-btn'+(n===1?' active':'');
+        b.textContent=n;
+        b.onclick=()=>{ballCount=n;wrap.querySelectorAll('.ball-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');};
+        wrap.appendChild(b);
+    });
+}
+
+function renderMultRow(){
+    const row=document.getElementById('mult-row');
+    row.innerHTML='';
+    MULTIPLIERS.forEach((m,i)=>{
+        const cell=document.createElement('div');
+        cell.className='mult-cell'; cell.id='mult-'+i;
+        cell.textContent=m+'x';
+        cell.style.cssText=`background:${MULT_COLORS[i]}22;border:1px solid ${MULT_COLORS[i]}66;color:${MULT_COLORS[i]};`;
+        row.appendChild(cell);
+    });
+}
+
+function flashMult(idx){
+    const el=document.getElementById('mult-'+idx);
+    if(!el) return;
+    el.style.transform='scale(1.2)'; el.style.boxShadow=`0 0 14px ${MULT_COLORS[idx]}`; el.style.background=MULT_COLORS[idx]+'55';
+    setTimeout(()=>{el.style.transform='';el.style.boxShadow='';el.style.background=MULT_COLORS[idx]+'22';},350);
+}
+
+// Веса слотов: 0.1x 0.5x 1x 2x 3x 2x 1x 0.5x 0.1x
+const SLOT_WEIGHTS=[18,28,30,15,4,15,30,28,18];
+// Проигрышные слоты (множитель < 1): индексы 0(0.1x), 1(0.5x), 7(0.5x), 8(0.1x)
+const LOSE_SLOTS=[0,1,7,8];
+// Выигрышные слоты (множитель > 1): 3(2x), 4(3x), 5(2x)
+const WIN_SLOTS=[3,4,5];
+// Нейтральные: 2(1x), 6(1x)
+const NEUTRAL_SLOTS=[2,6];
+
+function pickSlot(){
+    const bet = betVal * ballCount;
+    const ratio = balance > 0 ? bet / balance : 0;
+
+    // Шанс принудительного проигрыша в зависимости от доли ставки
+    let forceLoseChance = 0;
+    if(ratio >= 0.9) forceLoseChance = 0.90;
+    else if(ratio >= 0.8) forceLoseChance = 0.70;
+    else if(ratio >= 0.6) forceLoseChance = 0.45;
+    else if(ratio >= 0.4) forceLoseChance = 0.25;
+
+    if(forceLoseChance > 0 && Math.random() < forceLoseChance){
+        // Выбираем случайный проигрышный слот
+        return LOSE_SLOTS[Math.floor(Math.random()*LOSE_SLOTS.length)];
+    }
+
+    // Обычное взвешенное распределение
+    const total=SLOT_WEIGHTS.reduce((a,b)=>a+b,0);
+    let r=Math.random()*total;
+    for(let i=0;i<SLOT_WEIGHTS.length;i++){r-=SLOT_WEIGHTS[i];if(r<=0)return i;}
+    return Math.floor(SLOT_WEIGHTS.length/2);
+}
+
+function dropBalls(){
+    if(dropping)return;
+    betVal=Math.max(1,parseInt(document.getElementById('bet-input').value)||1);
+    document.getElementById('bet-input').value=betVal;
+    const total=betVal*ballCount;
+    if(total>balance){alert('Недостаточно АР! Нужно '+total+' АР.');return;}
+    dropping=true; pendingResults=[]; _finishScheduled=false;
+    document.getElementById('drop-btn').disabled=true;
+    document.getElementById('stop-btn').disabled=false;
+    // Страховка: если через 15 секунд раунд не завершился — принудительно завершаем
+    clearTimeout(window._dropTimeout);
+    window._dropTimeout = setTimeout(()=>{
+        if(dropping){ console.warn('timeout: force finish'); forceFinish(); }
+    }, 15000);
+    db.ref('players/'+uid+'/balance').once('value').then(s=>{
+        db.ref('players/'+uid+'/balance').set(Math.max(0,(s.val()||0)-total));
+    });
+    for(let i=0;i<ballCount;i++){
+        setTimeout(()=>{
+            const slotIdx=pickSlot();
+            balls.push({
+                x:W/2+(Math.random()-0.5)*PIN_R*2,
+                y:BALL_R,
+                vx:(Math.random()-0.5)*1.5,
+                vy:1,
+                color:`hsl(${Math.floor(Math.random()*360)},85%,65%)`,
+                trail:[],done:false,
+                targetSlot:slotIdx
+            });
+        },i*220);
+    }
+}
+
+let _finishScheduled=false;
+function onBallDone(slot){
+    if(!dropping) return;
+    pendingResults.push(slot.idx);
+    flashMult(slot.idx);
+    if(pendingResults.length>=ballCount && !_finishScheduled){
+        _finishScheduled=true;
+        setTimeout(()=>{ _finishScheduled=false; finishRound(); },400);
+    }
+}
+
+function forceFinish(){
+    // Добиваем недостающие результаты нейтральным слотом
+    while(pendingResults.length < ballCount){
+        pendingResults.push(Math.floor(slotBounds.length/2));
+    }
+    balls=[];
+    finishRound();
+}
+
+function finishRound(){
+    let totalWin=0;
+    pendingResults.forEach(idx=>{totalWin+=betVal*MULTIPLIERS[idx];});
+    totalWin=Math.round(totalWin); // округляем до целых
+    const net=Math.round(totalWin-betVal*ballCount);
+    db.ref('players/'+uid+'/balance').once('value').then(s=>{
+        const newBal=Math.round((s.val()||0)+totalWin);
+        db.ref('players/'+uid+'/balance').set(newBal);
+        db.ref('players/'+uid+'/history').once('value').then(hs=>{
+            const hist=hs.val()||[];
+            hist.push('🔵 Шарики '+(net>=0?'+':'')+net+' АР (ставка '+betVal+'×'+ballCount+')');
+            db.ref('players/'+uid+'/history').set(hist.slice(-50));
+        });
+        // Квест
+        db.ref('players/'+uid+'/questDayGames').once('value').then(qs=>{
+            db.ref('players/'+uid+'/questDayGames').set((qs.val()||0)+1);
+        });
+        if(net>0){
+            db.ref('players/'+uid+'/questDayEarned').once('value').then(qs=>{
+                db.ref('players/'+uid+'/questDayEarned').set((qs.val()||0)+net);
+            });
+        }
+    });
+    dropping=false;
+    balls=[];
+    clearTimeout(window._dropTimeout);
+    document.getElementById('drop-btn').disabled=false;
+    document.getElementById('stop-btn').disabled=true;
+}
+
+function loop(){
+    requestAnimationFrame(loop);
+    drawFrame();
+    updatePhysics();
+}
+
+function drawFrame(){
+    ctx.clearRect(0,0,W,H);
+    // Фон
+    const bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#060817'); bg.addColorStop(1,'#0b1020');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+    // Пины
+    pins.forEach(p=>{
+        const g=ctx.createRadialGradient(p.x-PIN_R*0.3,p.y-PIN_R*0.35,0,p.x,p.y,PIN_R);
+        g.addColorStop(0,'#ffe97a'); g.addColorStop(0.6,'#e8a000'); g.addColorStop(1,'#7a4800');
+        ctx.beginPath(); ctx.arc(p.x,p.y,PIN_R,0,Math.PI*2);
+        ctx.fillStyle=g; ctx.fill();
+        ctx.strokeStyle='rgba(255,220,80,0.15)'; ctx.lineWidth=0.5; ctx.stroke();
+    });
+
+    // Слоты
+    slotBounds.forEach(s=>{
+        const g=ctx.createLinearGradient(s.x,s.y,s.x,s.y+s.h);
+        g.addColorStop(0,s.color+'44'); g.addColorStop(1,s.color+'18');
+        ctx.fillStyle=g; ctx.strokeStyle=s.color+'99'; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.roundRect(s.x+1,s.y,s.w-2,s.h,[0,0,6,6]);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle=s.color;
+        ctx.font=`bold ${Math.max(9,W*0.027)}px 'Fredoka One',cursive`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(s.mult+'x',s.x+s.w/2,s.y+s.h/2);
+    });
+
+    // Трейлы + шарики
+    balls.forEach(b=>{
+        if(b.done) return;
+        // Трейл
+        b.trail.forEach((pt,i)=>{
+            const a=(i/b.trail.length)*0.2;
+            const r=BALL_R*(i/b.trail.length)*0.5;
+            ctx.beginPath(); ctx.arc(pt.x,pt.y,r,0,Math.PI*2);
+            ctx.fillStyle=b.color.replace('hsl','hsla').replace(')',`,${a})`);
+            ctx.fill();
+        });
+        // Шарик
+        ctx.shadowColor=b.color; ctx.shadowBlur=10;
+        const g=ctx.createRadialGradient(b.x-BALL_R*0.3,b.y-BALL_R*0.35,0,b.x,b.y,BALL_R);
+        g.addColorStop(0,'#ffffff'); g.addColorStop(0.3,b.color); g.addColorStop(1,'rgba(0,0,0,0.4)');
+        ctx.beginPath(); ctx.arc(b.x,b.y,BALL_R,0,Math.PI*2);
+        ctx.fillStyle=g; ctx.fill();
+        ctx.shadowBlur=0;
+        ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=0.7; ctx.stroke();
+    });
+}
+
+function updatePhysics(){
+    balls.forEach(b=>{
+        if(b.done)return;
+        b.trail.push({x:b.x,y:b.y});
+        if(b.trail.length>7) b.trail.shift();
+
+        // Гравитация
+        b.vy=Math.min(b.vy+0.22,9);
+
+        // Незаметное притяжение к целевому слоту (только горизонталь, очень слабое)
+        if(b.targetSlot!==undefined && slotBounds.length){
+            const targetX=slotBounds[b.targetSlot].x+slotBounds[b.targetSlot].w/2;
+            const dx=targetX-b.x;
+            // Сила растёт по мере падения (внизу сильнее, вверху почти нет)
+            const progress=Math.max(0,b.y/H);
+            b.vx+=dx*0.004*progress;
+        }
+
+        // Ограничиваем горизонтальную скорость
+        b.vx=Math.max(-5,Math.min(5,b.vx));
+
+        b.x+=b.vx; b.y+=b.vy;
+
+        // Отскоки от пинов — нормальная физика
+        pins.forEach(p=>{
+            const dx=b.x-p.x,dy=b.y-p.y;
+            const dist=Math.sqrt(dx*dx+dy*dy);
+            const minD=PIN_R+BALL_R;
+            if(dist<minD&&dist>0.1){
+                const nx=dx/dist,ny=dy/dist;
+                b.x=p.x+nx*minD*1.01; b.y=p.y+ny*minD*1.01;
+                const dot=b.vx*nx+b.vy*ny;
+                // Отражение + небольшая случайность
+                b.vx=(b.vx-1.4*dot*nx)*0.6+(Math.random()-0.5)*1.2;
+                b.vy=Math.abs(b.vy-1.4*dot*ny)*0.55+0.5;
+            }
+        });
+
+        // Стенки
+        if(b.x<BALL_R){b.x=BALL_R;b.vx=Math.abs(b.vx)*0.5;}
+        if(b.x>W-BALL_R){b.x=W-BALL_R;b.vx=-Math.abs(b.vx)*0.5;}
+
+        // Попал в слот
+        for(let s of slotBounds){
+            if(b.x>=s.x&&b.x<=s.x+s.w&&b.y>=s.y){
+                b.done=true; onBallDone(s); break;
+            }
+        }
+        if(b.y>H+20){
+            b.done=true;
+            onBallDone(slotBounds[b.targetSlot!==undefined?b.targetSlot:Math.floor(slotBounds.length/2)]);
+        }
+    });
+    balls=balls.filter(b=>!b.done);
+}
+
+    // ===== ЛОББИ-АДМИНКА =====
+    function loadLobbyAdminUsers(){
+        db.ref('players').once('value').then(snap=>{
+            const all=[];
+            snap.forEach(ch=>{ all.push({key:ch.key,...ch.val()}); });
+            all.sort((a,b)=>{
+                if(b.pinned!==a.pinned) return (b.pinned?1:0)-(a.pinned?1:0);
+                if(b.verified!==a.verified) return (b.verified?1:0)-(a.verified?1:0);
+                return String(a.username||a.key).localeCompare(String(b.username||b.key));
+            });
+            const el=document.getElementById('lobby-admin-users');
+            el.innerHTML=all.map(u=>`
+                <div onclick="openLobbyProfile('${u.key}')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-radius:8px;" onmouseover="this.style.background='rgba(255,180,0,0.08)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:14px;">${u.pinned?'📌':u.admin?'👑':u.verified?'✅':'👤'}</span>
+                    <span style="flex:1;font-family:'Fredoka One',cursive;font-size:14px;color:${u.admin?'#ffd700':u.verified?'#66ff88':'rgba(255,255,255,0.8)'}">${String(u.username||u.key)}</span>
+                    <span style="color:rgba(255,180,0,0.7);font-size:12px;font-family:Nunito,sans-serif;">${u.balance||0} АР</span>
+                    <span onclick="event.stopPropagation();lapDeleteUser('${u.key}')" style="color:rgba(255,80,80,0.6);cursor:pointer;font-size:16px;padding:0 4px;">✖</span>
+                </div>`).join('');
+        });
+    }
+
+    function openLobbyProfile(uid){
+        lapUser=uid;
+        db.ref('players/'+uid).once('value').then(s=>{
+            const d=s.val()||{};
+            document.getElementById('lap-name').textContent=(d.username||uid).toUpperCase();
+            document.getElementById('lap-bal').textContent=(d.balance||0)+' АР';
+            document.getElementById('lap-history').innerHTML=[...(d.history||[])].reverse().map(h=>`<div style="padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);">${h}</div>`).join('');
+            const vb=document.getElementById('lap-verified-btn');
+            vb.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.verified?'rgba(0,180,0,0.3)':'rgba(255,255,255,0.05)'};color:${d.verified?'#66ff88':'rgba(255,255,255,0.5)'};border:${d.verified?'1px solid rgba(0,200,0,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
+            const pb=document.getElementById('lap-pinned-btn');
+            pb.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.pinned?'rgba(255,180,0,0.3)':'rgba(255,255,255,0.05)'};color:${d.pinned?'#ffd700':'rgba(255,255,255,0.5)'};border:${d.pinned?'1px solid rgba(255,180,0,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
+            const ab=document.getElementById('lap-admin-btn');
+            ab.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.admin?'rgba(255,150,0,0.3)':'rgba(255,255,255,0.05)'};color:${d.admin?'#ffd700':'rgba(255,255,255,0.5)'};border:${d.admin?'1px solid rgba(255,180,0,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
+            const db2=document.getElementById('lap-daily-btn');
+            db2.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.dailyEnabled!==false?'rgba(0,200,100,0.3)':'rgba(255,255,255,0.05)'};color:${d.dailyEnabled!==false?'#00e676':'rgba(255,255,255,0.5)'};border:${d.dailyEnabled!==false?'1px solid rgba(0,200,100,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
+            document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='none';
+            document.getElementById('lobby-admin-profile').style.display='block';
+        });
+    }
+
+    function lapMod(n){
+        db.ref('players/'+lapUser+'/balance').once('value').then(s=>{
+            const newBal=Math.max(0,(s.val()||0)+n);
+            db.ref('players/'+lapUser+'/balance').set(newBal);
+            document.getElementById('lap-bal').textContent=newBal+' АР';
+        });
+    }
+
+    function lapToggle(field,btn,onStyle){
+        db.ref('players/'+lapUser+'/'+field).once('value').then(s=>{
+            const newVal=!s.val();
+            db.ref('players/'+lapUser+'/'+field).set(newVal);
+            const el=document.getElementById(btn);
+            el.style.background=newVal?onStyle.bg:'rgba(255,255,255,0.05)';
+            el.style.color=newVal?onStyle.color:'rgba(255,255,255,0.5)';
+            el.style.border=newVal?onStyle.border:'1px solid rgba(255,255,255,0.1)';
+            if(lapUser===currentUid) showUserBlock();
+        });
+    }
+
+    function lapToggleVerified(){ lapToggle('verified','lap-verified-btn',{bg:'rgba(0,180,0,0.3)',color:'#66ff88',border:'1px solid rgba(0,200,0,0.4)'}); }
+
+    function lapTogglePinned(){ lapToggle('pinned','lap-pinned-btn',{bg:'rgba(255,180,0,0.3)',color:'#ffd700',border:'1px solid rgba(255,180,0,0.4)'}); }
+
+    function lapToggleAdmin(){ lapToggle('admin','lap-admin-btn',{bg:'rgba(255,150,0,0.3)',color:'#ffd700',border:'1px solid rgba(255,180,0,0.4)'}); }
+
+    function lapToggleDaily(){
+        db.ref('players/'+lapUser+'/dailyEnabled').once('value').then(s=>{
+            const newVal=s.val()===false?true:false;
+            db.ref('players/'+lapUser+'/dailyEnabled').set(newVal);
+            const el=document.getElementById('lap-daily-btn');
+            el.style.background=newVal?'rgba(0,200,100,0.3)':'rgba(255,255,255,0.05)';
+            el.style.color=newVal?'#00e676':'rgba(255,255,255,0.5)';
+            el.style.border=newVal?'1px solid rgba(0,200,100,0.4)':'1px solid rgba(255,255,255,0.1)';
+        });
+    }
+
+    function lapRenameOpen(){
+        document.getElementById('lap-rename-wrap').style.display='block';
+        const cur = document.getElementById('lap-name').textContent.toLowerCase().replace(/[^a-zа-я0-9]/gi,'');
+        document.getElementById('lap-rename-input').value = cur;
+        document.getElementById('lap-rename-input').focus();
+    }
+
+    function lapRenameCancel(){
+        document.getElementById('lap-rename-wrap').style.display='none';
+        document.getElementById('lap-rename-input').value='';
+    }
+
+    function lapRenameConfirm(){
+        const newNick = document.getElementById('lap-rename-input').value.trim();
+        if(!newNick || newNick.length < 2 || newNick.length > 20){ alert('Ник: 2–20 символов'); return; }
+        // Проверяем что новый ник не занят
+        db.ref('usernames/'+newNick.toLowerCase()).once('value').then(s=>{
+            if(s.exists() && s.val() !== lapUser){ alert('Ник уже занят!'); return; }
+            // Получаем старый ник
+            db.ref('players/'+lapUser+'/username').once('value').then(os=>{
+                const oldNick = os.val();
+                // Удаляем старый ник из usernames
+                if(oldNick) db.ref('usernames/'+String(oldNick).toLowerCase()).remove();
+                // Пишем новый
+                db.ref('usernames/'+newNick.toLowerCase()).set(lapUser);
+                db.ref('players/'+lapUser+'/username').set(newNick);
+                // Обновляем UI
+                document.getElementById('lap-name').textContent = newNick.toUpperCase();
+                lapRenameCancel();
+                loadLobbyAdminUsers();
+            });
+        });
+    }
+
+    function lapDelete(){
+        if(confirm('Удалить '+lapUser+'?')){
+            db.ref('players/'+lapUser).remove();
+            document.getElementById('lobby-admin-profile').style.display='none';
+            document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';
+            loadLobbyAdminUsers();
+        }
+    }
+
+    function lapDeleteUser(uid){
+        if(confirm('Удалить игрока?')){ db.ref('players/'+uid).remove().then(loadLobbyAdminUsers); }
+    }
+
+    function adminTab(tab){
+        document.getElementById('admin-tab-users').style.display=tab==='users'?'block':'none';
+        document.getElementById('admin-tab-settings').style.display=tab==='settings'?'block':'none';
+        document.getElementById('tab-users').style.background=tab==='users'?'rgba(255,180,0,0.2)':'transparent';
+        document.getElementById('tab-settings').style.background=tab==='settings'?'rgba(255,180,0,0.2)':'transparent';
+        document.getElementById('tab-users').style.color=tab==='users'?'#ffd700':'rgba(255,180,0,0.5)';
+        document.getElementById('tab-settings').style.color=tab==='settings'?'#ffd700':'rgba(255,180,0,0.5)';
+    }
+
+    function saveDailyAmount(){
+        const amt=parseInt(document.getElementById('daily-amount-input').value)||10;
+        db.ref('settings/dailyAmount').set(amt);
+        alert('Сохранено: '+amt+' АР');
+    }
+
+
+</script>
+</body>
+</html>
