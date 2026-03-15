@@ -437,18 +437,24 @@ let pendingResults=[],ballCount=1,betVal=3;
 function initGame(){
     canvas=document.getElementById('plinko-canvas');
     ctx=canvas.getContext('2d');
-    resizeCanvas();
     buildBallBtns();
     renderMultRow();
     window.addEventListener('resize',()=>{resizeCanvas();renderMultRow();});
-    requestAnimationFrame(loop);
+    // Ждём пока браузер отрисует layout (особенно важно на мобильных)
+    requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+            resizeCanvas();
+            requestAnimationFrame(loop);
+        });
+    });
 }
 
 function resizeCanvas(){
     const wrap=canvas.parentElement;
-    W=wrap.clientWidth; H=Math.round(W*1.15);
+    W=wrap.clientWidth||wrap.offsetWidth||300;
+    H=Math.round(W*1.15);
     canvas.width=W; canvas.height=H; canvas.style.height=H+'px';
-    calcLayout();
+    if(W>0) calcLayout();
 }
 
 function calcLayout(){
@@ -553,6 +559,7 @@ function pickSlot(){
 
 function dropBalls(){
     if(dropping)return;
+    if(!W||!slotBounds.length){ resizeCanvas(); if(!W) return; }
     betVal=Math.max(1,parseInt(document.getElementById('bet-input').value)||1);
     document.getElementById('bet-input').value=betVal;
     const total=betVal*ballCount;
