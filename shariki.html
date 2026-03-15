@@ -52,8 +52,8 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 .btn-drop:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
 
 /* Кнопки промо/квесты */
-.promo-btn{flex:1;padding:9px 8px;border-radius:12px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,100,0,0.25);color:rgba(255,200,100,0.7);font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
-.promo-btn:hover{background:rgba(255,100,0,0.1);}
+.promo-btn { width:100%; padding:11px; font-family:'Fredoka One',cursive; font-size:14px; letter-spacing:2px; color:#ffd700; border:2px solid rgba(255,215,0,0.35); border-radius:14px; cursor:pointer; text-transform:uppercase; margin-bottom:10px; background:rgba(255,180,0,0.07); transition:all 0.25s; }
+.promo-btn:hover { background:rgba(255,180,0,0.15); border-color:#ffd700; }
 
 /* История */
 .history-label{font-size:11px;font-weight:800;letter-spacing:3px;color:rgba(255,180,0,0.4);text-align:center;margin:10px 0 6px;}
@@ -94,7 +94,7 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 <!-- АВТОРИЗАЦИЯ -->
 <div id="auth-section">
   <a href="index.html" style="display:block;text-align:center;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,180,0,0.5);text-decoration:none;margin-bottom:8px;">← ГЛАВНАЯ</a>
-  <h1 class="casino-title">🔵 ШАРИКИ</h1>
+  <h1 class="casino-title">ШАРИКИ</h1>
   <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
   <input type="text" id="username" placeholder="НИК" autocomplete="username">
   <input type="password" id="password" placeholder="ПАРОЛЬ" autocomplete="current-password">
@@ -104,7 +104,7 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 <!-- ИГРА -->
 <div id="game-section" style="display:none;">
   <a href="index.html" id="back-link" style="display:block;text-align:center;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,180,0,0.5);text-decoration:none;margin-bottom:8px;">← ГЛАВНАЯ</a>
-  <h1 class="casino-title">🔵 ШАРИКИ</h1>
+  <h1 class="casino-title">ШАРИКИ</h1>
   <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
 
   <div class="vip-access" id="vip-btn" onclick="toggleAdmin(event)">👑 VIP</div>
@@ -253,10 +253,10 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 
   <button class="btn-drop" id="drop-btn" onclick="dropBalls()">▼ БРОСИТЬ</button>
 
-  <div style="display:flex;gap:8px;margin-bottom:4px;">
-    <button class="promo-btn" onclick="togglePanel('promo-panel')">🎁 ПРОМОКОД</button>
-    <button class="promo-btn" onclick="togglePanel('quests-panel')" style="color:#cc88ff;border-color:rgba(150,0,255,0.35);">📋 КВЕСТЫ</button>
-  </div>
+        <div style="display:flex;gap:8px;">
+            <button class="promo-btn" onclick="promptPromo()" style="flex:1;">🎁 ПРОМОКОД</button>
+            <button class="promo-btn" onclick="openGameQuests()" style="flex:1;color:#cc88ff;border-color:rgba(150,0,255,0.35);">📋 КВЕСТЫ</button>
+        </div>
 
   <div class="history-label">история</div>
   <div id="history" class="history-box"></div>
@@ -287,7 +287,6 @@ let curTrack=parseInt(localStorage.getItem('musicTrack')||'0');
 let bgMusic=new Audio(playlist[curTrack].file);
 bgMusic.loop=true;
 let mOn=localStorage.getItem('musicOn')!=='0';
-bgMusic.volume=parseFloat(localStorage.getItem('musicVol')||'0.3');
 const _savedVol=parseFloat(localStorage.getItem('musicVol')||'0.3');
 
 function applyVolume(){const v=parseFloat(document.getElementById('music-vol').value);bgMusic.volume=v;bgMusic.muted=!mOn;localStorage.setItem('musicVol',v);}
@@ -304,8 +303,6 @@ function playTrack(i){
     renderPlaylist();
 }
 function renderPlaylist(){
-    const _volEl=document.getElementById('music-vol');
-    if(_volEl) _volEl.value=parseFloat(localStorage.getItem('musicVol')||'0.3');
     const volEl=document.getElementById('music-vol');
     if(volEl) volEl.value=_savedVol;
     bgMusic.volume=_savedVol;
@@ -381,7 +378,7 @@ function go(){
 
 function closePanels(){
     ['settings-panel','admin-panel','user-profile-panel','quests-panel','promo-panel'].forEach(id=>{
-        const _el=document.getElementById(id); if(_el) _el.style.display='none';
+        document.getElementById(id).style.display='none';
     });
 }
 function togglePanel(id){
@@ -466,7 +463,7 @@ const MULT_COLORS=['#ff3355','#ff6633','#ffaa00','#aacc00','#00e676','#aacc00','
 let canvas,ctx,W,H,PIN_R,BALL_R;
 let pins=[],slotBounds=[];
 let balls=[],dropping=false;
-let pendingResults=[],ballCount=1,betVal=3,_dropBallCount=1;
+let pendingResults=[],ballCount=1,betVal=3;
 
 function initGame(){
     canvas=document.getElementById('plinko-canvas');
@@ -589,12 +586,11 @@ function dropBalls(){
     if(dropping)return;
     betVal=Math.max(1,parseInt(document.getElementById('bet-input').value)||1);
     document.getElementById('bet-input').value=betVal;
-    _dropBallCount=ballCount; // фиксируем до расчётов
-    const total=betVal*_dropBallCount;
+    const total=betVal*ballCount;
     if(total>balance){alert('Недостаточно АР! Нужно '+total+' АР.');return;}
     dropping=true; pendingResults=[]; _finishScheduled=false;
     document.getElementById('drop-btn').disabled=true;
-    
+    document.getElementById('stop-btn').disabled=false;
     // Страховка: если через 15 секунд раунд не завершился — принудительно завершаем
     clearTimeout(window._dropTimeout);
     window._dropTimeout = setTimeout(()=>{
@@ -603,7 +599,7 @@ function dropBalls(){
     db.ref('players/'+uid+'/balance').once('value').then(s=>{
         db.ref('players/'+uid+'/balance').set(Math.max(0,(s.val()||0)-total));
     });
-    for(let i=0;i<_dropBallCount;i++){
+    for(let i=0;i<ballCount;i++){
         setTimeout(()=>{
             const slotIdx=pickSlot();
             balls.push({
@@ -632,7 +628,7 @@ function onBallDone(slot){
 
 function forceFinish(){
     // Добиваем недостающие результаты нейтральным слотом
-    while(pendingResults.length < _dropBallCount){
+    while(pendingResults.length < ballCount){
         pendingResults.push(Math.floor(slotBounds.length/2));
     }
     balls=[];
@@ -643,13 +639,13 @@ function finishRound(){
     let totalWin=0;
     pendingResults.forEach(idx=>{totalWin+=betVal*MULTIPLIERS[idx];});
     totalWin=Math.floor(totalWin); // округляем вниз
-    const net=totalWin-betVal*_dropBallCount;
+    const net=totalWin-betVal*ballCount;
     db.ref('players/'+uid+'/balance').once('value').then(s=>{
         const newBal=Math.floor((s.val()||0)+totalWin);
         db.ref('players/'+uid+'/balance').set(newBal);
         db.ref('players/'+uid+'/history').once('value').then(hs=>{
             const hist=hs.val()||[];
-            hist.push('🔵 Шарики '+(net>=0?'+':'')+net+' АР (ставка '+betVal+'×'+_dropBallCount+')');
+            hist.push('🔵 Шарики '+(net>=0?'+':'')+net+' АР (ставка '+betVal+'×'+ballCount+')');
             db.ref('players/'+uid+'/history').set(hist.slice(-50));
         });
         // Квест
@@ -666,7 +662,7 @@ function finishRound(){
     balls=[];
     clearTimeout(window._dropTimeout);
     document.getElementById('drop-btn').disabled=false;
-    
+    document.getElementById('stop-btn').disabled=true;
 }
 
 function loop(){
@@ -960,6 +956,107 @@ function updatePhysics(){
         document.getElementById('admin-panel').style.display='block';
         loadUsers();
     }
+
+    // ===== ПРОМОКОД И КВЕСТЫ =====
+    function promptPromo() {
+        const input = prompt("Введи промокод:");
+        if (!input) return;
+        const code = input.trim().toLowerCase();
+        const promoCodes = { "mell": 3, "мелл": 5, "меллстрой": 5 };
+        if (!(code in promoCodes)) { alert("❌ Промокод не найден!"); return; }
+        db.ref('players/' + uid + '/usedPromos/' + code).once('value').then(snap => {
+            if (snap.exists() && snap.val() === true) { alert("⛔ Ты уже использовал этот промокод!"); return; }
+            const reward = promoCodes[code];
+            db.ref('players/' + uid).once('value').then(s => {
+                const d = s.val();
+                db.ref('players/' + uid).update({
+                    balance: (d.balance || 0) + reward,
+                    ['usedPromos/' + code]: true,
+                    history: (d.history || []).concat(['🎁 ПРОМО «' + code + '» +' + reward + ' АР']).slice(-15)
+                });
+                alert("✅ Промокод активирован! +" + reward + " АР начислено.");
+            });
+        });
+    }
+
+    function openGameQuests(){
+        if(!user){ alert('Войди в аккаунт!'); return; }
+        document.getElementById('quest-overlay').style.display='flex';
+        const now=new Date(), midnight=new Date(); midnight.setHours(24,0,0,0);
+        const h=Math.floor((midnight-now)/3600000), m=Math.floor(((midnight-now)%3600000)/60000);
+        document.getElementById('quest-reset').textContent='Сброс через '+h+'ч '+m+'м';
+        renderGameQuests();
+    }
+
+    function closeGameQuests(){
+        document.getElementById('quest-overlay').style.display='none';
+    }
+
+    const QUEST_POOL_G={
+        easy:[
+            {id:'e1',text:'Сыграй 3 игры в любой игре',reward:5,check:d=>(d.questDayGames||0)>=3},
+            {id:'e2',text:'Выиграй хотя бы 1 раз в слоте',reward:3,check:d=>(d.questSlotWins||0)>=1},
+            {id:'e3',text:'Открой 10 ячеек в сапёре',reward:4,check:d=>(d.questMinesCells||0)>=10},
+            {id:'e4',text:'Сыграй в полёт 2 раза',reward:4,check:d=>(d.questFlightGames||0)>=2},
+            {id:'e6',text:'Открой 5 ячеек в сапёре',reward:3,check:d=>(d.questMinesCells||0)>=5},
+            {id:'e7',text:'Сыграй в слот 3 раза',reward:3,check:d=>(d.questSlotGames||0)>=3},
+            {id:'e8',text:'Сыграй в сапёр 1 раз',reward:3,check:d=>(d.questMinesGames||0)>=1},
+            {id:'e9',text:'Долети до 500м в полёте',reward:4,check:d=>(d.questMaxDist||0)>=500},
+        ],
+        medium:[
+            {id:'m1',text:'Долети до 2000м в полёте',reward:10,check:d=>(d.questMaxDist||0)>=2000},
+            {id:'m2',text:'Выиграй 15 АР за одну игру в сапёре',reward:8,check:d=>(d.questMinesMaxWin||0)>=15},
+            {id:'m3',text:'Выведи выигрыш в сапёре 3 раза',reward:5,check:d=>(d.questMinesWins||0)>=3},
+            {id:'m4',text:'Долети до 1000м в полёте',reward:7,check:d=>(d.questMaxDist||0)>=1000},
+            {id:'m5',text:'Сыграй 5 игр за день',reward:8,check:d=>(d.questDayGames||0)>=5},
+            {id:'m6',text:'Выиграй в слот 3 раза',reward:9,check:d=>(d.questSlotWins||0)>=3},
+        ],
+        hard:[
+            {id:'h1',text:'Собери 50 АР за день',reward:25,check:d=>(d.questDayEarned||0)>=50},
+            {id:'h2',text:'Долети до 5000м в полёте',reward:20,check:d=>(d.questMaxDist||0)>=5000},
+            {id:'h3',text:'Сыграй 10 игр за день',reward:20,check:d=>(d.questDayGames||0)>=10},
+            {id:'h4',text:'Выведи выигрыш в сапёре 5 раз',reward:20,check:d=>(d.questMinesWins||0)>=5},
+        ]
+    };
+
+    function getDailyQuestsG(){
+        const seed=new Date().toDateString().split('').reduce((a,ch)=>a+ch.charCodeAt(0),0);
+        const pick=(arr,n)=>[...arr].sort((a,b)=>((seed*a.id.charCodeAt(a.id.length-1))%97)-((seed*b.id.charCodeAt(b.id.length-1))%97)).slice(0,n);
+        return [...pick(QUEST_POOL_G.easy,3),...pick(QUEST_POOL_G.medium,2),...pick(QUEST_POOL_G.hard,1)];
+    }
+
+    function renderGameQuests(){
+        db.ref('players/'+uid).once('value').then(s=>{
+            const d=s.val()||{};
+            const today=new Date().toDateString();
+            const done=d.questsDone||{};
+            const quests=getDailyQuestsG();
+            const types=['easy','easy','easy','medium','medium','hard'];
+            const diffBg={easy:'rgba(0,200,100,0.1)',medium:'rgba(255,180,0,0.1)',hard:'rgba(255,50,50,0.1)'};
+            const diffColor={easy:'#66ff88',medium:'#ffd700',hard:'#ff6666'};
+            const diffLabel={easy:'\U0001f7e2 \u041b\u0401\u0413\u041a\u0418\u0419',medium:'\U0001f7e1 \u0421\u0420\u0415\u0414\u041d\u0418\u0419',hard:'\U0001f534 \u0421\u041b\u041e\u0416\u041d\u042b\u0419'};
+            const el=document.getElementById('quest-list'); el.innerHTML='';
+            quests.forEach((q,i)=>{
+                const type=types[i];
+                const completed=!!(done[today+'_'+q.id]);
+                const canClaim=q.check(d)&&!completed;
+                const wrap=document.createElement('div');
+                wrap.style.cssText='background:'+diffBg[type]+';border:1px solid '+diffColor[type]+'40;border-radius:12px;padding:10px;margin-bottom:8px;';
+                const info=document.createElement('div');
+                info.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:10px;color:'+diffColor[type]+';font-family:Fredoka One,cursive;letter-spacing:1px;">'+diffLabel[type]+'</span><span style="font-size:12px;color:#ffd700;font-family:Fredoka One,cursive;">+'+q.reward+' \u0410\u0420</span></div><div style="font-size:12px;color:rgba(255,255,255,0.85);font-family:Nunito,sans-serif;margin-bottom:6px;">'+q.text+'</div>';
+                const btn=document.createElement('button');
+                btn.textContent=completed?'\u2705 \u0412\u042b\u041f\u041e\u041b\u041d\u0415\u041d\u041e':canClaim?'🎁 \u0417\u0410\u0411\u0420\u0410\u0422\u042c':'\u23f3 \u041d\u0415 \u0412\u042b\u041f\u041e\u041b\u041d\u0415\u041d\u041e';
+                btn.disabled=!canClaim;
+                btn.style.cssText='width:100%;padding:6px;border-radius:8px;font-family:Fredoka One,cursive;font-size:11px;border:none;cursor:'+(canClaim?'pointer':'not-allowed')+';background:'+(completed?'rgba(0,200,100,0.2)':canClaim?'linear-gradient(180deg,#9c27b0,#6a0080)':'rgba(255,255,255,0.05)')+';color:'+(completed?'#66ff88':canClaim?'#fff':'rgba(255,255,255,0.3)')+';';
+                btn.onclick=()=>claimGameQuest(q.id,today);
+                wrap.appendChild(info); wrap.appendChild(btn); el.appendChild(wrap);
+            });
+        });
+    }
+
+
 </script>
+
+    <div id="quest-overlay" onclick="if(event.target===this)closeGameQuests()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at center, rgba(20,0,40,0.97) 0%, rgba(0,0,15,0.99) 100%);z-index:9999;align-items:center;justify-content:center;"><div onclick="event.stopPropagation()" style="background:linear-gradient(160deg,#0d001a,#1a0030);border:2px solid rgba(150,0,255,0.4);border-radius:22px;padding:18px;width:88%;max-width:360px;max-height:82vh;overflow-y:auto;scrollbar-width:thin;"><div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;color:#cc88ff;margin-bottom:4px;">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div><div id="quest-reset" style="font-size:10px;text-align:center;color:rgba(200,150,255,0.4);letter-spacing:2px;margin-bottom:12px;"></div><div id="quest-list"></div><button onclick="closeGameQuests()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(150,0,255,0.45);border:1px solid rgba(150,0,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button></div>
 </body>
 </html>
