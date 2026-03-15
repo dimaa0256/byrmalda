@@ -65,14 +65,9 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 .panel-title{font-family:'Fredoka One',cursive;font-size:16px;letter-spacing:2px;color:#ffd700;text-align:center;margin-bottom:12px;}
 .panel-title.red{color:#ff4444;}
 .music-list{max-height:180px;overflow-y:auto;scrollbar-width:thin;margin-bottom:10px;}
-.music-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.55);transition:background .15s;}
+.music-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.55);transition:background .15s;}
 .music-item:hover,.music-item.active{background:rgba(255,150,0,0.12);color:#ffd700;}
-.music-item .loop-cb{width:14px;height:14px;accent-color:#ffd700;cursor:pointer;flex-shrink:0;}
-.music-item-name{flex:1;}
 .mute-toggle{width:100%;padding:8px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;margin-bottom:8px;}
-.mute-toggle.on{background:rgba(255,180,0,0.1);border-color:rgba(255,180,0,0.3);color:#ffd700;}
-.vol-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:0 2px;}
-.vol-slider{flex:1;width:100%;accent-color:#9944ff;height:4px;cursor:pointer;}
 .vol-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .vol-slider{flex:1;accent-color:#ffd700;}
 .btn-panel-close{width:100%;padding:8px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;margin-top:6px;}
@@ -93,7 +88,7 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 .quest-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#9944ff,#ff4488);}
 </style>
 </head>
-<body>
+<body onclick="closePanels()">
 <div class="casino-machine" onclick="event.stopPropagation()">
 
 <!-- АВТОРИЗАЦИЯ -->
@@ -126,12 +121,8 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
   <div id="settings-panel" onclick="event.stopPropagation()">
     <div class="panel-title">🎵 ПЛЕЙЛИСТ</div>
     <div class="music-list" id="music-playlist"></div>
-    <button id="m-toggle" class="mute-toggle on" onclick="toggleMute('music')">🎵 МУЗЫКА: ВКЛ</button>
-    <div class="vol-row">
-      <span style="font-size:13px;">🔈</span>
-      <input type="range" class="vol-slider" id="music-vol" min="0" max="1" step="0.05" value="0.3" oninput="applyVolume()" style="flex:1;">
-      <span style="font-size:13px;">🔊</span>
-    </div>
+    <button id="m-toggle" class="mute-toggle" onclick="toggleMute()">🎵 МУЗЫКА: ВКЛ</button>
+    <div class="vol-row"><span style="font-size:11px;color:rgba(255,255,255,0.4);">🔈</span><input type="range" class="vol-slider" id="music-vol" min="0" max="1" step="0.05" value="0.3" oninput="applyVolume()"><span style="font-size:11px;color:rgba(255,255,255,0.4);">🔊</span></div>
     <button class="btn-panel-close" onclick="closePanels()">✕ ЗАКРЫТЬ</button>
   </div>
 
@@ -285,18 +276,9 @@ function playTrack(i){
     renderPlaylist();
 }
 function renderPlaylist(){
-    document.getElementById('music-playlist').innerHTML=playlist.map((t,i)=>{
-        const isActive=i===curTrack;
-        const loopChecked=isActive&&bgMusic.loop?'checked':'';
-        return `<div class="music-item${isActive?' active':''}" onclick="playTrack(${i})">
-            <span class="music-item-name">${isActive?'▶ ':''}${t.name}</span>
-            <input type="checkbox" class="loop-cb" ${loopChecked} onclick="event.stopPropagation();setLoop(${i},this.checked)" title="Повтор">
-        </div>`;
-    }).join('');
-}
-
-function setLoop(i, val){
-    if(i===curTrack){ bgMusic.loop=val; }
+    document.getElementById('music-playlist').innerHTML=playlist.map((t,i)=>
+        `<div class="music-item${i===curTrack?' active':''}" onclick="playTrack(${i})">${i===curTrack?'▶ ':''}${t.name}</div>`
+    ).join('');
 }
 
 function toEmail(u){return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app';}
@@ -375,8 +357,7 @@ function togglePanel(id){
     closePanels();
     if(!was) el.style.display='block';
 }
-function toggleSettings(e){e.stopPropagation();togglePanel('settings-panel');}
-document.addEventListener('click',closePanels);
+function toggleSettings(e){ e.stopPropagation(); const p=document.getElementById('settings-panel'); const wasOpen=p.style.display==='block'; closePanels(); if(!wasOpen){ p.style.display='block'; renderPlaylist(); } }
 
 function toggleAdmin(e){
     e.stopPropagation();
