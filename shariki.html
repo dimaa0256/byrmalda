@@ -347,8 +347,8 @@ function go(){
 }
 
 function closePanels(){
-    ['settings-panel','admin-panel','user-profile-panel','quests-panel','promo-panel'].forEach(id=>{
-        document.getElementById(id).style.display='none';
+    ['settings-panel','admin-panel','user-profile-panel','quests-panel','promo-panel','lobby-admin-panel'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.style.display='none';
     });
 }
 function togglePanel(id){
