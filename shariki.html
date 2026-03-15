@@ -239,7 +239,6 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
   <div class="plinko-wrap">
     <canvas id="plinko-canvas"></canvas>
   </div>
-  <div class="multipliers" id="mult-row"></div>
 
   <!-- Управление -->
   <div class="ctrl-row">
@@ -543,11 +542,10 @@ function renderMultRow(){
     });
 }
 
+const _flashSlots = {};
 function flashMult(idx){
-    const el=document.getElementById('mult-'+idx);
-    if(!el) return;
-    el.style.transform='scale(1.2)'; el.style.boxShadow=`0 0 14px ${MULT_COLORS[idx]}`; el.style.background=MULT_COLORS[idx]+'55';
-    setTimeout(()=>{el.style.transform='';el.style.boxShadow='';el.style.background=MULT_COLORS[idx]+'22';},350);
+    _flashSlots[idx] = Date.now();
+    setTimeout(()=>{ delete _flashSlots[idx]; }, 400);
 }
 
 // Веса слотов: 0.1x 0.5x 1x 2x 3x 2x 1x 0.5x 0.1x
@@ -698,6 +696,13 @@ function drawFrame(){
         ctx.font=`bold ${Math.max(9,W*0.027)}px 'Fredoka One',cursive`;
         ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(s.mult+'x',s.x+s.w/2,s.y+s.h/2);
+        // Подсветка при попадании
+        if(_flashSlots[s.idx]){
+            ctx.fillStyle = s.color+'66';
+            ctx.beginPath(); ctx.roundRect(s.x+1,s.y,s.w-2,s.h,[0,0,6,6]); ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.fillText(s.mult+'x',s.x+s.w/2,s.y+s.h/2);
+        }
     });
 
     // Трейлы + шарики
