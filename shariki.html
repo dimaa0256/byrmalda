@@ -86,7 +86,20 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
 .quest-item{padding:9px 10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);margin-bottom:7px;}
 .quest-bar{height:4px;border-radius:2px;background:rgba(255,255,255,0.1);margin-top:6px;}
 .quest-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#9944ff,#ff4488);}
-</style>
+
+        /* Экран судьбы */
+        #fate-overlay{display:none;position:fixed;inset:0;z-index:99999;background:radial-gradient(ellipse at center,rgba(40,0,0,0.98) 0%,rgba(5,0,10,0.99) 100%);align-items:center;justify-content:center;}
+        #fate-overlay.show{display:flex;}
+        .fate-box{width:88%;max-width:360px;border:2px solid rgba(255,50,50,0.5);border-radius:22px;padding:24px;background:linear-gradient(160deg,#1a0005,#0d0015);box-shadow:0 0 60px rgba(255,0,50,0.2);text-align:center;}
+        .fate-title{font-family:'Fredoka One',cursive;font-size:22px;color:#ff4444;letter-spacing:2px;margin-bottom:8px;}
+        .fate-subtitle{font-size:12px;color:rgba(255,100,100,0.6);letter-spacing:3px;margin-bottom:20px;font-family:Nunito,sans-serif;}
+        .fate-text{font-size:14px;color:rgba(255,255,255,0.75);font-family:Nunito,sans-serif;line-height:1.6;margin-bottom:24px;}
+        .fate-btn{width:100%;padding:14px;border-radius:14px;font-family:'Fredoka One',cursive;font-size:15px;letter-spacing:2px;cursor:pointer;margin-bottom:10px;transition:all .2s;}
+        .fate-btn-red{background:linear-gradient(135deg,rgba(180,0,0,0.3),rgba(100,0,0,0.2));border:2px solid rgba(255,50,50,0.5);color:#ff6666;}
+        .fate-btn-red:hover{background:linear-gradient(135deg,rgba(220,0,0,0.4),rgba(150,0,0,0.3));}
+        .fate-btn-gold{background:linear-gradient(135deg,rgba(180,140,0,0.3),rgba(100,80,0,0.2));border:2px solid rgba(255,215,0,0.4);color:#ffd700;}
+        .fate-btn-gold:hover{background:linear-gradient(135deg,rgba(220,170,0,0.4),rgba(150,110,0,0.3));}
+    </style>
 </head>
 <body>
 <div class="casino-machine" onclick="event.stopPropagation()">
@@ -243,7 +256,7 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
   <!-- Управление -->
   <div class="ctrl-row">
     <div class="ctrl-label">СТАВКА</div>
-    <input class="ctrl-input" id="bet-input" type="number" min="1" value="3">
+    <input class="ctrl-input" id="bet-input" type="number" min="1" max="100" value="3">
   </div>
   <div class="ctrl-row">
     <div class="ctrl-label">ШАРИКИ</div>
@@ -368,6 +381,10 @@ function go(){
         document.getElementById('history').innerHTML=[...hist].reverse().slice(0,20).map(h=>`<div>${h}</div>`).join('')||'<div style="color:rgba(255,255,255,0.3)">Пусто</div>';
     });
     db.ref('players/'+uid).update({lastSeen:Date.now(),currentPage:'🔵 Шарики'});
+    // Проверяем есть ли активный "выбор судьбы"
+    db.ref('players/'+uid+'/fatePending').once('value').then(fs=>{
+        if(fs.val()) showFateScreen(fs.val());
+    });
     localStorage.setItem('lobbyUser', user);
     localStorage.setItem('lobbyUid', uid);
     if(mOn) bgMusic.play().catch(()=>{});
@@ -572,7 +589,7 @@ function pickSlot(){
 
 function dropBalls(){
     if(dropping)return;
-    betVal=Math.max(1,parseInt(document.getElementById('bet-input').value)||1);
+    betVal=Math.max(1,Math.min(100,parseInt(document.getElementById('bet-input').value)||1));
     document.getElementById('bet-input').value=betVal;
     const total=betVal*ballCount;
     if(total>balance){alert('Недостаточно АР! Нужно '+total+' АР.');return;}
@@ -1046,8 +1063,57 @@ function updatePhysics(){
         });
     }
 
+
+    function showFateScreen(data){
+        const amount = data.amount || 0;
+        const saveAmount = data.saveAmount || 500;
+        document.getElementById('fate-text').innerHTML = 
+            'Наши системы зафиксировали <span style="color:#ff4444;font-weight:900;">аномальную активность</span> на твоём счету.<br><br>' +
+            'Казино предлагает тебе выбор:<br><br>' +
+            '<span style="color:#ff6666;">🔴 Принять наказание</span> — твой баланс будет обнулён как у нарушителя.<br><br>' +
+            '<span style="color:#ffd700;">🟡 Договориться с казино</span> — ты сохраняешь <span style="color:#ffd700;font-weight:900;">' + saveAmount + ' АР</span> и продолжаешь играть честно.';
+        document.getElementById('fate-btn-lose').textContent = '🔴 ПРИНЯТЬ НАКАЗАНИЕ';
+        document.getElementById('fate-btn-save').textContent = '🟡 СОХРАНИТЬ ' + saveAmount + ' АР';
+        document.getElementById('fate-overlay').classList.add('show');
+    }
+
+    function fateChoice(choice){
+        db.ref('players/'+uid+'/fatePending').once('value').then(s=>{
+            const data = s.val();
+            if(!data) return;
+            const saveAmount = data.saveAmount || 500;
+            if(choice === 'lose'){
+                db.ref('players/'+uid+'/balance').set(0);
+                db.ref('players/'+uid+'/history').once('value').then(hs=>{
+                    const h=hs.val()||[];
+                    h.push('⚠️ Баланс обнулён по решению казино');
+                    db.ref('players/'+uid+'/history').set(h.slice(-50));
+                });
+            } else {
+                db.ref('players/'+uid+'/balance').set(saveAmount);
+                db.ref('players/'+uid+'/history').once('value').then(hs=>{
+                    const h=hs.val()||[];
+                    h.push('⚠️ Баланс скорректирован до '+saveAmount+' АР по договору с казино');
+                    db.ref('players/'+uid+'/history').set(h.slice(-50));
+                });
+            }
+            db.ref('players/'+uid+'/fatePending').remove();
+            document.getElementById('fate-overlay').classList.remove('show');
+        });
+    }
 </script>
 
     <div id="quest-overlay" onclick="if(event.target===this)closeGameQuests()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at center, rgba(20,0,40,0.97) 0%, rgba(0,0,15,0.99) 100%);z-index:9999;align-items:center;justify-content:center;"><div onclick="event.stopPropagation()" style="background:linear-gradient(160deg,#0d001a,#1a0030);border:2px solid rgba(150,0,255,0.4);border-radius:22px;padding:18px;width:88%;max-width:360px;max-height:82vh;overflow-y:auto;scrollbar-width:thin;"><div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;color:#cc88ff;margin-bottom:4px;">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div><div id="quest-reset" style="font-size:10px;text-align:center;color:rgba(200,150,255,0.4);letter-spacing:2px;margin-bottom:12px;"></div><div id="quest-list"></div><button onclick="closeGameQuests()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(150,0,255,0.45);border:1px solid rgba(150,0,255,0.2);cursor:pointer;font-family:Nunito,sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
+
+    <div id="fate-overlay">
+        <div class="fate-box">
+            <div class="fate-title">⚠️ ИСПЫТАНИЕ СУДЬБЫ</div>
+            <div class="fate-subtitle">КАЗИНО БУРМАЛДА</div>
+            <div class="fate-text" id="fate-text"></div>
+            <button class="fate-btn fate-btn-red" onclick="fateChoice('lose')" id="fate-btn-lose"></button>
+            <button class="fate-btn fate-btn-gold" onclick="fateChoice('save')" id="fate-btn-save"></button>
+            <div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:12px;font-family:Nunito,sans-serif;letter-spacing:1px;">Выбор необратим. Окно не исчезнет до принятия решения.</div>
+        </div>
+    </div>
 </body>
 </html>
