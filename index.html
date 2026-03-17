@@ -3,140 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <link rel="manifest" href="./manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="БУРМАЛДА">
-    <meta name="theme-color" content="#ff4500">
-    <link rel="apple-touch-icon" href="./icon-192.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🍓 БУРМАЛДА</title>
-    
-    <link rel="preconnect" href="https://www.gstatic.com">
-    <link rel="dns-prefetch" href="https://www.gstatic.com">
-    
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body {
-            margin: 0; padding: 0;
-            background: radial-gradient(circle at top, #1a0a2e 0%, #0d0618 100%);
-            color: #fff; font-family: 'Nunito', sans-serif;
-            overflow-x: hidden; min-height: 100vh;
-        }
-        /* Твои оригинальные стили сохранены полностью */
-        .header {
-            padding: 25px 20px 15px; text-align: center;
-            background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-        }
-        .logo {
-            font-family: 'Fredoka One', cursive; font-size: 34px;
-            letter-spacing: 4px; color: #fff;
-            text-shadow: 0 0 20px rgba(255, 69, 0, 0.6); margin-bottom: 5px;
-        }
-        .balance-card {
-            background: linear-gradient(135deg, #ff4500 0%, #ff8c00 100%);
-            margin: 15px auto; padding: 15px 25px; border-radius: 20px;
-            width: fit-content; min-width: 200px;
-            box-shadow: 0 10px 25px rgba(255, 69, 0, 0.3);
-            transition: transform 0.2s;
-        }
-        .balance-card:active { transform: scale(0.95); }
-        .bal-label { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.9; font-weight: 800; }
-        .bal-value { font-size: 28px; font-weight: 900; margin-top: 2px; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: radial-gradient(circle at top, #1a0a2e 0%, #0d0618 100%); color: #fff; font-family: 'Nunito', sans-serif; min-height: 100vh; }
+        .header { padding: 25px 20px; text-align: center; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .logo { font-family: 'Fredoka One', cursive; font-size: 34px; letter-spacing: 4px; text-shadow: 0 0 20px rgba(255, 69, 0, 0.6); }
+        .balance-card { background: linear-gradient(135deg, #ff4500 0%, #ff8c00 100%); margin: 15px auto; padding: 15px 25px; border-radius: 20px; width: fit-content; box-shadow: 0 10px 25px rgba(255, 69, 0, 0.3); }
+        .bal-value { font-size: 28px; font-weight: 900; }
+        
+        /* Кнопка ежедневки для ВИП */
+        #daily-reward-container { display: none; margin-bottom: 15px; }
+        .daily-btn { background: #ffd700; color: #000; border: none; padding: 12px 20px; border-radius: 15px; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3); }
 
-        .menu-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px;
-        }
-        .menu-item {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; padding: 20px; text-align: center;
-            text-decoration: none; color: #fff; transition: 0.3s;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .menu-item:active { background: rgba(255, 255, 255, 0.1); transform: translateY(2px); }
-        .icon { font-size: 40px; margin-bottom: 12px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3)); }
-        .name { font-weight: 900; font-size: 16px; letter-spacing: 1px; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
+        .menu-item { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 20px; text-align: center; text-decoration: none; color: #fff; display: flex; flex-direction: column; align-items: center; }
+        .icon { font-size: 40px; margin-bottom: 10px; }
+        .name { font-weight: 900; font-size: 14px; }
 
-        #auth-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0d0618; z-index: 1000; display: none;
-            flex-direction: column; align-items: center; justify-content: center;
-        }
-        .auth-box {
-            width: 85%; max-width: 320px; text-align: center;
-        }
-        input {
-            width: 100%; padding: 16px; margin: 10px 0;
-            border-radius: 15px; border: none; background: rgba(255,255,255,0.08);
-            color: #fff; font-family: inherit; font-size: 16px; font-weight: 700;
-        }
-        .btn {
-            width: 100%; padding: 16px; border: none; border-radius: 15px;
-            font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 10px;
-            transition: 0.2s;
-        }
-        .btn-main { background: #ff4500; color: #fff; }
-
-        #duel-panel {
-            background: rgba(255, 69, 0, 0.1); border: 2px solid #ff4500;
-            margin: 0 20px 20px; padding: 15px; border-radius: 20px; display: none;
-        }
+        #auth-overlay { position: fixed; inset: 0; background: #0d0618; z-index: 1000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        input { width: 80%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; background: rgba(255,255,255,0.1); color: #fff; font-size: 16px; }
+        .btn-auth { width: 80%; padding: 15px; border-radius: 12px; border: none; background: #ff4500; color: #fff; font-weight: 900; }
     </style>
 </head>
 <body>
 
 <div id="auth-overlay">
-    <div class="auth-box">
-        <div class="logo">БУРМАЛДА</div>
-        <p style="opacity:0.6; margin-bottom:20px;">Вход в систему</p>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="pass" placeholder="Пароль">
-        <button class="btn btn-main" onclick="login()">ВОЙТИ</button>
-    </div>
+    <div class="logo">БУРМАЛДА</div>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="pass" placeholder="Пароль">
+    <button class="btn-auth" onclick="login()">ВОЙТИ</button>
 </div>
 
 <div class="header">
     <div class="logo">БУРМАЛДА</div>
-    <div class="balance-card" onclick="location.reload()">
-        <div class="bal-label">Твой баланс</div>
-        <div class="bal-value"><span id="user-balance">...</span> АР</div>
+    <div id="daily-reward-container">
+        <button class="daily-btn" onclick="claimDaily()">🎁 ЗАБРАТЬ 50 АР (VIP)</button>
+    </div>
+    <div class="balance-card">
+        <div class="bal-value"><span id="user-balance">0</span> АР</div>
     </div>
 </div>
 
-<div id="duel-panel">
-    <div id="duel-info" style="font-weight: 800; font-size: 14px; margin-bottom: 10px; text-align: center;">⚔️ АКТИВНАЯ ДУЭЛЬ!</div>
-    <button class="btn btn-main" style="margin:0; padding:10px;" onclick="goToDuelGame()">ПЕРЕЙТИ К ИГРЕ</button>
-</div>
-
 <div class="menu-grid">
-    <a href="slot.html" class="menu-item">
-        <span class="icon">🍓</span>
-        <span class="name">СЛОТЫ</span>
-    </a>
-    <a href="minesweeper.html" class="menu-item">
-        <span class="icon">💣</span>
-        <span class="name">САПЁР</span>
-    </a>
-    <a href="airplane.html" class="menu-item">
-        <span class="icon">✈️</span>
-        <span class="name">ПОЛЁТ</span>
-    </a>
-    <a href="shariki.html" class="menu-item">
-        <span class="icon">🔮</span>
-        <span class="name">ШАРИКИ</span>
-    </a>
+    <a href="slot.html" class="menu-item"><span class="icon">🍓</span><span class="name">СЛОТЫ</span></a>
+    <a href="minesweeper.html" class="menu-item"><span class="icon">💣</span><span class="name">САПЁР</span></a>
+    <a href="airplane.html" class="menu-item"><span class="icon">✈️</span><span class="name">ПОЛЁТ</span></a>
+    <a href="shariki.html" class="menu-item"><span class="icon">🔮</span><span class="name">ШАРИКИ</span></a>
+    <div class="menu-item" onclick="handleVipClick()" style="border-color: #ffd700; background: rgba(255,215,0,0.05);">
+        <span class="icon">🌟</span><span class="name" style="color: #ffd700;">ВИП</span>
+    </div>
 </div>
 
 <script>
-    // --- КОНФИГ ТВОЕГО FIREBASE (ОСТАВЬ СВОИ ДАННЫЕ) ---
     const firebaseConfig = {
-      apiKey: "AIzaSy...", // ВСТАВЬ СВОЙ КЛЮЧ
+      // ВСТАВЬ СЮДА СВОИ ДАННЫЕ ИЗ ОРИГИНАЛЬНОГО ФАЙЛА
+      apiKey: "AIzaSy...",
       authDomain: "burmalda-...",
       databaseURL: "https://burmalda-...",
       projectId: "burmalda-...",
@@ -145,72 +72,57 @@
       appId: "..."
     };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.database();
+    const auth = firebase.auth();
 
-    let currentUid = null;
-
-    // --- МГНОВЕННЫЙ ВХОД (КЭШ) ---
-    const lastBal = localStorage.getItem('burmalda_bal');
-    if (lastBal) document.getElementById('user-balance').textContent = lastBal;
+    let uid, userStatus, userBalance;
 
     auth.onAuthStateChanged(user => {
         if (user) {
-            currentUid = user.uid;
+            uid = user.uid;
             document.getElementById('auth-overlay').style.display = 'none';
-            loadData();
-            checkDuels();
+            db.ref('players/' + uid).on('value', s => {
+                const d = s.val();
+                if (!d) return;
+                userStatus = d.status || 'player';
+                userBalance = d.balance || 0;
+                document.getElementById('user-balance').textContent = userBalance;
+                
+                // Проверка ежедневки для VIP
+                if (userStatus === 'vip') {
+                    const last = d.lastDaily || 0;
+                    if (Date.now() - last > 24 * 60 * 60 * 1000) {
+                        document.getElementById('daily-reward-container').style.display = 'block';
+                    } else {
+                        document.getElementById('daily-reward-container').style.display = 'none';
+                    }
+                }
+            });
         } else {
             document.getElementById('auth-overlay').style.display = 'flex';
         }
     });
 
-    function loadData() {
-        db.ref('players/' + currentUid).on('value', s => {
-            const data = s.val();
-            if (data) {
-                const bal = data.balance || 0;
-                document.getElementById('user-balance').textContent = bal;
-                localStorage.setItem('burmalda_bal', bal); // Сохраняем в кэш
-            }
+    function claimDaily() {
+        db.ref('players/' + uid).update({
+            balance: userBalance + 50,
+            lastDaily: Date.now()
         });
+        alert('Вы получили ежедневную награду 50 АР!');
     }
 
-    function checkDuels() {
-        db.ref('duels').on('value', s => {
-            const duels = s.val();
-            if (!duels) return;
-            for (let id in duels) {
-                const d = duels[id];
-                if ((d.challenger === currentUid || d.opponent === currentUid) && d.status === 'active') {
-                    document.getElementById('duel-panel').style.display = 'block';
-                    window.activeDuelId = id;
-                    window.duelData = d;
-                    return;
-                }
-            }
-            document.getElementById('duel-panel').style.display = 'none';
-        });
-    }
-
-    function goToDuelGame() {
-        if (!window.activeDuelId) return;
-        const urls = {slots:'slot.html', minesweeper:'minesweeper.html', airplane:'airplane.html'};
-        window.location.href = urls[window.duelData.game] + '?duel=' + window.activeDuelId;
+    function handleVipClick() {
+        if (userStatus === 'vip' || userStatus === 'admin') {
+            window.location.href = 'admin.html';
+        } else {
+            alert('Эта панель доступна только VIP игрокам!');
+        }
     }
 
     async function login() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
-        try {
-            await auth.signInWithEmailAndPassword(e, p);
-        } catch (err) {
-            alert('Ошибка: ' + err.message);
-        }
-    }
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        try { await auth.signInWithEmailAndPassword(e, p); } catch(err) { alert(err.message); }
     }
 </script>
 </body>
