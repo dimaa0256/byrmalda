@@ -256,7 +256,8 @@ body{background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 10
   <!-- Управление -->
   <div class="ctrl-row">
     <div class="ctrl-label">СТАВКА</div>
-    <input class="ctrl-input" id="bet-input" type="number" min="1" max="100" value="3">
+    <input class="ctrl-input" id="bet-input" type="number" min="1" max="100" value="3" placeholder="1–100" oninput="checkBetLimit(this)">
+    <div id="bet-hint" style="font-size:10px;color:rgba(255,136,170,0.5);text-align:center;margin-top:4px;font-family:Nunito,sans-serif;letter-spacing:1px;">от 1 до 100 АР</div>
   </div>
   <div class="ctrl-row">
     <div class="ctrl-label">ШАРИКИ</div>
@@ -1100,6 +1101,18 @@ function updatePhysics(){
             db.ref('players/'+uid+'/fatePending').remove();
             document.getElementById('fate-overlay').classList.remove('show');
         });
+    }
+
+    function checkBetLimit(el){
+        const v = parseInt(el.value)||0;
+        const hint = document.getElementById('bet-hint');
+        if(v > 100){
+            el.style.borderColor = 'rgba(255,50,50,0.6)';
+            if(hint){ hint.textContent = '⚠️ Максимальная ставка — 100 АР'; hint.style.color = '#ff6666'; }
+        } else {
+            el.style.borderColor = 'rgba(150,50,255,0.3)';
+            if(hint){ hint.textContent = 'от 1 до 100 АР'; hint.style.color = 'rgba(255,136,170,0.5)'; }
+        }
     }
 </script>
 
