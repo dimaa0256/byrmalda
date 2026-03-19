@@ -981,18 +981,21 @@
         if(!hud){
             hud = document.createElement('div');
             hud.id = 'duel-hud';
-            hud.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:500;background:rgba(20,0,15,0.97);border-bottom:2px solid rgba(255,0,80,0.5);padding:6px 16px 8px;text-align:center;width:100%;max-width:420px;font-family:Fredoka One,cursive;box-sizing:border-box;';
+            hud.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:500;background:rgba(20,0,15,0.95);border-bottom:1px solid rgba(255,0,80,0.4);padding:4px 12px 5px;text-align:center;width:100%;max-width:420px;font-family:Fredoka One,cursive;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;';
             document.body.prepend(hud);
+            // Сдвигаем контент вниз чтобы HUD не перекрывал
+            document.body.style.paddingTop = '48px';
         }
         const sc = d.scores||{challenger:0,opponent:0};
         const myScore = myDuelRole==='challenger' ? (sc.challenger||0) : (sc.opponent||0);
         const theirScore = myDuelRole==='challenger' ? (sc.opponent||0) : (sc.challenger||0);
         const theirName = myDuelRole==='challenger' ? d.opponentName : d.challengerName;
         const winsNeeded = d.winsNeeded||3;
-        hud.innerHTML = `<div style="font-size:10px;color:rgba(255,136,170,0.6);letter-spacing:2px;">⚔️ до ${winsNeeded} побед • ${d.bet||0} АР</div>
-            <div style="font-size:20px;color:#ffd700;margin-top:1px;">${myScore} <span style="color:rgba(255,255,255,0.3)">:</span> ${theirScore} <span style="font-size:10px;color:rgba(255,255,255,0.4)">vs ${(theirName||'').toUpperCase()}</span></div>
-            <button id="draw-btn" onclick="voteDrawDuel()" style="margin-top:5px;padding:3px 14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:1px;">🏳 ЗАКОНЧИТЬ ИГРУ <span id="draw-votes"></span></button>`;
+        hud.innerHTML = `<div style="font-size:11px;color:rgba(255,136,170,0.7);white-space:nowrap;">⚔️ ${myScore}:${theirScore}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.35);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">до ${winsNeeded} побед • ${d.bet||0} АР • vs ${(theirName||'').toUpperCase()}</div>
+            <button id="draw-btn" onclick="voteDrawDuel()" style="padding:2px 8px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.35);border:1px solid rgba(255,255,255,0.12);border-radius:6px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:10px;white-space:nowrap;flex-shrink:0;">🏳 <span id="draw-votes"></span></button>`;
     }
+
 
     function updateDrawBtn(count, myVoted){
         const btn = document.getElementById('draw-btn');

@@ -305,6 +305,7 @@
                     <button onclick="selectDuelGame('slots')" id="dg-slots" class="duel-game-btn active-dg">🎰 СЛОТЫ</button>
                     <button onclick="selectDuelGame('minesweeper')" id="dg-minesweeper" class="duel-game-btn">💣 САПЁР</button>
                     <button onclick="selectDuelGame('airplane')" id="dg-airplane" class="duel-game-btn">✈️ ПОЛЁТ</button>
+                    <button onclick="selectDuelGame('shariki')" id="dg-shariki" class="duel-game-btn">🔵 ШАРИКИ</button>
                 </div>
                 <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,136,170,0.6);letter-spacing:2px;margin-bottom:6px;">РАУНДОВ:</div>
                 <div style="display:flex;gap:6px;margin-bottom:10px;">
@@ -1037,8 +1038,8 @@
 
     function selectDuelGame(game){
         duelGame = game;
-        ['slots','minesweeper','airplane'].forEach(g=>{
-            document.getElementById('dg-'+g).classList.toggle('active-dg', g===game);
+        ['slots','minesweeper','airplane','shariki'].forEach(g=>{
+            const el=document.getElementById('dg-'+g); if(el) el.classList.toggle('active-dg', g===game);
         });
     }
 
@@ -1054,7 +1055,7 @@
 
     function sendDuelInvite(){
         if(!duelTarget){ alert('Выбери соперника!'); return; }
-        const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт'};
+        const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт', shariki:'🔵 Шарики'};
         const duelId = db.ref('duels').push().key;
         db.ref('duels/'+duelId).set({
             challenger: currentUid,
@@ -1091,7 +1092,7 @@
             const d = snap.val();
             if(!d || d.status !== 'pending') return;
             pendingDuelId = snap.key;
-            const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт'};
+            const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт', shariki:'🔵 Шарики'};
             const text = d.challengerName.toUpperCase() + ' вызывает на ' + gameNames[d.game] + ' ×' + (d.rounds||3) + (d.bet?' · ' + d.bet + ' АР':'');
             document.getElementById('duel-notify-text').textContent = text;
             document.getElementById('duel-notify').style.display = 'block';
@@ -1134,7 +1135,7 @@
 
     function showActiveDuel(d){
         if(!d) return;
-        const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт'};
+        const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт', shariki:'🔵 Шарики'};
         const sc = d.scores||{challenger:0,opponent:0};
         const isChal = d.challenger === currentUid;
         const myScore = isChal ? sc.challenger : sc.opponent;
@@ -1154,7 +1155,7 @@
         db.ref('duels/'+activeDuelId).once('value').then(s=>{
             const d = s.val();
             if(!d) return;
-            const urls = {slots:'slot.html', minesweeper:'minesweeper.html', airplane:'airplane.html'};
+            const urls = {slots:'slot.html', minesweeper:'minesweeper.html', airplane:'airplane.html', shariki:'shariki.html'};
             window.location.href = urls[d.game] + '?duel=' + activeDuelId;
         });
     }
