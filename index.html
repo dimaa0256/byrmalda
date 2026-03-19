@@ -60,7 +60,7 @@
         
         .user-bar { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,180,0,0.2); border-radius: 16px; padding: 10px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
         .user-bar-name { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: rgba(255,180,100,0.5); text-transform: uppercase; margin-bottom: 2px; }
-        .user-bar-val { font-family: 'Fredoka One', cursive; font-size: 18px; color: #fff; }
+        .user-bar-val { font-family: 'Fredoka One', cursive; font-size: 18px; color: #fff; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .user-bar-bal { font-family: 'Fredoka One', cursive; font-size: 18px; color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.5); }
         .btn-logout { padding: 6px 14px; background: transparent; border: 1px solid rgba(255,100,0,0.3); border-radius: 10px; color: rgba(255,150,100,0.6); font-size: 11px; font-weight: 800; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; }
         .btn-logout:hover { border-color: #ff4400; color: #ff8844; }
@@ -163,7 +163,9 @@
         <div class="user-bar">
             <div>
                 <div class="user-bar-name">игрок</div>
-                <div class="user-bar-val" id="lobby-username"></div>
+                <div style="display:flex;align-items:center;gap:4px;">
+                    <div class="user-bar-val" id="lobby-username" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+                </div>
             </div>
             <div style="text-align:right;">
                 <div class="user-bar-name">баланс</div>
@@ -178,7 +180,7 @@
             <button onclick="openQuests()" id="quests-btn" style="flex:1;padding:9px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#cc88ff;background:rgba(150,0,255,0.08);border:1px solid rgba(150,0,255,0.3);border-radius:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(150,0,255,0.18)'" onmouseout="this.style.background='rgba(150,0,255,0.08)'">📋 КВЕСТЫ</button>
             <button onclick="openDuels()" id="duels-btn" style="flex:1;padding:9px;font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:#ff88aa;background:rgba(255,0,80,0.08);border:1px solid rgba(255,0,80,0.3);border-radius:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(255,0,80,0.18)'" onmouseout="this.style.background='rgba(255,0,80,0.08)'">⚔️ ДУЭЛЬ</button>
         </div>
-        <div id="daily-reward-wrap" style="display:none;margin-top:8px;">
+<div id="daily-reward-wrap" style="display:none;margin-top:8px;">
             <button onclick="claimDaily()" id="daily-btn" style="width:100%;padding:10px;border-radius:14px;background:linear-gradient(135deg,rgba(0,200,100,0.2),rgba(0,150,50,0.1));border:1px solid rgba(0,200,100,0.4);color:#00e676;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;">🎁 ЕЖЕДНЕВНАЯ НАГРАДА</button>
         </div>
     </div>
@@ -309,14 +311,22 @@
                     <button onclick="selectDuelRounds(3)" id="dr-3" class="duel-rounds-btn active-dr">×3</button>
                     <button onclick="selectDuelRounds(5)" id="dr-5" class="duel-rounds-btn">×5</button>
                     <button onclick="selectDuelRounds(10)" id="dr-10" class="duel-rounds-btn">×10</button>
+                    <button onclick="toggleDuelCustom('rounds')" class="duel-rounds-btn" style="font-size:14px;">✏️</button>
+                </div>
+                <div id="duel-custom-rounds" style="display:none;margin-bottom:10px;">
+                    <input id="duel-rounds-input" type="number" min="1" max="99" placeholder="Своё кол-во" oninput="duelRounds=Math.max(1,parseInt(this.value)||1)" style="width:100%;padding:7px 12px;border-radius:10px;background:rgba(0,0,0,0.4);color:#fff;border:1px solid rgba(255,0,80,0.3);font-family:'Fredoka One',cursive;font-size:14px;text-align:center;outline:none;box-sizing:border-box;">
                 </div>
                 <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,136,170,0.6);letter-spacing:2px;margin-bottom:6px;">СТАВКА:</div>
                 <div style="display:flex;gap:6px;margin-bottom:12px;">
-                    <button onclick="selectDuelBet(0)" id="db-0" class="duel-rounds-btn active-dr">0 АР</button>
-                    <button onclick="selectDuelBet(5)" id="db-5" class="duel-rounds-btn">5 АР</button>
-                    <button onclick="selectDuelBet(10)" id="db-10" class="duel-rounds-btn">10 АР</button>
-                    <button onclick="selectDuelBet(25)" id="db-25" class="duel-rounds-btn">25 АР</button>
-                    <button onclick="selectDuelBet(50)" id="db-50" class="duel-rounds-btn">50 АР</button>
+                    <button onclick="selectDuelBet(0)" id="db-0" class="duel-rounds-btn active-dr">0</button>
+                    <button onclick="selectDuelBet(5)" id="db-5" class="duel-rounds-btn">5</button>
+                    <button onclick="selectDuelBet(10)" id="db-10" class="duel-rounds-btn">10</button>
+                    <button onclick="selectDuelBet(25)" id="db-25" class="duel-rounds-btn">25</button>
+                    <button onclick="selectDuelBet(50)" id="db-50" class="duel-rounds-btn">50</button>
+                    <button onclick="toggleDuelCustom('bet')" class="duel-rounds-btn" style="font-size:14px;">✏️</button>
+                </div>
+                <div id="duel-custom-bet" style="display:none;margin-bottom:12px;">
+                    <input id="duel-bet-input" type="number" min="0" placeholder="Своя ставка" oninput="duelBet=Math.max(0,parseInt(this.value)||0)" style="width:100%;padding:7px 12px;border-radius:10px;background:rgba(0,0,0,0.4);color:#fff;border:1px solid rgba(255,0,80,0.3);font-family:'Fredoka One',cursive;font-size:14px;text-align:center;outline:none;box-sizing:border-box;">
                 </div>
                 <div style="font-family:'Fredoka One',cursive;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;" id="duel-target-label"></div>
                 <button onclick="sendDuelInvite()" style="width:100%;padding:10px;background:linear-gradient(180deg,#ff2255,#aa0033);color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;">⚔️ ОТПРАВИТЬ ВЫЗОВ</button>
@@ -463,7 +473,7 @@
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value;
         if(!u||!p){ showErr('Заполни поля'); return; }
-        if(u.length<2||u.length>20){ showErr('Имя: 2–20 символов'); return; }
+        if(u.length<2||u.length>15){ showErr('Имя: 2–15 символов'); return; }
         showErr('');
         const fp = p + '_Brm9!';
         const isAuthErr = c => ['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c);
@@ -544,7 +554,9 @@
         if(!currentUid) return;
         document.getElementById('auth-block').style.display='none';
         document.getElementById('user-block').style.display='block';
-        document.getElementById('lobby-username').textContent=currentUser.toUpperCase();
+        const _unEl=document.getElementById('lobby-username');
+        _unEl.textContent=currentUser.toUpperCase();
+        _unEl.style.fontSize=currentUser.length>10?'13px':currentUser.length>7?'15px':'18px';
         try {
             const ua=navigator.userAgent, mobile=/Mobi|Android|iPhone|iPad/i.test(ua);
             let browser='Unknown';
@@ -594,7 +606,9 @@
             const vipBtn=document.getElementById('vip-btn');
             if(vipBtn) vipBtn.style.display='';
             const badge=d.verified?'✅ ':d.admin?'👑 ':'';
-            document.getElementById('lobby-username').textContent=badge+currentUser.toUpperCase();
+            const _unEl2=document.getElementById('lobby-username');
+            _unEl2.textContent=badge+currentUser.toUpperCase();
+            _unEl2.style.fontSize=currentUser.length>10?'13px':currentUser.length>7?'15px':'18px';
         });
     }
 
@@ -883,7 +897,7 @@
 
     function lapRenameConfirm(){
         const newNick = document.getElementById('lap-rename-input').value.trim();
-        if(!newNick || newNick.length < 2 || newNick.length > 20){ alert('Ник: 2–20 символов'); return; }
+        if(!newNick || newNick.length < 2 || newNick.length > 15){ alert('Ник: 2–15 символов'); return; }
         // Проверяем что новый ник не занят
         db.ref('usernames/'+newNick.toLowerCase()).once('value').then(s=>{
             if(s.exists() && s.val() !== lapUser){ alert('Ник уже занят!'); return; }
@@ -999,7 +1013,7 @@
             const data = s.val()||{};
             const now = Date.now();
             const online = Object.entries(data)
-                .filter(([k,v]) => v.username && !v.hidden && k !== currentUid && v.lastSeen && (now-v.lastSeen)<120000)
+                .filter(([k,v]) => v.username && (!v.hidden || v.admin) && k !== currentUid && v.lastSeen && (now-v.lastSeen)<120000)
                 .map(([k,v]) => ({uid:k, username:v.username}));
             
             if(online.length === 0){
@@ -1159,6 +1173,67 @@
         document.getElementById('duel-active').style.display = 'none';
     }
 
-    </script>
+    
+    function openSelfRename(){
+        const w=document.getElementById('self-rename-wrap');
+        w.style.display=w.style.display==='none'?'block':'none';
+        if(w.style.display==='block') document.getElementById('self-rename-input').focus();
+    }
+    function confirmSelfRename(){
+        const newNick=document.getElementById('self-rename-input').value.trim();
+        const pass=document.getElementById('self-rename-pass').value;
+        const err=document.getElementById('self-rename-err');
+        if(!newNick||newNick.length<2||newNick.length>15){err.textContent='Ник: 2–15 символов';return;}
+        if(!pass){err.textContent='Введи пароль';return;}
+        // Проверяем пароль
+        const fp=pass+'_Brm9!';
+        auth.currentUser.reauthenticateWithCredential(
+            firebase.auth.EmailAuthProvider.credential(auth.currentUser.email, fp)
+        ).then(()=>{
+            db.ref('usernames/'+newNick.toLowerCase()).once('value').then(s=>{
+                if(s.exists()&&s.val()!==currentUid){err.textContent='Ник занят';return;}
+                // Удаляем старый ник
+                db.ref('usernames/'+currentUser.toLowerCase()).remove();
+                // Пишем новый
+                db.ref('usernames/'+newNick.toLowerCase()).set(currentUid);
+                db.ref('players/'+currentUid+'/username').set(newNick);
+                currentUser=newNick;
+                localStorage.setItem('lobbyUser',newNick);
+                showUserBlock();
+                document.getElementById('self-rename-wrap').style.display='none';
+                err.textContent='';
+            });
+        }).catch(()=>{
+            // Пробуем без суффикса (старые акки)
+            auth.currentUser.reauthenticateWithCredential(
+                firebase.auth.EmailAuthProvider.credential(auth.currentUser.email, pass)
+            ).then(()=>{
+                db.ref('usernames/'+newNick.toLowerCase()).once('value').then(s=>{
+                    if(s.exists()&&s.val()!==currentUid){err.textContent='Ник занят';return;}
+                    db.ref('usernames/'+currentUser.toLowerCase()).remove();
+                    db.ref('usernames/'+newNick.toLowerCase()).set(currentUid);
+                    db.ref('players/'+currentUid+'/username').set(newNick);
+                    currentUser=newNick;
+                    localStorage.setItem('lobbyUser',newNick);
+                    showUserBlock();
+                    document.getElementById('self-rename-wrap').style.display='none';
+                    err.textContent='';
+                });
+            }).catch(()=>{ err.textContent='Неверный пароль'; });
+        });
+    }
+
+    function toggleDuelCustom(type){
+        if(type==='rounds'){
+            const el=document.getElementById('duel-custom-rounds');
+            el.style.display=el.style.display==='none'?'block':'none';
+            if(el.style.display==='block') document.getElementById('duel-rounds-input').focus();
+        } else {
+            const el=document.getElementById('duel-custom-bet');
+            el.style.display=el.style.display==='none'?'block':'none';
+            if(el.style.display==='block') document.getElementById('duel-bet-input').focus();
+        }
+    }
+</script>
 </body>
 </html>
