@@ -1,6 +1,6 @@
 {
-  "name": "Бурмалда",
-  "short_name": "Бурмалда",
+  "name": "Бурмалда Казино",
+  "short_name": "БУРМАЛДА",
   "description": "Казино Бурмалда — слоты, сапёр, полёт",
   "start_url": "./index.html",
   "display": "standalone",
