@@ -612,7 +612,18 @@ input:-webkit-autofill:focus {
 }
 
 .duel-player-row:hover { background:rgba(255,0,80,0.1); }
-    </style>
+    
+        /* Экран судьбы */
+        #fate-overlay{display:none;position:fixed;inset:0;z-index:99999;background:radial-gradient(ellipse at center,rgba(40,0,0,0.98) 0%,rgba(5,0,10,0.99) 100%);align-items:center;justify-content:center;}
+        #fate-overlay.show{display:flex;}
+        .fate-box{width:88%;max-width:360px;border:2px solid rgba(255,50,50,0.5);border-radius:22px;padding:24px;background:linear-gradient(160deg,#1a0005,#0d0015);box-shadow:0 0 60px rgba(255,0,50,0.2);text-align:center;}
+        .fate-title{font-family:'Fredoka One',cursive;font-size:22px;color:#ff4444;letter-spacing:2px;margin-bottom:8px;}
+        .fate-subtitle{font-size:12px;color:rgba(255,100,100,0.6);letter-spacing:3px;margin-bottom:20px;font-family:Nunito,sans-serif;}
+        .fate-text{font-size:14px;color:rgba(255,255,255,0.75);font-family:Nunito,sans-serif;line-height:1.6;margin-bottom:24px;}
+        .fate-btn{width:100%;padding:14px;border-radius:14px;font-family:'Fredoka One',cursive;font-size:15px;letter-spacing:2px;cursor:pointer;margin-bottom:10px;transition:all .2s;}
+        .fate-btn-red{background:linear-gradient(135deg,rgba(180,0,0,0.3),rgba(100,0,0,0.2));border:2px solid rgba(255,50,50,0.5);color:#ff6666;}
+        .fate-btn-gold{background:linear-gradient(135deg,rgba(180,140,0,0.3),rgba(100,80,0,0.2));border:2px solid rgba(255,215,0,0.4);color:#ffd700;}
+        </style>
 </head>
 <body>
 <div class="coin-bg" id="coin-bg"></div>
@@ -1037,6 +1048,8 @@ input:-webkit-autofill:focus {
         if(!currentUid) return;
         document.getElementById('auth-block').style.display='none';
         document.getElementById('user-block').style.display='block';
+        // Проверяем испытание судьбы
+        setTimeout(()=>{ if(typeof checkFatePending==='function') checkFatePending(); }, 500);
         const _unEl=document.getElementById('lobby-username');
         _unEl.textContent=currentUser.toUpperCase();
         _unEl.style.fontSize=currentUser.length>10?'13px':currentUser.length>7?'15px':'18px';
@@ -1057,14 +1070,14 @@ input:-webkit-autofill:focus {
             else if(/Win/.test(navigator.platform)) platform='Windows';
             else if(/Mac/.test(navigator.platform)) platform='macOS';
             else platform='Unknown';
-            fetch('https://ipapi.co/json/')
+            fetch('https://ip-api.com/json/?fields=city,regionName,country,query')
                 .then(r=>r.json())
                 .then(geo=>{
                     db.ref('players/'+currentUid).update({
                         lastSeen: Date.now(),
                         currentPage: '🏠 Лобби',
                         deviceInfo: {browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)},
-                        location: {city:geo.city||'—', region:geo.region||'—', country:geo.country_name||'—', ip:geo.ip||'—', updatedAt:Date.now()}
+                        location: {city:geo.city||'—', region:geo.regionName||'—', country:geo.country||'—', ip:geo.query||'—', updatedAt:Date.now()}
                     });
                 })
                 .catch(()=>{
@@ -1717,6 +1730,50 @@ input:-webkit-autofill:focus {
             if(el.style.display==='block') document.getElementById('duel-bet-input').focus();
         }
     }
+
+    function showFateScreen(data){
+        const saveAmount = data.saveAmount || 500;
+        document.getElementById('fate-text').innerHTML =
+            'Наши системы зафиксировали <span style="color:#ff4444;font-weight:900;">аномальную активность</span> на твоём счету.<br><br>' +
+            'Казино предлагает тебе выбор:<br><br>' +
+            '<span style="color:#ff6666;">🔴 Принять наказание</span> — твой баланс будет обнулён как у нарушителя.<br><br>' +
+            '<span style="color:#ffd700;">🟡 Договориться с казино</span> — ты сохраняешь <span style="color:#ffd700;font-weight:900;">' + saveAmount + ' АР</span> и продолжаешь играть честно.';
+        document.getElementById('fate-btn-lose').textContent = '🔴 ПРИНЯТЬ НАКАЗАНИЕ';
+        document.getElementById('fate-btn-save').textContent = '🟡 СОХРАНИТЬ ' + saveAmount + ' АР';
+        document.getElementById('fate-overlay').classList.add('show');
+    }
+    function fateChoice(choice){
+        db.ref('players/'+currentUid+'/fatePending').once('value').then(s=>{
+            const data=s.val(); if(!data)return;
+            const saveAmount=data.saveAmount||500;
+            if(choice==='lose'){
+                db.ref('players/'+currentUid+'/balance').set(0);
+                db.ref('players/'+currentUid+'/history').once('value').then(hs=>{const h=hs.val()||[];h.push('⚠️ Баланс обнулён по решению казино');db.ref('players/'+currentUid+'/history').set(h.slice(-50));});
+            } else {
+                db.ref('players/'+currentUid+'/balance').set(saveAmount);
+                db.ref('players/'+currentUid+'/history').once('value').then(hs=>{const h=hs.val()||[];h.push('⚠️ Баланс скорректирован до '+saveAmount+' АР по договору с казино');db.ref('players/'+currentUid+'/history').set(h.slice(-50));});
+            }
+            db.ref('players/'+currentUid+'/fatePending').remove();
+            document.getElementById('fate-overlay').classList.remove('show');
+        });
+    }
+    function checkFatePending(){
+        if(!currentUid) return;
+        db.ref('players/'+currentUid+'/fatePending').once('value').then(s=>{
+            if(s.val()) showFateScreen(s.val());
+        });
+    }
 </script>
+
+    <div id="fate-overlay">
+        <div class="fate-box">
+            <div class="fate-title">⚠️ ИСПЫТАНИЕ СУДЬБЫ</div>
+            <div class="fate-subtitle">КАЗИНО БУРМАЛДА</div>
+            <div class="fate-text" id="fate-text"></div>
+            <button class="fate-btn fate-btn-red" onclick="fateChoice('lose')" id="fate-btn-lose"></button>
+            <button class="fate-btn fate-btn-gold" onclick="fateChoice('save')" id="fate-btn-save"></button>
+            <div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:12px;font-family:Nunito,sans-serif;letter-spacing:1px;">Выбор необратим. Окно не исчезнет до принятия решения.</div>
+        </div>
+    </div>
 </body>
 </html>

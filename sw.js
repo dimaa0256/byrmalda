@@ -1,9 +1,10 @@
-const CACHE = 'burmalda-v2';
+const CACHE = 'burmalda-v3';
 const ASSETS = [
   '/index.html',
   '/slot.html',
   '/minesweeper.html',
   '/airplane.html',
+  '/shariki.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
@@ -25,16 +26,25 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Network first — всегда берём свежие данные, кэш только если офлайн
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Не обрабатываем внешние API
-  if (e.request.url.includes('ipapi.co') || e.request.url.includes('firebaseio.com') || e.request.url.includes('googleapis.com')) return;
+  const url = e.request.url;
+  // Пропускаем внешние API без обработки
+  if (url.includes('ipapi.co') ||
+      url.includes('firebaseio.com') ||
+      url.includes('googleapis.com') ||
+      url.includes('firebaseapp.com') ||
+      url.includes('gstatic.com') ||
+      !url.startsWith('https://dimaa0256.github.io')) return;
+
   e.respondWith(
     fetch(e.request)
       .then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
+        // Кэшируем только успешные полные ответы
+        if (res.ok && res.status === 200 && res.type === 'basic') {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone)).catch(()=>{});
+        }
         return res;
       })
       .catch(() => caches.match(e.request))
