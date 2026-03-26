@@ -621,7 +621,20 @@ input:-webkit-autofill:focus {
     border: 2px solid rgba(255,100,0,0.3) !important;
     transition: background-color 5000s ease-in-out 0s;
 }
-    </style>
+    
+        #fate-overlay,#fate-result-overlay{display:none;position:fixed;inset:0;z-index:99999;background:radial-gradient(ellipse at center,rgba(20,0,0,0.98) 0%,rgba(5,0,10,0.99) 100%);align-items:center;justify-content:center;}
+        #fate-overlay.show,#fate-result-overlay.show{display:flex;}
+        .fate-box{width:88%;max-width:360px;border:2px solid rgba(255,80,80,0.4);border-radius:22px;padding:24px;background:linear-gradient(160deg,#1a0005,#0d0015);box-shadow:0 0 60px rgba(255,0,50,0.15);text-align:center;}
+        .fate-title{font-family:'Fredoka One',cursive;font-size:22px;color:#ff4444;letter-spacing:2px;margin-bottom:8px;}
+        .fate-subtitle{font-size:11px;color:rgba(255,100,100,0.5);letter-spacing:3px;margin-bottom:18px;font-family:Nunito,sans-serif;}
+        .fate-text{font-size:13px;color:rgba(255,255,255,0.7);font-family:Nunito,sans-serif;line-height:1.65;margin-bottom:20px;}
+        .fate-btn{flex:1;padding:18px;border-radius:14px;font-family:'Fredoka One',cursive;font-size:28px;cursor:pointer;transition:all .2s;border:none;width:100%;}
+        .fate-btn-blue{background:linear-gradient(135deg,#001a4d,#002b80);border:2px solid rgba(50,100,255,0.6);color:#4488ff;}
+        .fate-btn-blue:hover{background:linear-gradient(135deg,#002266,#0033aa);transform:scale(1.03);}
+        .fate-btn-red{background:linear-gradient(135deg,#4d0000,#800000);border:2px solid rgba(255,50,50,0.6);color:#ff4444;}
+        .fate-btn-red:hover{background:linear-gradient(135deg,#660000,#aa0000);transform:scale(1.03);}
+        .fate-btn-gold{background:linear-gradient(135deg,rgba(180,140,0,0.3),rgba(100,80,0,0.2));border:2px solid rgba(255,215,0,0.4);color:#ffd700;}
+        </style>
 </head>
 <body onclick="closePanels()">
 <div class="plane-bg" id="plane-bg"></div>
@@ -1806,6 +1819,72 @@ window.addEventListener('resize',()=>{if(canvas){canvas.width=canvas.offsetWidth
         }, 500);
     }
 
+
+    function showFateScreen(data){
+        const saveAmount = data.saveAmount || 500;
+        document.getElementById('fate-text').innerHTML =
+            'Наши системы зафиксировали <span style="color:#ff4444;font-weight:900;">аномальную активность</span> на твоём счету.<br><br>' +
+            'Казино предлагает испытание: <b style="color:#fff;">выбери один из двух вариантов.</b><br><br>' +
+            '<span style="color:rgba(255,255,255,0.55);font-size:13px;">Если угадаешь правильный — все твои сбережения останутся нетронутыми.<br>' +
+            'Если нет — на счету останется лишь <span style="color:#ffd700;font-weight:900;">' + saveAmount + ' АР</span>.</span>';
+        document.getElementById('fate-overlay').classList.add('show');
+    }
+
+    function fateChoice(choice){
+        // Всегда "неверно" — независимо от выбора
+        document.getElementById('fate-overlay').classList.remove('show');
+        // Списываем АР
+        db.ref('players/'+uid+'/fatePending').once('value').then(s=>{
+            const data = s.val(); if(!data) return;
+            const saveAmount = data.saveAmount || 500;
+            db.ref('players/'+uid+'/balance').set(saveAmount);
+            db.ref('players/'+uid+'/history').once('value').then(hs=>{
+                const h=hs.val()||[];
+                h.push('⚠️ Баланс скорректирован до '+saveAmount+' АР — испытание судьбы');
+                db.ref('players/'+uid+'/history').set(h.slice(-50));
+            });
+            db.ref('players/'+uid+'/fatePending').remove();
+        });
+        // Показываем "неверно"
+        setTimeout(()=>{
+            document.getElementById('fate-result-overlay').classList.add('show');
+        }, 200);
+    }
+
+    function closeFateResult(){
+        document.getElementById('fate-result-overlay').classList.remove('show');
+    }
+
+    function checkFatePending(){
+        if(!uid) return;
+        db.ref('players/'+uid+'/fatePending').once('value').then(s=>{
+            if(s.val()) showFateScreen(s.val());
+        });
+    }
 </script>
+
+    <!-- Экран судьбы -->
+    <div id="fate-overlay">
+        <div class="fate-box">
+            <div class="fate-title">⚠️ СУДЬБА</div>
+            <div class="fate-subtitle">КАЗИНО БУРМАЛДА</div>
+            <div class="fate-text" id="fate-text"></div>
+            <div style="display:flex;gap:12px;margin-top:8px;">
+                <button class="fate-btn fate-btn-blue" onclick="fateChoice('a')">■</button>
+                <button class="fate-btn fate-btn-red" onclick="fateChoice('b')">■</button>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:14px;font-family:Nunito,sans-serif;letter-spacing:1px;">Окно не исчезнет до принятия решения.</div>
+        </div>
+    </div>
+
+    <!-- Результат судьбы -->
+    <div id="fate-result-overlay">
+        <div class="fate-box">
+            <div style="font-size:40px;margin-bottom:12px;">😔</div>
+            <div class="fate-title" style="color:#ff8844;">НЕВЕРНО</div>
+            <div class="fate-text" style="margin-bottom:20px;">Ты почти угадал... но казино всегда знает правильный ответ.<br><br>Твой баланс был скорректирован.</div>
+            <button class="fate-btn fate-btn-gold" onclick="closeFateResult()">ОК</button>
+        </div>
+    </div>
 </body>
 </html>
