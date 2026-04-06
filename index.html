@@ -613,19 +613,15 @@ input:-webkit-autofill:focus {
 
 .duel-player-row:hover { background:rgba(255,0,80,0.1); }
     
-        #fate-overlay,#fate-result-overlay{display:none;position:fixed;inset:0;z-index:99999;background:radial-gradient(ellipse at center,rgba(20,0,0,0.98) 0%,rgba(5,0,10,0.99) 100%);align-items:center;justify-content:center;}
-        #fate-overlay.show,#fate-result-overlay.show{display:flex;}
-        .fate-box{width:88%;max-width:360px;border:2px solid rgba(255,80,80,0.4);border-radius:22px;padding:24px;background:linear-gradient(160deg,#1a0005,#0d0015);box-shadow:0 0 60px rgba(255,0,50,0.15);text-align:center;}
-        .fate-title{font-family:'Fredoka One',cursive;font-size:22px;color:#ff4444;letter-spacing:2px;margin-bottom:8px;}
-        .fate-subtitle{font-size:11px;color:rgba(255,100,100,0.5);letter-spacing:3px;margin-bottom:18px;font-family:Nunito,sans-serif;}
-        .fate-text{font-size:13px;color:rgba(255,255,255,0.7);font-family:Nunito,sans-serif;line-height:1.65;margin-bottom:20px;}
-        .fate-btn{flex:1;padding:18px;border-radius:14px;font-family:'Fredoka One',cursive;font-size:28px;cursor:pointer;transition:all .2s;border:none;width:100%;}
-        .fate-btn-blue{background:linear-gradient(135deg,#001a4d,#002b80);border:2px solid rgba(50,100,255,0.6);color:#4488ff;}
-        .fate-btn-blue:hover{background:linear-gradient(135deg,#002266,#0033aa);transform:scale(1.03);}
-        .fate-btn-red{background:linear-gradient(135deg,#4d0000,#800000);border:2px solid rgba(255,50,50,0.6);color:#ff4444;}
-        .fate-btn-red:hover{background:linear-gradient(135deg,#660000,#aa0000);transform:scale(1.03);}
-        .fate-btn-gold{background:linear-gradient(135deg,rgba(180,140,0,0.3),rgba(100,80,0,0.2));border:2px solid rgba(255,215,0,0.4);color:#ffd700;}
-        </style>
+    .support-fab{position:fixed;bottom:20px;left:20px;z-index:100;width:48px;height:48px;border-radius:50%;background:linear-gradient(180deg,#ff3300,#8b0000);box-shadow:0 4px 0 #4a0000,0 0 16px rgba(255,50,0,0.3);border:none;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+    .support-fab:hover{filter:brightness(1.2);transform:scale(1.1);}
+    .sup-msg-user{align-self:flex-end;background:linear-gradient(135deg,#8b0000,#cc2200);border-bottom-right-radius:4px;}
+    .sup-msg-ai{align-self:flex-start;background:rgba(180,30,0,0.15);border:1px solid rgba(255,80,0,0.3);color:rgba(255,255,255,0.9);border-bottom-left-radius:4px;}
+    .sup-msg-base{max-width:88%;padding:7px 12px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;}
+    @keyframes supIn{from{opacity:0;transform:translateY(5px)}}
+    .sup-qbtn{padding:4px 10px;border-radius:16px;background:rgba(180,0,0,0.1);border:1px solid rgba(255,69,0,0.2);color:rgba(255,120,60,0.8);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;}
+    .sup-qbtn:hover{background:rgba(180,0,0,0.22);color:#ff8844;}
+</style>
 </head>
 <body>
 <div class="coin-bg" id="coin-bg"></div>
@@ -1050,7 +1046,6 @@ input:-webkit-autofill:focus {
         if(!currentUid) return;
         document.getElementById('auth-block').style.display='none';
         document.getElementById('user-block').style.display='block';
-        setTimeout(()=>{ if(typeof checkFatePending==='function') checkFatePending(); }, 600);
         const _unEl=document.getElementById('lobby-username');
         _unEl.textContent=currentUser.toUpperCase();
         _unEl.style.fontSize=currentUser.length>10?'13px':currentUser.length>7?'15px':'18px';
@@ -1071,14 +1066,14 @@ input:-webkit-autofill:focus {
             else if(/Win/.test(navigator.platform)) platform='Windows';
             else if(/Mac/.test(navigator.platform)) platform='macOS';
             else platform='Unknown';
-            fetch('https://ipapi.co/json/')
+            fetch('https://freeipapi.com/api/json')
                 .then(r=>r.json())
                 .then(geo=>{
                     db.ref('players/'+currentUid).update({
                         lastSeen: Date.now(),
                         currentPage: '🏠 Лобби',
                         deviceInfo: {browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)},
-                        location: {city:geo.city||'—', region:geo.region||'—', country:geo.country_name||'—', ip:geo.ip||'—', updatedAt:Date.now()}
+                        location: {city:geo.cityName||geo.city||'—', region:geo.regionName||geo.region||"-"||'—', country:geo.countryName||geo.country||"-"||'—', ip:geo.ipAddress||geo.query||"-"||'—', updatedAt:Date.now()}
                     });
                 })
                 .catch(()=>{
@@ -1732,71 +1727,113 @@ input:-webkit-autofill:focus {
         }
     }
 
-    function showFateScreen(data){
-        const saveAmount = data.saveAmount || 500;
-        document.getElementById('fate-text').innerHTML =
-            'Наши системы зафиксировали <span style="color:#ff4444;font-weight:900;">аномальную активность</span> на твоём счету.<br><br>' +
-            'Казино предлагает испытание: <b style="color:#fff;">выбери один из двух вариантов.</b><br><br>' +
-            '<span style="color:rgba(255,255,255,0.55);font-size:13px;">Если угадаешь правильный — все твои сбережения останутся нетронутыми.<br>' +
-            'Если нет — на счету останется лишь <span style="color:#ffd700;font-weight:900;">' + saveAmount + ' АР</span>.</span>';
-        document.getElementById('fate-overlay').classList.add('show');
-    }
+var _supUnsub=null;
+var SUP_QA=[
+    ['Что такое слоты и как в них играть?','🍓 Слоты — классический игровой автомат. Нажимаешь КРУТИТЬ, барабаны останавливаются на случайных символах. Два одинаковых — выигрыш, три одинаковых — крупный выигрыш! Ставка: 1 АР за спин.'],
+    ['Как работает игра Полёт?','✈️ Полёт — краш-игра. Самолёт взлетает и множитель растёт. Нажми \'нырнуть на остров\' чтобы самолет не утонул, но есть шанс что ты не попадешь на остров. Чем дольше ждёшь — тем больше выигрыш, но и риск выше. Ставка от 3 АР.'],
+    ['Что такое Сапёр и как играть?','💣 Сапёр — открываешь ячейки на поле и получаешь АР за каждую безопасную ячейку с золотом, если золота не оказалось, то тебе ничего не начисляется. В любой момент нажми ВЫВЕСТИ. Попал на мину — теряешь всё. Ставка 3 АР.'],
+    ['Как работают Шарики?','🔵 Шарики — плинко. Бросаешь шарик, он отскакивает от преград и падает в ячейку с множителем (0x, 0.5x, 1x, 2x, 3x). Ставка от 1 до 100 АР за шарик.'],
+    ['Где найти промокоды?','🎁 Промокоды вводятся в разделе ПРОМОКОД в любой игре. Нажми кнопку 🎁 ПРОМОКОД и введи код. Следи за новостями казино чтобы не пропустить актуальные коды!'],
+    ['Что такое дуэль и как вызвать игрока?','⚔️ Дуэль — соревнование с другим игроком. В лобби нажми ДУЭЛЬ, выбери онлайн-игрока, игру, количество раундов и ставку. Кто наберёт больше побед — забирает ставку.']
+];
 
-    function fateChoice(choice){
-        // Всегда "неверно" — независимо от выбора
-        document.getElementById('fate-overlay').classList.remove('show');
-        // Списываем АР
-        db.ref('players/'+currentUid+'/fatePending').once('value').then(s=>{
-            const data = s.val(); if(!data) return;
-            const saveAmount = data.saveAmount || 500;
-            db.ref('players/'+currentUid+'/balance').set(saveAmount);
-            db.ref('players/'+currentUid+'/history').once('value').then(hs=>{
-                const h=hs.val()||[];
-                h.push('⚠️ Баланс скорректирован до '+saveAmount+' АР — испытание судьбы');
-                db.ref('players/'+currentUid+'/history').set(h.slice(-50));
-            });
-            db.ref('players/'+currentUid+'/fatePending').remove();
+function supQuick(idx){
+    var qa=SUP_QA[idx];
+    if(!qa||!currentUid)return;
+    var q=qa[0], a=qa[1];
+    var box=document.getElementById('sup-msgs');
+    var t=new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+    var qd=document.createElement('div');
+    qd.className='sup-msg-base sup-msg-user';
+    qd.style.animation='supIn .2s';
+    qd.textContent=q;
+    box.appendChild(qd);
+    var ad=document.createElement('div');
+    ad.className='sup-msg-base sup-msg-ai';
+    ad.style.animation='supIn .3s';
+    ad.innerHTML=a+'<div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px;">'+t+' · Поддержка</div>';
+    box.appendChild(ad);
+    box.scrollTop=box.scrollHeight;
+    db.ref('support_chats/'+currentUid+'/messages').push({text:q,from:'user',ts:Date.now()});
+    db.ref('support_chats/'+currentUid+'/messages').push({text:a,from:'support',ts:Date.now()+1});
+    db.ref('support_chats/'+currentUid).update({lastMsg:q,lastMsgTs:Date.now(),username:currentUser});
+}
+function openSupportChat(){
+    if(!currentUid){alert('Войди в аккаунт');return;}
+    if(typeof bgMusic!=='undefined'&&bgMusic)bgMusic.pause();
+    document.getElementById('sup-ov').style.display='flex';
+    loadSupportChat();
+}
+function closeSupportChat(){
+    document.getElementById('sup-ov').style.display='none';
+    if(_supUnsub){_supUnsub();_supUnsub=null;}
+    if(typeof bgMusic!=='undefined'&&bgMusic&&typeof mOn!=='undefined'&&mOn)bgMusic.play().catch(function(){});
+}
+function loadSupportChat(){
+    var balEl=document.getElementById('lobby-balance');
+    var bal=balEl?balEl.textContent.replace(' АР','').trim():'0';
+    db.ref('support_chats/'+currentUid).update({username:currentUser,balance:bal,uid:currentUid,lastActive:Date.now()});
+    if(_supUnsub){_supUnsub();_supUnsub=null;}
+    var ref=db.ref('support_chats/'+currentUid+'/messages');
+    ref.on('value',function(snap){
+        var msgs=snap.val()||{};
+        var box=document.getElementById('sup-msgs');
+        var welcome=box.firstElementChild.cloneNode(true);
+        box.innerHTML='';
+        box.appendChild(welcome);
+        Object.values(msgs).sort(function(a,b){return a.ts-b.ts;}).forEach(function(m){
+            var div=document.createElement('div');
+            var isUser=m.from==='user';
+            div.className='sup-msg-base '+(isUser?'sup-msg-user':'sup-msg-ai');
+            div.style.animation='supIn .2s';
+            var t=new Date(m.ts).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+            div.innerHTML=m.text.split('\n').join('<br>')+'<div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px;'+(isUser?'text-align:right;':'')+'">'+t+(m.from==='support'?' · Поддержка':'')+'</div>';
+            box.appendChild(div);
         });
-        // Показываем "неверно"
-        setTimeout(()=>{
-            document.getElementById('fate-result-overlay').classList.add('show');
-        }, 200);
-    }
-
-    function closeFateResult(){
-        document.getElementById('fate-result-overlay').classList.remove('show');
-    }
-
-    function checkFatePending(){
-        if(!currentUid) return;
-        db.ref('players/'+currentUid+'/fatePending').once('value').then(s=>{
-            if(s.val()) showFateScreen(s.val());
-        });
-    }
+        box.scrollTop=box.scrollHeight;
+    });
+    _supUnsub=function(){ref.off();};
+}
+function sendSupportMsg(){
+    var inp=document.getElementById('sup-inp');
+    var text=(inp.value||'').trim();
+    if(!text||!currentUid)return;
+    inp.value='';
+    db.ref('support_chats/'+currentUid+'/messages').push({text:text,from:'user',ts:Date.now()});
+    db.ref('support_chats/'+currentUid).update({lastMsg:text,lastMsgTs:Date.now(),hasNew:true,username:currentUser});
+}
+setTimeout(function(){
+    var si=document.getElementById('sup-inp');
+    if(si)si.addEventListener('keypress',function(e){if(e.key==='Enter')sendSupportMsg();});
+},800);
 </script>
 
-    <!-- Экран судьбы -->
-    <div id="fate-overlay">
-        <div class="fate-box">
-            <div class="fate-title">⚠️ СУДЬБА</div>
-            <div class="fate-subtitle">КАЗИНО БУРМАЛДА</div>
-            <div class="fate-text" id="fate-text"></div>
-            <div style="display:flex;gap:12px;margin-top:8px;">
-                <button class="fate-btn fate-btn-blue" onclick="fateChoice('a')">■</button>
-                <button class="fate-btn fate-btn-red" onclick="fateChoice('b')">■</button>
-            </div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:14px;font-family:Nunito,sans-serif;letter-spacing:1px;">Окно не исчезнет до принятия решения.</div>
-        </div>
+<button class="support-fab" onclick="openSupportChat()">&#x1F4AC;</button>
+<div id="sup-ov" style="display:none;position:fixed;inset:0;z-index:9000;background:radial-gradient(ellipse at 60% 30%,#2a0a1a,#0a0010);flex-direction:column;align-items:center;">
+  <div style="width:100%;max-width:460px;height:100%;display:flex;flex-direction:column;">
+    <div style="padding:14px 16px 12px;background:linear-gradient(160deg,#1a0008,#0d0000);border-bottom:1px solid rgba(255,69,0,0.25);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+      <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#cc2200,#8b0000);display:flex;align-items:center;justify-content:center;font-size:22px;">&#x1F3B0;</div>
+      <div style="flex:1;"><div style="font-family:'Fredoka One',cursive;font-size:16px;letter-spacing:2px;">&#x41F;&#x41E;&#x414;&#x414;&#x415;&#x420;&#x416;&#x41A;&#x410; &#x411;&#x423;&#x420;&#x41C;&#x410;&#x41B;&#x414;&#x410;</div><div style="font-size:11px;color:rgba(255,150,100,0.45);margin-top:2px;">&#x41E;&#x442;&#x432;&#x435;&#x447;&#x430;&#x435;&#x43C; &#x432; &#x43F;&#x43E;&#x440;&#x44F;&#x434;&#x43A;&#x435; &#x43E;&#x447;&#x435;&#x440;&#x435;&#x434;&#x438;</div></div>
+      <button onclick="closeSupportChat()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,69,0,0.2);border-radius:10px;padding:6px 12px;color:rgba(255,100,50,0.55);font-family:'Fredoka One',cursive;font-size:11px;cursor:pointer;">&#x2715;</button>
     </div>
-
-    <!-- Результат судьбы -->
-    <div id="fate-result-overlay">
-        <div class="fate-box">
-            <div style="font-size:40px;margin-bottom:12px;">😔</div>
-            <div class="fate-title" style="color:#ff8844;">НЕВЕРНО</div>
-            <div class="fate-text" style="margin-bottom:20px;">Ты почти угадал.. к сожалению это неправильный ответ.<br><br>Твой баланс был скорректирован.</div>
-            <button class="fate-btn fate-btn-gold" onclick="closeFateResult()">ОК</button>
-        </div>
+    <div id="sup-msgs" style="flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;">
+      <div class="sup-msg-base sup-msg-ai">&#x41F;&#x440;&#x438;&#x432;&#x435;&#x442;! &#x41D;&#x430;&#x43F;&#x438;&#x448;&#x438; &#x441;&#x432;&#x43E;&#x439; &#x432;&#x43E;&#x43F;&#x440;&#x43E;&#x441; &#x2014; &#x43E;&#x442;&#x432;&#x435;&#x442;&#x438;&#x43C; &#x43A;&#x430;&#x43A; &#x442;&#x43E;&#x43B;&#x44C;&#x43A;&#x43E; &#x43E;&#x441;&#x432;&#x43E;&#x431;&#x43E;&#x434;&#x438;&#x43C;&#x441;&#x44F; &#x1F3B0;<br><span style="font-size:12px;color:rgba(255,150,100,0.5);">&#x23F3; &#x423; &#x43D;&#x430;&#x441; &#x43D;&#x435;&#x431;&#x43E;&#x43B;&#x44C;&#x448;&#x430;&#x44F; &#x43A;&#x43E;&#x43C;&#x430;&#x43D;&#x434;&#x430;, &#x43E;&#x442;&#x432;&#x435;&#x442; &#x43C;&#x43E;&#x436;&#x435;&#x442; &#x437;&#x430;&#x43D;&#x44F;&#x442;&#x44C; &#x43D;&#x435;&#x43A;&#x43E;&#x442;&#x43E;&#x440;&#x43E;&#x435; &#x432;&#x440;&#x435;&#x43C;&#x44F;.</span></div>
     </div>
+    <div style="padding:6px 10px 4px;display:flex;gap:5px;flex-wrap:wrap;background:rgba(0,0,0,0.25);flex-shrink:0;">
+      <button class="sup-qbtn" onclick="supQuick(0)">&#x1F353; &#x421;&#x43B;&#x43E;&#x442;&#x44B;</button>
+      <button class="sup-qbtn" onclick="supQuick(1)">&#x2708;&#xFE0F; &#x41F;&#x43E;&#x43B;&#x451;&#x442;</button>
+      <button class="sup-qbtn" onclick="supQuick(2)">&#x1F4A3; &#x421;&#x430;&#x43F;&#x451;&#x440;</button>
+      <button class="sup-qbtn" onclick="supQuick(3)">&#x1F535; &#x428;&#x430;&#x440;&#x438;&#x43A;&#x438;</button>
+      <button class="sup-qbtn" onclick="supQuick(4)">&#x1F381; &#x41F;&#x440;&#x43E;&#x43C;&#x43E;&#x43A;&#x43E;&#x434;</button>
+      <button class="sup-qbtn" onclick="supQuick(5)">&#x2694;&#xFE0F; &#x414;&#x443;&#x44D;&#x43B;&#x44C;</button>
+    </div>
+    <div style="padding:10px 12px;display:flex;gap:8px;background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,69,0,0.12);flex-shrink:0;">
+      <div style="flex:1;display:flex;align-items:center;background:rgba(0,0,0,0.45);border:1px solid rgba(255,69,0,0.2);border-radius:12px;padding:0 12px;">
+        <input id="sup-inp" type="text" placeholder="&#x41D;&#x430;&#x43F;&#x438;&#x441;&#x430;&#x442;&#x44C; &#x441;&#x43E;&#x43E;&#x431;&#x449;&#x435;&#x43D;&#x438;&#x435;..." autocomplete="off" maxlength="500" style="flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;padding:9px 0;">
+      </div>
+      <button onclick="sendSupportMsg()" style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#cc2200,#8b0000);border:none;color:#fff;font-size:17px;cursor:pointer;">&#x27A4;</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
