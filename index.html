@@ -613,14 +613,15 @@ input:-webkit-autofill:focus {
 
 .duel-player-row:hover { background:rgba(255,0,80,0.1); }
     
-    .support-fab{position:fixed;bottom:20px;left:20px;z-index:100;width:48px;height:48px;border-radius:50%;background:linear-gradient(180deg,#ff3300,#8b0000);box-shadow:0 4px 0 #4a0000,0 0 16px rgba(255,50,0,0.3);border:none;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
-    .support-fab:hover{filter:brightness(1.2);transform:scale(1.1);}
-    .sup-msg-user{align-self:flex-end;background:linear-gradient(135deg,#8b0000,#cc2200);border-bottom-right-radius:4px;}
-    .sup-msg-ai{align-self:flex-start;background:rgba(180,30,0,0.15);border:1px solid rgba(255,80,0,0.3);color:rgba(255,255,255,0.9);border-bottom-left-radius:4px;}
-    .sup-msg-base{max-width:88%;padding:7px 12px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;}
-    @keyframes supIn{from{opacity:0;transform:translateY(5px)}}
-    .sup-qbtn{padding:4px 10px;border-radius:16px;background:rgba(180,0,0,0.1);border:1px solid rgba(255,69,0,0.2);color:rgba(255,120,60,0.8);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;}
-    .sup-qbtn:hover{background:rgba(180,0,0,0.22);color:#ff8844;}
+    .nmb{padding:9px 4px;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;transition:all .15s;width:100%;}
+    .nmb:hover{background:rgba(255,255,255,0.1);}
+    @keyframes rainbowShift{from{background-position:0%}to{background-position:200%}}
+    .bunny-el{position:absolute;cursor:pointer;user-select:none;}
+    .particle{position:fixed;pointer-events:none;z-index:9000;border-radius:50%;animation:pFly 0.6s ease-out forwards;}
+    @keyframes pFly{to{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
+    @keyframes bunnyPop{0%{transform:scale(1)}40%{transform:scale(1.4) rotate(6deg)}100%{transform:scale(0) rotate(20deg);opacity:0}}
+    @keyframes bunnyShake{0%,100%{transform:scale(1)}33%{transform:scale(1.07) rotate(-3deg)}66%{transform:scale(1.07) rotate(3deg)}}
+    @keyframes bunnyAppear{from{opacity:0;transform:scale(0.4)}to{opacity:1;transform:scale(1)}}
 </style>
 </head>
 <body>
@@ -664,15 +665,23 @@ input:-webkit-autofill:focus {
             <div style="text-align: right">
                 <div class="user-bar-name">баланс</div>
                 <div class="user-bar-bal" id="lobby-balance">0 АР</div>
+                <div id="egg-balance-wrap" style="display:none;margin-top:1px;"><span style="font-family:'Fredoka One',cursive;font-size:13px;color:#ffdd44;" id="lobby-eggs">0 🥚</span></div>
             </div>
             <button class="btn-logout" onclick="logout()">ВЫЙТИ</button>
         </div>
 
-        <div style="display: flex; gap: 8px; margin-top: 8px">
-            <button id="vip-btn" onclick="openVip()" style="flex: 1; padding: 9px; font-family: 'Fredoka One',cursive; font-size: 13px; letter-spacing: 2px; color: #ffd700; background: rgba(255,180,0,0.08); border: 1px solid rgba(255,180,0,0.3); border-radius: 14px; cursor: pointer; transition: all .2s" onmouseover="this.style.background='rgba(255,180,0,0.18)'" onmouseout="this.style.background='rgba(255,180,0,0.08)'">👑 ВИП</button>
-            <button onclick="openLeaderboard()" style="flex: 1; padding: 9px; font-family: 'Fredoka One',cursive; font-size: 13px; letter-spacing: 2px; color: #88ccff; background: rgba(0,100,255,0.08); border: 1px solid rgba(0,150,255,0.3); border-radius: 14px; cursor: pointer; transition: all .2s" onmouseover="this.style.background='rgba(0,100,255,0.18)'" onmouseout="this.style.background='rgba(0,100,255,0.08)'">🏆 ТОП</button>
-            <button onclick="openQuests()" id="quests-btn" style="flex: 1; padding: 9px; font-family: 'Fredoka One',cursive; font-size: 13px; letter-spacing: 2px; color: #cc88ff; background: rgba(150,0,255,0.08); border: 1px solid rgba(150,0,255,0.3); border-radius: 14px; cursor: pointer; transition: all .2s" onmouseover="this.style.background='rgba(150,0,255,0.18)'" onmouseout="this.style.background='rgba(150,0,255,0.08)'">📋 КВЕСТЫ</button>
-            <button onclick="openDuels()" id="duels-btn" style="flex: 1; padding: 9px; font-family: 'Fredoka One',cursive; font-size: 13px; letter-spacing: 2px; color: #ff88aa; background: rgba(255,0,80,0.08); border: 1px solid rgba(255,0,80,0.3); border-radius: 14px; cursor: pointer; transition: all .2s" onmouseover="this.style.background='rgba(255,0,80,0.18)'" onmouseout="this.style.background='rgba(255,0,80,0.08)'">⚔️ ДУЭЛЬ</button>
+        <div style="margin-top:8px;text-align:center;">
+            <button onclick="toggleNavMenu()" id="nav-toggle-btn" style="padding:7px 28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:rgba(255,255,255,0.45);font-size:18px;cursor:pointer;transition:all .2s;">▼</button>
+        </div>
+        <div id="nav-menu" style="display:none;margin-top:8px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+                <button id="vip-btn" onclick="openVip()" class="nmb" style="color:#ffd700;border-color:rgba(255,180,0,0.3);">👑 ВИП</button>
+                <button onclick="openLeaderboard()" class="nmb" style="color:#88ccff;border-color:rgba(0,150,255,0.3);">🏆 ТОП</button>
+                <button onclick="openQuests()" id="quests-btn" class="nmb" style="color:#cc88ff;border-color:rgba(150,0,255,0.3);">📋 КВЕСТЫ</button>
+                <button onclick="openDuels()" id="duels-btn" class="nmb" style="color:#ff88aa;border-color:rgba(255,0,80,0.3);">⚔️ ДУЭЛЬ</button>
+                <button onclick="openShop()" id="shop-btn" class="nmb" style="color:#ffdd88;border-color:rgba(255,200,0,0.3);">🛒 МАГАЗИН</button>
+                <button onclick="toggleNavMenu()" class="nmb" style="color:rgba(255,255,255,0.3);border-color:rgba(255,255,255,0.1);">▲</button>
+            </div>
         </div>
 <div id="daily-reward-wrap" style="display: none; margin-top: 8px">
             <button onclick="claimDaily()" id="daily-btn" style="width: 100%; padding: 10px; border-radius: 14px; background: linear-gradient(135deg,rgba(0,200,100,0.2),rgba(0,150,50,0.1)); border: 1px solid rgba(0,200,100,0.4); color: #00e676; font-family: 'Fredoka One',cursive; font-size: 14px; letter-spacing: 2px; cursor: pointer">🎁 ЕЖЕДНЕВНАЯ НАГРАДА</button>
@@ -680,6 +689,66 @@ input:-webkit-autofill:focus {
     </div>
     
     
+
+    <div id="shop-panel" style="display:none;background:linear-gradient(160deg,#0a0015,#150020);border:2px solid rgba(255,200,0,0.3);border-radius:22px;padding:18px;margin-bottom:12px;" onclick="event.stopPropagation()">
+        <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:14px;color:#ffd700;">🛒 МАГАЗИН БУРМАЛДА</div>
+
+        <!-- Блатной ник -->
+        <div id="shop-nick-buy" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <span style="font-size:24px;">✨</span>
+                <div style="flex:1;">
+                    <div style="font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:1px;background:linear-gradient(90deg,#ff4488,#ffdd00,#44ffaa,#4488ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:rainbowShift 2s linear infinite;">БЛАТНОЙ НИК</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">Переливающийся ник — виден всем</div>
+                </div>
+                <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#ffd700;">100 АР</div>
+            </div>
+            <button onclick="buyRainbowNick()" style="width:100%;padding:11px;border-radius:12px;border:none;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#ff4488,#ffdd00,#44ffaa,#4488ff);color:#fff;">КУПИТЬ</button>
+        </div>
+
+        <!-- Обычный ник (показывается если есть радужный) -->
+        <div id="shop-nick-reset" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <span style="font-size:24px;">🔤</span>
+                <div style="flex:1;">
+                    <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#fff;letter-spacing:1px;">ОБЫЧНЫЙ НИК</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">Вернуть стандартный ник</div>
+                </div>
+                <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#ffd700;">50 АР</div>
+            </div>
+            <button onclick="buyNormalNick()" style="width:100%;padding:11px;border-radius:12px;border:none;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);">ВЕРНУТЬ</button>
+        </div>
+
+        <!-- Пасха -->
+        <div id="shop-easter-item" style="display:none;background:rgba(255,200,100,0.06);border:1px solid rgba(255,180,0,0.2);border-radius:16px;padding:14px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <span style="font-size:24px;">🥚</span>
+                <div style="flex:1;">
+                    <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#ffdd44;letter-spacing:1px;">ПАСХА</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">1 яйцо = 3 АР</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+                    <span style="background:rgba(255,80,0,0.25);border:1px solid rgba(255,80,0,0.4);color:#ff8844;font-family:'Fredoka One',cursive;font-size:9px;padding:2px 6px;border-radius:6px;letter-spacing:1px;">-67%</span>
+                    <span id="shop-easter-badge" style="font-family:'Fredoka One',cursive;font-size:9px;padding:2px 6px;border-radius:6px;"></span>
+                </div>
+            </div>
+            <div id="shop-timer-wrap" style="text-align:center;margin-bottom:8px;">
+                <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:2px;" id="shop-timer-label"></div>
+                <div style="font-family:monospace;font-size:20px;color:#ffd700;letter-spacing:2px;" id="shop-timer">00:00:00</div>
+            </div>
+            <div id="shop-exchange-wrap" style="display:none;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <span style="font-size:12px;color:rgba(255,255,255,0.4);">Кол-во 🥚:</span>
+                    <input id="shop-egg-input" type="number" min="1" value="1" style="width:62px;padding:5px 8px;border-radius:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,200,0,0.3);color:#fff;font-family:'Fredoka One',cursive;font-size:14px;text-align:center;outline:none;">
+                    <span style="font-size:12px;color:rgba(255,255,255,0.4);">= <span id="shop-ar-preview" style="color:#ffd700;font-family:'Fredoka One',cursive;">3</span> АР</span>
+                </div>
+                <button onclick="doExchange()" style="width:100%;padding:11px;border-radius:12px;border:none;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#ff8800,#ffcc00);color:#1a0800;">ОБМЕНЯТЬ</button>
+            </div>
+        </div>
+
+        <button onclick="closeShop()" style="width:100%;padding:9px;margin-top:4px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
+    </div>
+    <div id="bunny-container" style="position:fixed;inset:0;pointer-events:none;z-index:8000;"></div>
     <div id="lobby-admin-panel" style="display: none; background: linear-gradient(160deg,#180020,#0a0015); border: 2px solid rgba(255,200,0,0.4); padding: 18px; border-radius: 22px; margin-bottom: 12px">
         <div style="font-family: 'Fredoka One',cursive; font-size: 17px; letter-spacing: 2px; text-align: center; margin-bottom: 12px; color: #ffd700">👑 АДМИН-ПАНЕЛЬ</div>
         <div style="display: flex; gap: 8px; margin-bottom: 10px">
@@ -1066,19 +1135,7 @@ input:-webkit-autofill:focus {
             else if(/Win/.test(navigator.platform)) platform='Windows';
             else if(/Mac/.test(navigator.platform)) platform='macOS';
             else platform='Unknown';
-            fetch('https://freeipapi.com/api/json')
-                .then(r=>r.json())
-                .then(geo=>{
-                    db.ref('players/'+currentUid).update({
-                        lastSeen: Date.now(),
-                        currentPage: '🏠 Лобби',
-                        deviceInfo: {browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)},
-                        location: {city:geo.cityName||geo.city||'—', region:geo.regionName||geo.region||"-"||'—', country:geo.countryName||geo.country||"-"||'—', ip:geo.ipAddress||geo.query||"-"||'—', updatedAt:Date.now()}
-                    });
-                })
-                .catch(()=>{
-                    db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Лобби', deviceInfo:{browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)}});
-                });
+db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Лобби', deviceInfo:{browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)}});
         } catch(e){}
         db.ref('players/'+currentUid+'/questDay').once('value').then(s=>{
             const today=new Date().toDateString();
@@ -1097,10 +1154,31 @@ input:-webkit-autofill:focus {
             isAdmin=!!d.admin;
             const vipBtn=document.getElementById('vip-btn');
             if(vipBtn) vipBtn.style.display='';
-            const badge=d.verified?'✅ ':d.admin?'👑 ':'';
+            const badge=d.verified?'✅ ':d.admin?'👑 ':d.pinned?'📌 ':'';
             const _unEl2=document.getElementById('lobby-username');
             _unEl2.textContent=badge+currentUser.toUpperCase();
             _unEl2.style.fontSize=currentUser.length>10?'13px':currentUser.length>7?'15px':'18px';
+            // Радужный ник
+            if(d.rainbowNick){
+                _unEl2.style.background='linear-gradient(90deg,#ff4488,#ffdd00,#44ffaa,#4488ff,#ff4488)';
+                _unEl2.style.backgroundSize='200%';
+                _unEl2.style.webkitBackgroundClip='text';
+                _unEl2.style.webkitTextFillColor='transparent';
+                _unEl2.style.animation='rainbowShift 2s linear infinite';
+            } else {
+                _unEl2.style.background='';
+                _unEl2.style.webkitBackgroundClip='';
+                _unEl2.style.webkitTextFillColor='';
+                _unEl2.style.animation='';
+            }
+            // Магазин — обновляем кнопки ника
+            updateNickShopBtn(!!d.rainbowNick);
+            // Яйца
+            if(typeof easterEggs!=='undefined'){
+                var eggsEl=document.getElementById('lobby-eggs');
+                easterEggs=d.eggs||0;
+                if(eggsEl)eggsEl.textContent=easterEggs+' 🥚';
+            }
         });
     }
 
@@ -1114,13 +1192,13 @@ input:-webkit-autofill:focus {
         document.getElementById('auth-block').style.display='block';
         document.getElementById('username').value='';
         document.getElementById('password').value='';
-        ['lobby-admin-panel','leaderboard-panel','quests-panel'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+        ['lobby-admin-panel','leaderboard-panel','quests-panel','shop-panel'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
     }
 
     document.addEventListener('click', function(e){
-        const panels=['lobby-admin-panel','leaderboard-panel','quests-panel'];
+        const panels=['lobby-admin-panel','leaderboard-panel','quests-panel','shop-panel'];
         const inside=panels.some(id=>document.getElementById(id)&&document.getElementById(id).contains(e.target));
-        const onBtn=e.target.closest('button')&&(e.target.closest('button').getAttribute('onclick')||'').match(/openVip|openLeaderboard|openQuests|openLobbyAdmin/);
+        const onBtn=e.target.closest('button')&&(e.target.closest('button').getAttribute('onclick')||'').match(/openVip|openLeaderboard|openQuests|openLobbyAdmin|openShop|toggleNavMenu/);
         if(!inside&&!onBtn) panels.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
     });
 
@@ -1229,13 +1307,14 @@ input:-webkit-autofill:focus {
             snap.forEach(ch=>{
                 const d=ch.val()||{};
                 if(d.hidden&&!isAdmin) return;
-                players.push({uid:ch.key,name:d.username||ch.key,balance:d.balance||0,games:d.questDayGames||0,verified:d.verified,admin:d.admin,hidden:d.hidden});
+                players.push({uid:ch.key,name:d.username||ch.key,balance:d.balance||0,games:d.questDayGames||0,verified:d.verified,admin:d.admin,hidden:d.hidden,pinned:d.pinned,rainbow:d.rainbowNick});
             });
             players.sort((a,b)=>tab==='ar'?b.balance-a.balance:b.games-a.games);
             let rank=0;
             el.innerHTML=players.slice(0,20).map(p=>{
-                const badge=p.admin?'👑':p.verified?'✅':'';
+                const badge=p.admin?'👑':p.verified?'✅':p.pinned?'📌':'';
                 const isMe=p.uid===currentUid;
+                const rainbowStyle=p.rainbow?'background:linear-gradient(90deg,#ff4488,#ffdd00,#44ffaa,#4488ff,#ff4488);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:rainbowShift 2s linear infinite;':'';
                 if(!p.hidden) rank++;
                 const num=p.hidden?'<span style="color: rgba(255,255,255,0.15); font-size: 11px">—</span>':'<span style="color: rgba(255,255,255,0.4); font-size: 11px; font-family: \'Fredoka One\',cursive">#'+rank+'</span>';
                 const nameColor=p.hidden?'rgba(255,255,255,0.25)':isMe?'#ffd700':'rgba(255,255,255,0.85)';
@@ -1243,7 +1322,7 @@ input:-webkit-autofill:focus {
                 return `<div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; background: ${isMe&&!p.hidden?'rgba(255,180,0,0.08)': 'transparent'}; border-bottom: 1px solid rgba(255,255,255,0.04)">
                     <span style="width: 26px; text-align: center">${num}</span>
                     <span style="font-size: 13px; opacity: ${p.hidden?'0.3': '1'}">${badge}</span>
-                    <span style="flex: 1; font-family: 'Fredoka One',cursive; font-size: 13px; color: ${nameColor}">${p.name}</span>
+                    <span style="flex: 1; font-family: 'Fredoka One',cursive; font-size: 13px; color: ${nameColor};${rainbowStyle}">${p.name}</span>
                     <span style="font-size: 12px; font-family: Nunito,sans-serif; font-weight: 700; color: rgba(255,180,0,0.8)">${tab==='ar'?p.balance+' АР':p.games+' игр'}</span>
                     ${hideBtn}
                 </div>`;
@@ -1727,113 +1806,211 @@ input:-webkit-autofill:focus {
         }
     }
 
-var _supUnsub=null;
-var SUP_QA=[
-    ['Что такое слоты и как в них играть?','🍓 Слоты — классический игровой автомат. Нажимаешь КРУТИТЬ, барабаны останавливаются на случайных символах. Два одинаковых — выигрыш, три одинаковых — крупный выигрыш! Ставка: 1 АР за спин.'],
-    ['Как работает игра Полёт?','✈️ Полёт — краш-игра. Самолёт взлетает и множитель растёт. Нажми \'нырнуть на остров\' чтобы самолет не утонул, но есть шанс что ты не попадешь на остров. Чем дольше ждёшь — тем больше выигрыш, но и риск выше. Ставка от 3 АР.'],
-    ['Что такое Сапёр и как играть?','💣 Сапёр — открываешь ячейки на поле и получаешь АР за каждую безопасную ячейку с золотом, если золота не оказалось, то тебе ничего не начисляется. В любой момент нажми ВЫВЕСТИ. Попал на мину — теряешь всё. Ставка 3 АР.'],
-    ['Как работают Шарики?','🔵 Шарики — плинко. Бросаешь шарик, он отскакивает от преград и падает в ячейку с множителем (0x, 0.5x, 1x, 2x, 3x). Ставка от 1 до 100 АР за шарик.'],
-    ['Где найти промокоды?','🎁 Промокоды вводятся в разделе ПРОМОКОД в любой игре. Нажми кнопку 🎁 ПРОМОКОД и введи код. Следи за новостями казино чтобы не пропустить актуальные коды!'],
-    ['Что такое дуэль и как вызвать игрока?','⚔️ Дуэль — соревнование с другим игроком. В лобби нажми ДУЭЛЬ, выбери онлайн-игрока, игру, количество раундов и ставку. Кто наберёт больше побед — забирает ставку.']
-];
+var EASTER_START=1744736400000, EASTER_END=1745341200000;
+var BUNNY_TYPES=[{"file":"bunny1.png","name":"Белый","rarity":"ОБЫЧНЫЙ","eggs":1,"chance":40,"color":"#ffffff","glow":"rgba(255,255,255,0.4)"},{"file":"bunny2.png","name":"Пухлый","rarity":"ОБЫЧНЫЙ+","eggs":2,"chance":25,"color":"#ddddff","glow":"rgba(200,200,255,0.4)"},{"file":"bunny3.png","name":"Огненный","rarity":"НЕОБЫЧНЫЙ","eggs":3,"chance":15,"color":"#ff8800","glow":"rgba(255,140,0,0.5)"},{"file":"bunny4.png","name":"Железный","rarity":"РЕДКИЙ","eggs":4,"chance":8,"color":"#aaaaaa","glow":"rgba(160,160,160,0.5)"},{"file":"bunny5.png","name":"Кристальный","rarity":"РЕДКИЙ+","eggs":5,"chance":5,"color":"#aaeeff","glow":"rgba(100,220,255,0.6)"},{"file":"bunny6.png","name":"Золотой","rarity":"ЭПИЧЕСКИЙ","eggs":6,"chance":3,"color":"#ffd700","glow":"rgba(255,215,0,0.7)"},{"file":"bunny7.png","name":"Изумрудный","rarity":"ЭПИЧЕСКИЙ+","eggs":7,"chance":2,"color":"#00e676","glow":"rgba(0,230,120,0.6)"},{"file":"bunny8.png","name":"Аметистовый","rarity":"ЛЕГЕНДАРНЫЙ","eggs":8,"chance":1.5,"color":"#cc88ff","glow":"rgba(180,100,255,0.7)"},{"file":"bunny9.png","name":"Радужный","rarity":"МИФИЧЕСКИЙ","eggs":10,"chance":0.5,"color":"#ffaaff","glow":"rgba(255,100,255,0.8)"}];
+var BUNNY_SLOTS=[{"x":8,"y":18},{"x":72,"y":12},{"x":18,"y":52},{"x":62,"y":44},{"x":82,"y":28},{"x":12,"y":72},{"x":48,"y":68},{"x":78,"y":62},{"x":33,"y":32},{"x":55,"y":22}];
+var easterActive=false, easterEggs=0;
+var activeBunnies={}, bunnyTimer=null, shopTimerIv=null;
 
-function supQuick(idx){
-    var qa=SUP_QA[idx];
-    if(!qa||!currentUid)return;
-    var q=qa[0], a=qa[1];
-    var box=document.getElementById('sup-msgs');
-    var t=new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
-    var qd=document.createElement('div');
-    qd.className='sup-msg-base sup-msg-user';
-    qd.style.animation='supIn .2s';
-    qd.textContent=q;
-    box.appendChild(qd);
-    var ad=document.createElement('div');
-    ad.className='sup-msg-base sup-msg-ai';
-    ad.style.animation='supIn .3s';
-    ad.innerHTML=a+'<div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px;">'+t+' · Поддержка</div>';
-    box.appendChild(ad);
-    box.scrollTop=box.scrollHeight;
-    db.ref('support_chats/'+currentUid+'/messages').push({text:q,from:'user',ts:Date.now()});
-    db.ref('support_chats/'+currentUid+'/messages').push({text:a,from:'support',ts:Date.now()+1});
-    db.ref('support_chats/'+currentUid).update({lastMsg:q,lastMsgTs:Date.now(),username:currentUser});
+function toggleNavMenu(){
+    var m=document.getElementById('nav-menu'), b=document.getElementById('nav-toggle-btn');
+    var open=m.style.display==='block';
+    m.style.display=open?'none':'block';
+    if(b)b.textContent=open?'▼':'▲';
 }
-function openSupportChat(){
-    if(!currentUid){alert('Войди в аккаунт');return;}
-    if(typeof bgMusic!=='undefined'&&bgMusic)bgMusic.pause();
-    document.getElementById('sup-ov').style.display='flex';
-    loadSupportChat();
+
+function updateNickShopBtn(hasRainbow){
+    var buy=document.getElementById('shop-nick-buy');
+    var reset=document.getElementById('shop-nick-reset');
+    if(buy) buy.style.display=hasRainbow?'none':'block';
+    if(reset) reset.style.display=hasRainbow?'block':'none';
 }
-function closeSupportChat(){
-    document.getElementById('sup-ov').style.display='none';
-    if(_supUnsub){_supUnsub();_supUnsub=null;}
-    if(typeof bgMusic!=='undefined'&&bgMusic&&typeof mOn!=='undefined'&&mOn)bgMusic.play().catch(function(){});
-}
-function loadSupportChat(){
-    var balEl=document.getElementById('lobby-balance');
-    var bal=balEl?balEl.textContent.replace(' АР','').trim():'0';
-    db.ref('support_chats/'+currentUid).update({username:currentUser,balance:bal,uid:currentUid,lastActive:Date.now()});
-    if(_supUnsub){_supUnsub();_supUnsub=null;}
-    var ref=db.ref('support_chats/'+currentUid+'/messages');
-    ref.on('value',function(snap){
-        var msgs=snap.val()||{};
-        var box=document.getElementById('sup-msgs');
-        var welcome=box.firstElementChild.cloneNode(true);
-        box.innerHTML='';
-        box.appendChild(welcome);
-        Object.values(msgs).sort(function(a,b){return a.ts-b.ts;}).forEach(function(m){
-            var div=document.createElement('div');
-            var isUser=m.from==='user';
-            div.className='sup-msg-base '+(isUser?'sup-msg-user':'sup-msg-ai');
-            div.style.animation='supIn .2s';
-            var t=new Date(m.ts).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
-            div.innerHTML=m.text.split('\n').join('<br>')+'<div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px;'+(isUser?'text-align:right;':'')+'">'+t+(m.from==='support'?' · Поддержка':'')+'</div>';
-            box.appendChild(div);
+
+function buyRainbowNick(){
+    if(!currentUid)return;
+    db.ref('players/'+currentUid+'/balance').once('value').then(function(s){
+        var bal=s.val()||0;
+        if(bal<100){alert('Нужно 100 АР. У тебя '+bal+' АР.');return;}
+        if(!confirm('Купить Блатной ник за 100 АР?'))return;
+        db.ref('players/'+currentUid+'/balance').set(bal-100);
+        db.ref('players/'+currentUid+'/rainbowNick').set(true);
+        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){
+            var h=hs.val()||[];h.push('✨ Куплен Блатной ник — 100 АР');
+            db.ref('players/'+currentUid+'/history').set(h.slice(-50));
         });
-        box.scrollTop=box.scrollHeight;
     });
-    _supUnsub=function(){ref.off();};
 }
-function sendSupportMsg(){
-    var inp=document.getElementById('sup-inp');
-    var text=(inp.value||'').trim();
-    if(!text||!currentUid)return;
-    inp.value='';
-    db.ref('support_chats/'+currentUid+'/messages').push({text:text,from:'user',ts:Date.now()});
-    db.ref('support_chats/'+currentUid).update({lastMsg:text,lastMsgTs:Date.now(),hasNew:true,username:currentUser});
+function buyNormalNick(){
+    if(!currentUid)return;
+    db.ref('players/'+currentUid+'/balance').once('value').then(function(s){
+        var bal=s.val()||0;
+        if(bal<50){alert('Нужно 50 АР. У тебя '+bal+' АР.');return;}
+        if(!confirm('Вернуть обычный ник за 50 АР?'))return;
+        db.ref('players/'+currentUid+'/balance').set(bal-50);
+        db.ref('players/'+currentUid+'/rainbowNick').set(false);
+        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){
+            var h=hs.val()||[];h.push('🔤 Возврат обычного ника — 50 АР');
+            db.ref('players/'+currentUid+'/history').set(h.slice(-50));
+        });
+    });
+}
+
+function openShop(){
+    var panels=['lobby-admin-panel','leaderboard-panel','quests-panel'];
+    panels.forEach(function(p){var el=document.getElementById(p);if(el)el.style.display='none';});
+    var sp=document.getElementById('shop-panel');
+    var open=sp.style.display==='block';
+    sp.style.display=open?'none':'block';
+    if(!open){
+        updateShopTimer();
+        if(shopTimerIv)clearInterval(shopTimerIv);
+        shopTimerIv=setInterval(updateShopTimer,1000);
+    } else {
+        if(shopTimerIv){clearInterval(shopTimerIv);shopTimerIv=null;}
+    }
+}
+function closeShop(){
+    var sp=document.getElementById('shop-panel');if(sp)sp.style.display='none';
+    if(shopTimerIv){clearInterval(shopTimerIv);shopTimerIv=null;}
+}
+function updateShopTimer(){
+    var now=Date.now();
+    var item=document.getElementById('shop-easter-item');
+    if(!item)return;
+    if(!easterActive){item.style.display='none';return;}
+    item.style.display='block';
+    var badge=document.getElementById('shop-easter-badge');
+    var label=document.getElementById('shop-timer-label');
+    var timerEl=document.getElementById('shop-timer');
+    var exWrap=document.getElementById('shop-exchange-wrap');
+    function fmt(ms){var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return(h>9?h:'0'+h)+':'+(m>9?m:'0'+m)+':'+(sc>9?sc:'0'+sc);}
+    if(now<EASTER_START){
+        if(badge){badge.textContent='СКОРО';badge.style.cssText='background:rgba(255,180,0,0.12);color:#ffd700;font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:6px;';}
+        if(label)label.textContent='Акция начнётся через:';
+        if(timerEl)timerEl.textContent=fmt(EASTER_START-now);
+        if(exWrap)exWrap.style.display='none';
+    } else if(now<EASTER_END){
+        if(badge){badge.textContent='АКТИВНО';badge.style.cssText='background:rgba(0,200,100,0.12);color:#00e676;font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:6px;';}
+        if(label)label.textContent='Акция закончится через:';
+        if(timerEl)timerEl.textContent=fmt(EASTER_END-now);
+        if(exWrap)exWrap.style.display='block';
+    } else {
+        if(badge){badge.textContent='ЗАВЕРШЕНО';badge.style.cssText='color:rgba(255,255,255,0.3);font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:6px;';}
+        if(label)label.textContent='Акция завершена';
+        if(timerEl)timerEl.textContent='00:00:00';
+        if(exWrap)exWrap.style.display='none';
+    }
+}
+function doExchange(){
+    var now=Date.now();
+    if(!easterActive||now<EASTER_START||now>=EASTER_END){alert('Акция не активна');return;}
+    var inp=document.getElementById('shop-egg-input');
+    var amt=Math.max(1,parseInt(inp.value)||1);
+    if(amt>easterEggs){alert('Недостаточно яиц! У тебя '+easterEggs+' 🥚');return;}
+    var gain=amt*3;
+    db.ref('players/'+currentUid+'/eggs').set(easterEggs-amt);
+    db.ref('players/'+currentUid+'/balance').once('value').then(function(s){
+        db.ref('players/'+currentUid+'/balance').set((s.val()||0)+gain);
+        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){
+            var h=hs.val()||[];h.push('🥚 Обмен '+amt+' яиц → +'+gain+' АР');
+            db.ref('players/'+currentUid+'/history').set(h.slice(-50));
+        });
+        alert('✅ +'+gain+' АР!');
+    });
 }
 setTimeout(function(){
-    var si=document.getElementById('sup-inp');
-    if(si)si.addEventListener('keypress',function(e){if(e.key==='Enter')sendSupportMsg();});
-},800);
-</script>
+    var inp=document.getElementById('shop-egg-input');
+    if(inp)inp.addEventListener('input',function(){var p=document.getElementById('shop-ar-preview');if(p)p.textContent=(parseInt(this.value)||1)*3;});
+},600);
 
-<button class="support-fab" onclick="openSupportChat()">&#x1F4AC;</button>
-<div id="sup-ov" style="display:none;position:fixed;inset:0;z-index:9000;background:radial-gradient(ellipse at 60% 30%,#2a0a1a,#0a0010);flex-direction:column;align-items:center;">
-  <div style="width:100%;max-width:460px;height:100%;display:flex;flex-direction:column;">
-    <div style="padding:14px 16px 12px;background:linear-gradient(160deg,#1a0008,#0d0000);border-bottom:1px solid rgba(255,69,0,0.25);display:flex;align-items:center;gap:12px;flex-shrink:0;">
-      <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#cc2200,#8b0000);display:flex;align-items:center;justify-content:center;font-size:22px;">&#x1F3B0;</div>
-      <div style="flex:1;"><div style="font-family:'Fredoka One',cursive;font-size:16px;letter-spacing:2px;">&#x41F;&#x41E;&#x414;&#x414;&#x415;&#x420;&#x416;&#x41A;&#x410; &#x411;&#x423;&#x420;&#x41C;&#x410;&#x41B;&#x414;&#x410;</div><div style="font-size:11px;color:rgba(255,150,100,0.45);margin-top:2px;">&#x41E;&#x442;&#x432;&#x435;&#x447;&#x430;&#x435;&#x43C; &#x432; &#x43F;&#x43E;&#x440;&#x44F;&#x434;&#x43A;&#x435; &#x43E;&#x447;&#x435;&#x440;&#x435;&#x434;&#x438;</div></div>
-      <button onclick="closeSupportChat()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,69,0,0.2);border-radius:10px;padding:6px 12px;color:rgba(255,100,50,0.55);font-family:'Fredoka One',cursive;font-size:11px;cursor:pointer;">&#x2715;</button>
-    </div>
-    <div id="sup-msgs" style="flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;">
-      <div class="sup-msg-base sup-msg-ai">&#x41F;&#x440;&#x438;&#x432;&#x435;&#x442;! &#x41D;&#x430;&#x43F;&#x438;&#x448;&#x438; &#x441;&#x432;&#x43E;&#x439; &#x432;&#x43E;&#x43F;&#x440;&#x43E;&#x441; &#x2014; &#x43E;&#x442;&#x432;&#x435;&#x442;&#x438;&#x43C; &#x43A;&#x430;&#x43A; &#x442;&#x43E;&#x43B;&#x44C;&#x43A;&#x43E; &#x43E;&#x441;&#x432;&#x43E;&#x431;&#x43E;&#x434;&#x438;&#x43C;&#x441;&#x44F; &#x1F3B0;<br><span style="font-size:12px;color:rgba(255,150,100,0.5);">&#x23F3; &#x423; &#x43D;&#x430;&#x441; &#x43D;&#x435;&#x431;&#x43E;&#x43B;&#x44C;&#x448;&#x430;&#x44F; &#x43A;&#x43E;&#x43C;&#x430;&#x43D;&#x434;&#x430;, &#x43E;&#x442;&#x432;&#x435;&#x442; &#x43C;&#x43E;&#x436;&#x435;&#x442; &#x437;&#x430;&#x43D;&#x44F;&#x442;&#x44C; &#x43D;&#x435;&#x43A;&#x43E;&#x442;&#x43E;&#x440;&#x43E;&#x435; &#x432;&#x440;&#x435;&#x43C;&#x44F;.</span></div>
-    </div>
-    <div style="padding:6px 10px 4px;display:flex;gap:5px;flex-wrap:wrap;background:rgba(0,0,0,0.25);flex-shrink:0;">
-      <button class="sup-qbtn" onclick="supQuick(0)">&#x1F353; &#x421;&#x43B;&#x43E;&#x442;&#x44B;</button>
-      <button class="sup-qbtn" onclick="supQuick(1)">&#x2708;&#xFE0F; &#x41F;&#x43E;&#x43B;&#x451;&#x442;</button>
-      <button class="sup-qbtn" onclick="supQuick(2)">&#x1F4A3; &#x421;&#x430;&#x43F;&#x451;&#x440;</button>
-      <button class="sup-qbtn" onclick="supQuick(3)">&#x1F535; &#x428;&#x430;&#x440;&#x438;&#x43A;&#x438;</button>
-      <button class="sup-qbtn" onclick="supQuick(4)">&#x1F381; &#x41F;&#x440;&#x43E;&#x43C;&#x43E;&#x43A;&#x43E;&#x434;</button>
-      <button class="sup-qbtn" onclick="supQuick(5)">&#x2694;&#xFE0F; &#x414;&#x443;&#x44D;&#x43B;&#x44C;</button>
-    </div>
-    <div style="padding:10px 12px;display:flex;gap:8px;background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,69,0,0.12);flex-shrink:0;">
-      <div style="flex:1;display:flex;align-items:center;background:rgba(0,0,0,0.45);border:1px solid rgba(255,69,0,0.2);border-radius:12px;padding:0 12px;">
-        <input id="sup-inp" type="text" placeholder="&#x41D;&#x430;&#x43F;&#x438;&#x441;&#x430;&#x442;&#x44C; &#x441;&#x43E;&#x43E;&#x431;&#x449;&#x435;&#x43D;&#x438;&#x435;..." autocomplete="off" maxlength="500" style="flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;padding:9px 0;">
-      </div>
-      <button onclick="sendSupportMsg()" style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#cc2200,#8b0000);border:none;color:#fff;font-size:17px;cursor:pointer;">&#x27A4;</button>
-    </div>
-  </div>
-</div>
+function checkEasterEvent(){
+    db.ref('settings/easterEvent').on('value',function(snap){
+        easterActive=snap.val()===true;
+        var wrap=document.getElementById('egg-balance-wrap');
+        if(wrap)wrap.style.display=easterActive?'block':'none';
+        if(easterActive)startBunnySpawner(); else{stopBunnySpawner();clearAllBunnies();}
+        updateShopTimer();
+    });
+}
+
+function pickBunny(){
+    var roll=Math.random()*100,cum=0;
+    for(var i=0;i<BUNNY_TYPES.length;i++){cum+=BUNNY_TYPES[i].chance;if(roll<cum)return BUNNY_TYPES[i];}
+    return BUNNY_TYPES[0];
+}
+function spawnBunny(){
+    if(!easterActive||!currentUid)return;
+    if(Object.keys(activeBunnies).length>=2)return;
+    var type=pickBunny();
+    var used=Object.values(activeBunnies).map(function(b){return b.si;});
+    var free=BUNNY_SLOTS.map(function(s,i){return i;}).filter(function(i){return used.indexOf(i)<0;});
+    if(!free.length)return;
+    var si=free[Math.floor(Math.random()*free.length)];
+    var slot=BUNNY_SLOTS[si];
+    var id='b'+Date.now();
+    var size=70+Math.random()*35;
+    var el=document.createElement('div');
+    el.className='bunny-el';el.id=id;
+    el.style.cssText='left:'+slot.x+'vw;top:'+slot.y+'vh;width:'+size+'px;height:'+size+'px;filter:drop-shadow(0 0 10px '+type.glow+');animation:bunnyAppear 0.4s ease-out;pointer-events:all;';
+    el.innerHTML='<img src="'+type.file+'" style="width:100%;height:100%;object-fit:contain;pointer-events:none;" draggable="false">'
+        +'<div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:'+type.color+';font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:7px;white-space:nowrap;border:1px solid '+type.color+'55;">'+type.rarity+'</div>';
+    var clicks=[];
+    el.addEventListener('click',function(e){
+        e.stopPropagation();
+        var now=Date.now();clicks.push(now);
+        el.style.animation='bunnyShake 0.25s';
+        setTimeout(function(){el.style.animation='';},260);
+        spawnParticles(e.clientX,e.clientY,type.color);
+        clicks=clicks.filter(function(t){return now-t<=5000;});
+        if(clicks.length>=3)catchBunny(id,type);
+    });
+    document.getElementById('bunny-container').appendChild(el);
+    activeBunnies[id]={type:type,si:si,el:el};
+    setTimeout(function(){if(activeBunnies[id])despawnBunny(id);},7000);
+}
+function catchBunny(id,type){
+    if(!activeBunnies[id])return;
+    var el=activeBunnies[id].el;
+    delete activeBunnies[id];
+    el.style.animation='bunnyPop 0.45s ease-out forwards';
+    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},450);
+    db.ref('players/'+currentUid+'/eggs').once('value').then(function(s){
+        var n=(s.val()||0)+type.eggs;
+        db.ref('players/'+currentUid+'/eggs').set(n);
+        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){
+            var h=hs.val()||[];h.push('🥚 Поймал '+type.name+'! +'+type.eggs+' 🥚');
+            db.ref('players/'+currentUid+'/history').set(h.slice(-50));
+        });
+    });
+    showBunnyNotif(type);
+}
+function despawnBunny(id){
+    if(!activeBunnies[id])return;
+    var el=activeBunnies[id].el;delete activeBunnies[id];
+    el.style.opacity='0';el.style.transition='opacity 0.35s';
+    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},360);
+}
+function clearAllBunnies(){Object.keys(activeBunnies).forEach(function(id){despawnBunny(id);});}
+function startBunnySpawner(){
+    stopBunnySpawner();
+    setTimeout(spawnBunny,1500);
+    bunnyTimer=setInterval(function(){if(Math.random()<0.45)spawnBunny();},14000);
+}
+function stopBunnySpawner(){if(bunnyTimer){clearInterval(bunnyTimer);bunnyTimer=null;}}
+function spawnParticles(x,y,color){
+    for(var i=0;i<8;i++){
+        var p=document.createElement('div');p.className='particle';
+        var a=(Math.PI*2/8)*i,d=25+Math.random()*35;
+        p.style.cssText='left:'+(x-4)+'px;top:'+(y-4)+'px;width:7px;height:7px;background:'+color+';--tx:'+(Math.cos(a)*d)+'px;--ty:'+(Math.sin(a)*d)+'px;';
+        document.body.appendChild(p);setTimeout(function(){if(p.parentNode)p.remove();},630);
+    }
+}
+function showBunnyNotif(type){
+    var n=document.createElement('div');
+    n.style.cssText='position:fixed;top:44%;left:50%;transform:translate(-50%,-50%);z-index:9500;background:rgba(0,0,0,0.9);border:2px solid '+type.color+';border-radius:18px;padding:18px 28px;text-align:center;pointer-events:none;animation:msgIn 0.3s;';
+    n.innerHTML='<div style="font-family:Fredoka One,cursive;font-size:13px;color:'+type.color+';letter-spacing:2px;margin-bottom:4px;">🎉 ПОЙМАЛ!</div><div style="font-size:20px;font-family:Fredoka One,cursive;color:#fff;margin-bottom:4px;">'+type.name+' Бурмалдаец</div><div style="font-size:14px;color:'+type.color+';">+'+type.eggs+' 🥚</div>';
+    document.body.appendChild(n);setTimeout(function(){if(n.parentNode)n.remove();},2000);
+}
+</script>
 </body>
 </html>

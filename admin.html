@@ -662,6 +662,7 @@ body::after {
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="showSection('sec-players')">👥 ИГРОКИ</button>
       <button class="nav-tab" onclick="showSection('sec-settings')">⚙️ НАСТРОЙКИ</button>
+      <button class="nav-tab" onclick="showSection('sec-events');loadEvents()">🎉 ИВЕНТЫ</button>
     </div>
 
     
@@ -1122,6 +1123,45 @@ function assignFate(u){
     alert('✅ Испытание назначено. Игрок увидит его при следующем входе в игру.');
   });
 }
+
+function loadEvents(){
+    db.ref('settings/easterEvent').once('value').then(function(s){
+        var on = s.val() === true;
+        var cb = document.getElementById('easter-toggle');
+        var sl = document.getElementById('easter-toggle-slider');
+        var kn = document.getElementById('easter-toggle-knob');
+        if(cb) cb.checked = on;
+        if(sl) sl.style.background = on ? '#00c853' : '#333';
+        if(kn) kn.style.transform = on ? 'translateX(24px)' : '';
+    });
+}
+function toggleEasterEvent(on){
+    db.ref('settings/easterEvent').set(on);
+    var sl = document.getElementById('easter-toggle-slider');
+    var kn = document.getElementById('easter-toggle-knob');
+    if(sl) sl.style.background = on ? '#00c853' : '#333';
+    if(kn) kn.style.transform = on ? 'translateX(24px)' : '';
+}
 </script>
 </body>
 </html>
+    <div class="section" id="sec-events">
+      <div class="panel-head">🎉 ИВЕНТЫ</div>
+      <div class="panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(255,200,100,0.06);border:1px solid rgba(255,180,0,0.2);border-radius:14px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:28px;">🐰</span>
+            <div>
+              <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#ffd700;letter-spacing:1px;">ПАСХА</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Зайцы, яйца, обмен в магазине</div>
+            </div>
+          </div>
+          <label style="position:relative;display:inline-block;width:52px;height:28px;cursor:pointer;">
+            <input type="checkbox" id="easter-toggle" onchange="toggleEasterEvent(this.checked)" style="opacity:0;width:0;height:0;">
+            <span id="easter-toggle-slider" style="position:absolute;inset:0;background:#333;border-radius:28px;transition:0.3s;"></span>
+            <span id="easter-toggle-knob" style="position:absolute;left:3px;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:0.3s;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></span>
+          </label>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);text-align:center;">Включение активирует зайцев и пасхальный магазин для всех игроков</div>
+      </div>
+    </div>
