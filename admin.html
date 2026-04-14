@@ -663,6 +663,7 @@ body::after {
       <button class="nav-tab active" onclick="showSection('sec-players')">👥 ИГРОКИ</button>
       <button class="nav-tab" onclick="showSection('sec-settings')">⚙️ НАСТРОЙКИ</button>
       <button class="nav-tab" onclick="showSection('sec-events');loadEvents()">🎉 ИВЕНТЫ</button>
+      <button class="nav-tab" onclick="showSection('sec-support');loadSupportChats()">💬 ПОДДЕРЖКА</button>
     </div>
 
     
@@ -1062,6 +1063,8 @@ function saveDailyAmount(){
 }
 
 function showSection(id){
+    if(id==='sec-support')loadSupportChats();
+    if(id==='sec-events')loadEvents();
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -1126,22 +1129,95 @@ function assignFate(u){
 
 function loadEvents(){
     db.ref('settings/easterEvent').once('value').then(function(s){
-        var on = s.val() === true;
-        var cb = document.getElementById('easter-toggle');
-        var sl = document.getElementById('easter-toggle-slider');
-        var kn = document.getElementById('easter-toggle-knob');
-        if(cb) cb.checked = on;
-        if(sl) sl.style.background = on ? '#00c853' : '#333';
-        if(kn) kn.style.transform = on ? 'translateX(24px)' : '';
+        var on=s.val()===true;
+        var cb=document.getElementById('easter-toggle');
+        var sl=document.getElementById('easter-slider');
+        var kn=document.getElementById('easter-knob');
+        if(cb)cb.checked=on;
+        if(sl)sl.style.background=on?'#00c853':'#333';
+        if(kn)kn.style.transform=on?'translateX(24px)':'';
     });
 }
 function toggleEasterEvent(on){
     db.ref('settings/easterEvent').set(on);
-    var sl = document.getElementById('easter-toggle-slider');
-    var kn = document.getElementById('easter-toggle-knob');
-    if(sl) sl.style.background = on ? '#00c853' : '#333';
-    if(kn) kn.style.transform = on ? 'translateX(24px)' : '';
+    var sl=document.getElementById('easter-slider');
+    var kn=document.getElementById('easter-knob');
+    if(sl)sl.style.background=on?'#00c853':'#333';
+    if(kn)kn.style.transform=on?'translateX(24px)':'';
 }
+
+var _supSel=null,_supMsgUnsub=null,_supListUnsub=null;
+function loadSupportChats(){
+    if(_supListUnsub){_supListUnsub();_supListUnsub=null;}
+    var ref=db.ref('support_chats');
+    ref.on('value',function(snap){
+        var chats=snap.val()||{};
+        var now=Date.now();
+        var list=document.getElementById('sup-list');
+        if(!list)return;
+        var entries=Object.entries(chats).sort(function(a,b){return(b[1].lastMsgTs||0)-(a[1].lastMsgTs||0);});
+        list.innerHTML='<div style="padding:8px 10px;font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:2px;">ИГРОКИ</div>';
+        if(!entries.length){list.innerHTML+='<div style="padding:12px;font-size:12px;color:rgba(255,255,255,0.2);">Нет обращений</div>';return;}
+        var avs=['🐱','🐸','🐺','🦊','🐻','🐼','🐨','🦁','🐯','🦝','🐮','🐷','🐙','🦋','🐧','🐵','🦄','🐬','🦊','🐲'];
+        entries.forEach(function(e){
+            var uid=e[0],d=e[1];
+            var online=(now-(d.lastActive||0))<120000;
+            var hasNew=!!d.hasNew;
+            var av=avs[Math.abs([].reduce.call(uid+'x',function(s,ch){return s+ch.charCodeAt(0);},0))%avs.length];
+            var div=document.createElement('div');
+            div.style.cssText='padding:9px 10px;cursor:pointer;display:flex;align-items:center;gap:7px;border-bottom:1px solid rgba(255,255,255,0.04);transition:background .15s;'+(uid===_supSel?'background:rgba(255,100,0,0.1);':'');
+            div.onmouseover=function(){if(uid!==_supSel)this.style.background='rgba(255,255,255,0.04)';};
+            div.onmouseout=function(){if(uid!==_supSel)this.style.background='';};
+            div.onclick=function(){openSupportChatAdmin(uid,d.username||uid);};
+            div.innerHTML='<div style="position:relative;flex-shrink:0;">'
+                +'<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:17px;">'+av+'</div>'
+                +(online?'<div style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#00e676;border:2px solid #0d0010;"></div>':'')
+                +(hasNew?'<div style="position:absolute;top:-2px;left:-2px;width:11px;height:11px;border-radius:50%;background:#ff2200;border:2px solid #0d0010;"></div>':'')
+                +'</div>'
+                +'<div style="flex:1;min-width:0;">'
+                +'<div style="font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:'+(hasNew?'#ff8866':'rgba(255,255,255,0.75)')+';">'+(d.username||uid).toUpperCase()+'</div>'
+                +'<div style="font-size:10px;color:rgba(255,255,255,0.25);">'+(d.balance||0)+' АР</div>'
+                +'</div>';
+            list.appendChild(div);
+        });
+    });
+    _supListUnsub=function(){ref.off();};
+}
+function openSupportChatAdmin(uid,username){
+    _supSel=uid;
+    var hdr=document.getElementById('sup-chat-header');if(hdr)hdr.textContent=username.toUpperCase();
+    var inp=document.getElementById('sup-chat-input-wrap');if(inp)inp.style.display='flex';
+    if(_supMsgUnsub){_supMsgUnsub();_supMsgUnsub=null;}
+    db.ref('support_chats/'+uid).update({hasNew:false});
+    var ref=db.ref('support_chats/'+uid+'/messages');
+    ref.on('value',function(snap){
+        var msgs=snap.val()||{};
+        var box=document.getElementById('sup-chat-msgs');if(!box)return;
+        box.innerHTML='';
+        Object.values(msgs).sort(function(a,b){return a.ts-b.ts;}).forEach(function(m){
+            var div=document.createElement('div');
+            var isUser=m.from==='user';
+            div.style.cssText='align-self:'+(isUser?'flex-start':'flex-end')+';max-width:85%;padding:7px 11px;border-radius:12px;font-size:13px;line-height:1.5;word-break:break-word;'+(isUser?'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);':'background:linear-gradient(135deg,#8b0000,#cc2200);');
+            var t=new Date(m.ts).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+            div.innerHTML=m.text.split('\n').join('<br>')+'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:3px;'+(isUser?'':'text-align:right;')+'">'+t+(isUser?' · '+username:' · Поддержка')+'</div>';
+            box.appendChild(div);
+        });
+        box.scrollTop=box.scrollHeight;
+    });
+    _supMsgUnsub=function(){ref.off();};
+    setTimeout(loadSupportChats,300);
+}
+function sendAdminSupport(){
+    if(!_supSel)return;
+    var inp=document.getElementById('sup-admin-inp');
+    var text=(inp.value||'').trim();if(!text)return;inp.value='';
+    db.ref('support_chats/'+_supSel+'/messages').push({text:text,from:'support',ts:Date.now()});
+    db.ref('support_chats/'+_supSel).update({lastMsg:text,lastMsgTs:Date.now()});
+}
+setTimeout(function(){
+    var ai=document.getElementById('sup-admin-inp');
+    if(ai)ai.addEventListener('keypress',function(e){if(e.key==='Enter')sendAdminSupport();});
+},800);
 </script>
 </body>
 </html>
@@ -1153,15 +1229,31 @@ function toggleEasterEvent(on){
             <span style="font-size:28px;">🐰</span>
             <div>
               <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#ffd700;letter-spacing:1px;">ПАСХА</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Зайцы, яйца, обмен в магазине</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Зайцы, яйца, магазин</div>
             </div>
           </div>
           <label style="position:relative;display:inline-block;width:52px;height:28px;cursor:pointer;">
             <input type="checkbox" id="easter-toggle" onchange="toggleEasterEvent(this.checked)" style="opacity:0;width:0;height:0;">
-            <span id="easter-toggle-slider" style="position:absolute;inset:0;background:#333;border-radius:28px;transition:0.3s;"></span>
-            <span id="easter-toggle-knob" style="position:absolute;left:3px;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:0.3s;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></span>
+            <span id="easter-slider" style="position:absolute;inset:0;background:#333;border-radius:28px;transition:0.3s;"></span>
+            <span id="easter-knob" style="position:absolute;left:3px;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:0.3s;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></span>
           </label>
         </div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.3);text-align:center;">Включение активирует зайцев и пасхальный магазин для всех игроков</div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-support">
+      <div class="panel-head">💬 ПОДДЕРЖКА</div>
+      <div style="display:flex;height:500px;">
+        <div id="sup-list" style="width:180px;flex-shrink:0;border-right:1px solid rgba(255,255,255,0.07);overflow-y:auto;scrollbar-width:thin;">
+          <div style="padding:8px 10px;font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:2px;">ИГРОКИ</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+          <div id="sup-chat-header" style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.07);font-family:'Fredoka One',cursive;font-size:14px;color:rgba(255,255,255,0.35);letter-spacing:1px;flex-shrink:0;">Выбери чат</div>
+          <div id="sup-chat-msgs" style="flex:1;padding:10px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;scrollbar-width:thin;"></div>
+          <div id="sup-chat-input-wrap" style="display:none;padding:10px 12px;gap:8px;align-items:center;border-top:1px solid rgba(255,255,255,0.07);">
+            <input id="sup-admin-inp" type="text" placeholder="Ответить..." maxlength="500" style="flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(255,180,0,0.2);border-radius:10px;color:#fff;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;padding:8px 12px;outline:none;">
+            <button onclick="sendAdminSupport()" style="padding:8px 14px;background:linear-gradient(135deg,#cc2200,#8b0000);border:none;border-radius:10px;color:#fff;font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;">ОТПРАВИТЬ</button>
+          </div>
+        </div>
       </div>
     </div>

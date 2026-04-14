@@ -616,12 +616,18 @@ input:-webkit-autofill:focus {
     .nmb{padding:9px 4px;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;transition:all .15s;width:100%;}
     .nmb:hover{background:rgba(255,255,255,0.1);}
     @keyframes rainbowShift{from{background-position:0%}to{background-position:200%}}
-    .bunny-el{position:absolute;cursor:pointer;user-select:none;}
+    .bunny-el{position:absolute;cursor:pointer;user-select:none;pointer-events:all;}
     .particle{position:fixed;pointer-events:none;z-index:9000;border-radius:50%;animation:pFly 0.6s ease-out forwards;}
     @keyframes pFly{to{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
     @keyframes bunnyPop{0%{transform:scale(1)}40%{transform:scale(1.4) rotate(6deg)}100%{transform:scale(0) rotate(20deg);opacity:0}}
     @keyframes bunnyShake{0%,100%{transform:scale(1)}33%{transform:scale(1.07) rotate(-3deg)}66%{transform:scale(1.07) rotate(3deg)}}
     @keyframes bunnyAppear{from{opacity:0;transform:scale(0.4)}to{opacity:1;transform:scale(1)}}
+    .support-fab{position:fixed;bottom:20px;left:20px;z-index:100;width:48px;height:48px;border-radius:50%;background:linear-gradient(180deg,#ff3300,#8b0000);box-shadow:0 4px 0 #4a0000;border:none;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+    .support-fab:hover{filter:brightness(1.2);transform:scale(1.1);}
+    .sup-msg-user{align-self:flex-end;background:linear-gradient(135deg,#8b0000,#cc2200);border-bottom-right-radius:4px;}
+    .sup-msg-ai{align-self:flex-start;background:rgba(180,30,0,0.15);border:1px solid rgba(255,80,0,0.3);color:rgba(255,255,255,0.9);border-bottom-left-radius:4px;}
+    .sup-msg-base{max-width:88%;padding:7px 12px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;}
+    .sup-qbtn{padding:4px 10px;border-radius:16px;background:rgba(180,0,0,0.1);border:1px solid rgba(255,69,0,0.2);color:rgba(255,120,60,0.8);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -671,7 +677,7 @@ input:-webkit-autofill:focus {
         </div>
 
         <div style="margin-top:8px;text-align:center;">
-            <button onclick="toggleNavMenu()" id="nav-toggle-btn" style="padding:7px 28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:rgba(255,255,255,0.45);font-size:18px;cursor:pointer;transition:all .2s;">▼</button>
+            <button onclick="toggleNavMenu()" id="nav-toggle-btn" style="padding:7px 28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:rgba(255,255,255,0.4);font-size:16px;cursor:pointer;">▼</button>
         </div>
         <div id="nav-menu" style="display:none;margin-top:8px;">
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
@@ -680,7 +686,6 @@ input:-webkit-autofill:focus {
                 <button onclick="openQuests()" id="quests-btn" class="nmb" style="color:#cc88ff;border-color:rgba(150,0,255,0.3);">📋 КВЕСТЫ</button>
                 <button onclick="openDuels()" id="duels-btn" class="nmb" style="color:#ff88aa;border-color:rgba(255,0,80,0.3);">⚔️ ДУЭЛЬ</button>
                 <button onclick="openShop()" id="shop-btn" class="nmb" style="color:#ffdd88;border-color:rgba(255,200,0,0.3);">🛒 МАГАЗИН</button>
-                <button onclick="toggleNavMenu()" class="nmb" style="color:rgba(255,255,255,0.3);border-color:rgba(255,255,255,0.1);">▲</button>
             </div>
         </div>
 <div id="daily-reward-wrap" style="display: none; margin-top: 8px">
@@ -688,149 +693,155 @@ input:-webkit-autofill:focus {
         </div>
     </div>
     
+   <!-- МАГАЗИН -->
+<div id="shop-panel" style="display:none;background:linear-gradient(160deg,#0a0015,#150020);border:2px solid rgba(255,200,0,0.3);border-radius:22px;padding:18px;margin-bottom:12px;" onclick="event.stopPropagation()">
+    <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:14px;color:#ffd700;">🛒 МАГАЗИН</div>
+
+    <div id="shop-nick-buy" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:24px;">✨</span>
+            <div style="flex:1;">
+                <div style="font-family:'Fredoka One',cursive;font-size:14px;background:linear-gradient(90deg,#ff4488,#ffdd00,#44ffaa,#4488ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:rainbowShift 2s linear infinite;">БЛАТНОЙ НИК</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">Переливающийся ник — виден всем</div>
+            </div>
+            <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#ffd700;">100 АР</div>
+        </div>
+        <button onclick="buyRainbowNick()" style="width:100%;padding:11px;border-radius:12px;border:none;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#ff4488,#ffdd00,#44ffaa,#4488ff);color:#fff;">КУПИТЬ</button>
+    </div>
+
+    <div id="shop-nick-reset" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:24px;">🔤</span>
+            <div style="flex:1;">
+                <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#fff;">ОБЫЧНЫЙ НИК</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">Вернуть стандартный ник</div>
+            </div>
+            <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#ffd700;">50 АР</div>
+        </div>
+        <button onclick="buyNormalNick()" style="width:100%;padding:11px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:rgba(255,255,255,0.08);color:#fff;">ВЕРНУТЬ</button>
+    </div>
+
+    <!-- 🥚 ПАСХАЛЬНАЯ АКЦИЯ -->
+    <div id="shop-easter-item" style="display:none;background:rgba(255,200,100,0.06);border:1px solid rgba(255,180,0,0.2);border-radius:16px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span style="font-size:24px;">🥚</span>
+            <div style="flex:1;">
+                <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#ffdd44;">ПАСХА</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">1 яйцо = 3 АР</div>
+            </div>
+            <span style="background:rgba(0,255,100,0.2);border:1px solid rgba(0,255,100,0.4);color:#66ff88;font-family:'Fredoka One',cursive;font-size:10px;padding:3px 8px;border-radius:8px;">
+                АКТИВНО
+            </span>
+        </div>
+
+        <div id="shop-exchange-wrap" style="display:block;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <span style="font-size:12px;color:rgba(255,255,255,0.4);">Кол-во 🥚:</span>
+                <input id="shop-egg-input" type="number" min="1" value="1"
+                    style="width:62px;padding:5px 8px;border-radius:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,200,0,0.3);color:#fff;font-family:'Fredoka One',cursive;font-size:14px;text-align:center;outline:none;">
+                <span style="font-size:12px;color:rgba(255,255,255,0.4);">
+                    = <span id="shop-ar-preview" style="color:#ffd700;font-family:'Fredoka One',cursive;">3</span> АР
+                </span>
+            </div>
+
+            <button onclick="doExchange()"
+                style="width:100%;padding:11px;border-radius:12px;border:none;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#ff8800,#ffcc00);color:#1a0800;">
+                ОБМЕНЯТЬ
+            </button>
+        </div>
+    </div>
+
+    <button onclick="closeShop()" style="width:100%;padding:9px;margin-top:4px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
+</div> 
+
     
 
-    <div id="shop-panel" style="display:none;background:linear-gradient(160deg,#0a0015,#150020);border:2px solid rgba(255,200,0,0.3);border-radius:22px;padding:18px;margin-bottom:12px;" onclick="event.stopPropagation()">
-        <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:14px;color:#ffd700;">🛒 МАГАЗИН БУРМАЛДА</div>
-
-        <!-- Блатной ник -->
-        <div id="shop-nick-buy" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                <span style="font-size:24px;">✨</span>
-                <div style="flex:1;">
-                    <div style="font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:1px;background:linear-gradient(90deg,#ff4488,#ffdd00,#44ffaa,#4488ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:rainbowShift 2s linear infinite;">БЛАТНОЙ НИК</div>
-                    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">Переливающийся ник — виден всем</div>
-                </div>
-                <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#ffd700;">100 АР</div>
-            </div>
-            <button onclick="buyRainbowNick()" style="width:100%;padding:11px;border-radius:12px;border:none;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#ff4488,#ffdd00,#44ffaa,#4488ff);color:#fff;">КУПИТЬ</button>
+    <!-- ТАБЛИЦА ЛИДЕРОВ -->
+    <div id="leaderboard-panel" style="display:none;background:linear-gradient(160deg,#00101a,#001525);border:2px solid rgba(0,150,255,0.3);padding:18px;border-radius:22px;margin-bottom:12px;">
+        <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:12px;color:#88ccff;">🏆 ТАБЛИЦА ЛИДЕРОВ</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <button id="lb-tab-ar" onclick="lbTab('ar')" style="flex:1;padding:8px;border-radius:10px;background:rgba(0,150,255,0.2);color:#88ccff;border:1px solid rgba(0,150,255,0.4);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">💰 ТОП ПО АР</button>
+            <button id="lb-tab-games" onclick="lbTab('games')" style="flex:1;padding:8px;border-radius:10px;background:transparent;color:rgba(0,150,255,0.5);border:1px solid rgba(0,150,255,0.2);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">🎮 ТОП ПО ИГРАМ</button>
         </div>
-
-        <!-- Обычный ник (показывается если есть радужный) -->
-        <div id="shop-nick-reset" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                <span style="font-size:24px;">🔤</span>
-                <div style="flex:1;">
-                    <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#fff;letter-spacing:1px;">ОБЫЧНЫЙ НИК</div>
-                    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">Вернуть стандартный ник</div>
-                </div>
-                <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#ffd700;">50 АР</div>
-            </div>
-            <button onclick="buyNormalNick()" style="width:100%;padding:11px;border-radius:12px;border:none;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);">ВЕРНУТЬ</button>
-        </div>
-
-        <!-- Пасха -->
-        <div id="shop-easter-item" style="display:none;background:rgba(255,200,100,0.06);border:1px solid rgba(255,180,0,0.2);border-radius:16px;padding:14px;margin-bottom:10px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                <span style="font-size:24px;">🥚</span>
-                <div style="flex:1;">
-                    <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#ffdd44;letter-spacing:1px;">ПАСХА</div>
-                    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">1 яйцо = 3 АР</div>
-                </div>
-                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-                    <span style="background:rgba(255,80,0,0.25);border:1px solid rgba(255,80,0,0.4);color:#ff8844;font-family:'Fredoka One',cursive;font-size:9px;padding:2px 6px;border-radius:6px;letter-spacing:1px;">-67%</span>
-                    <span id="shop-easter-badge" style="font-family:'Fredoka One',cursive;font-size:9px;padding:2px 6px;border-radius:6px;"></span>
-                </div>
-            </div>
-            <div id="shop-timer-wrap" style="text-align:center;margin-bottom:8px;">
-                <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:2px;" id="shop-timer-label"></div>
-                <div style="font-family:monospace;font-size:20px;color:#ffd700;letter-spacing:2px;" id="shop-timer">00:00:00</div>
-            </div>
-            <div id="shop-exchange-wrap" style="display:none;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                    <span style="font-size:12px;color:rgba(255,255,255,0.4);">Кол-во 🥚:</span>
-                    <input id="shop-egg-input" type="number" min="1" value="1" style="width:62px;padding:5px 8px;border-radius:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,200,0,0.3);color:#fff;font-family:'Fredoka One',cursive;font-size:14px;text-align:center;outline:none;">
-                    <span style="font-size:12px;color:rgba(255,255,255,0.4);">= <span id="shop-ar-preview" style="color:#ffd700;font-family:'Fredoka One',cursive;">3</span> АР</span>
-                </div>
-                <button onclick="doExchange()" style="width:100%;padding:11px;border-radius:12px;border:none;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#ff8800,#ffcc00);color:#1a0800;">ОБМЕНЯТЬ</button>
-            </div>
-        </div>
-
-        <button onclick="closeShop()" style="width:100%;padding:9px;margin-top:4px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
+        <div id="lb-list" style="max-height:300px;overflow-y:auto;scrollbar-width:thin;"></div>
+        <button onclick="openLeaderboard()" style="width:100%;padding:9px;margin-top:10px;border-radius:12px;background:transparent;color:rgba(0,150,255,0.45);border:1px solid rgba(0,150,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
     </div>
-    <div id="bunny-container" style="position:fixed;inset:0;pointer-events:none;z-index:8000;"></div>
-    <div id="lobby-admin-panel" style="display: none; background: linear-gradient(160deg,#180020,#0a0015); border: 2px solid rgba(255,200,0,0.4); padding: 18px; border-radius: 22px; margin-bottom: 12px">
-        <div style="font-family: 'Fredoka One',cursive; font-size: 17px; letter-spacing: 2px; text-align: center; margin-bottom: 12px; color: #ffd700">👑 АДМИН-ПАНЕЛЬ</div>
-        <div style="display: flex; gap: 8px; margin-bottom: 10px">
-            <button onclick="adminTab('users')" id="tab-users" style="flex: 1; padding: 8px; border-radius: 10px; background: rgba(255,180,0,0.2); color: #ffd700; border: 1px solid rgba(255,180,0,0.4); font-family: 'Fredoka One',cursive; font-size: 12px; cursor: pointer; letter-spacing: 1px">ИГРОКИ</button>
-            <button onclick="adminTab('settings')" id="tab-settings" style="flex: 1; padding: 8px; border-radius: 10px; background: transparent; color: rgba(255,180,0,0.5); border: 1px solid rgba(255,180,0,0.2); font-family: 'Fredoka One',cursive; font-size: 12px; cursor: pointer; letter-spacing: 1px">НАСТРОЙКИ</button>
+
+    <!-- КВЕСТЫ -->
+    <div id="quests-panel" style="display:none;background:linear-gradient(160deg,#0d001a,#1a0030);border:2px solid rgba(150,0,255,0.3);padding:18px;border-radius:22px;margin-bottom:12px;">
+        <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:4px;color:#cc88ff;">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div>
+        <div id="quests-reset-time" style="font-size:10px;text-align:center;color:rgba(200,150,255,0.4);letter-spacing:2px;margin-bottom:12px;"></div>
+        <div id="quests-list"></div>
+        <button onclick="openQuests()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(150,0,255,0.45);border:1px solid rgba(150,0,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
+    </div>
+
+    <!-- АДМИН ПАНЕЛЬ -->
+    <div id="lobby-admin-panel" style="display:none;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:18px;border-radius:22px;margin-bottom:12px;">
+        <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:12px;color:#ffd700;">👑 АДМИН-ПАНЕЛЬ</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <button onclick="adminTab('users')" id="tab-users" style="flex:1;padding:8px;border-radius:10px;background:rgba(255,180,0,0.2);color:#ffd700;border:1px solid rgba(255,180,0,0.4);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">ИГРОКИ</button>
+            <button onclick="adminTab('settings')" id="tab-settings" style="flex:1;padding:8px;border-radius:10px;background:transparent;color:rgba(255,180,0,0.5);border:1px solid rgba(255,180,0,0.2);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">НАСТРОЙКИ</button>
         </div>
         <div id="admin-tab-users">
-            <div style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 12px; border: 1px solid rgba(255,180,0,0.15); padding: 4px; margin-bottom: 8px; scrollbar-width: thin">
+            <div style="max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:12px;border:1px solid rgba(255,180,0,0.15);padding:4px;margin-bottom:8px;scrollbar-width:thin;">
                 <div id="lobby-admin-users"></div>
             </div>
         </div>
-        <div id="admin-tab-settings" style="display: none">
-            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; margin-bottom: 8px">
-                <div style="color: #ffd700; font-family: 'Fredoka One',cursive; font-size: 13px; margin-bottom: 8px">🎁 ЕЖЕДНЕВНАЯ НАГРАДА</div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px">
-                    <span style="color: rgba(255,255,255,0.6); font-size: 12px; font-family: Nunito,sans-serif">Размер:</span>
-                    <input id="daily-amount-input" type="number" value="10" min="1" style="width: 70px; padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,180,0,0.3); color: #fff; font-family: Nunito,sans-serif; font-size: 13px">
-                    <span style="color: rgba(255,255,255,0.5); font-size: 12px">АР</span>
-                    <button onclick="saveDailyAmount()" style="padding: 4px 10px; border-radius: 8px; background: rgba(255,180,0,0.2); border: 1px solid rgba(255,180,0,0.4); color: #ffd700; font-size: 11px; cursor: pointer; font-family: Nunito,sans-serif">✓</button>
+        <div id="admin-tab-settings" style="display:none;">
+            <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:12px;margin-bottom:8px;">
+                <div style="color:#ffd700;font-family:'Fredoka One',cursive;font-size:13px;margin-bottom:8px;">🎁 ЕЖЕДНЕВНАЯ НАГРАДА</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:Nunito,sans-serif;">Размер:</span>
+                    <input id="daily-amount-input" type="number" value="10" min="1" style="width:70px;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,180,0,0.3);color:#fff;font-family:Nunito,sans-serif;font-size:13px;">
+                    <span style="color:rgba(255,255,255,0.5);font-size:12px;">АР</span>
+                    <button onclick="saveDailyAmount()" style="padding:4px 10px;border-radius:8px;background:rgba(255,180,0,0.2);border:1px solid rgba(255,180,0,0.4);color:#ffd700;font-size:11px;cursor:pointer;font-family:Nunito,sans-serif;">✓</button>
                 </div>
             </div>
         </div>
-        
-        <div id="lobby-admin-profile" style="display: none">
-            <div id="lap-name" style="font-family: 'Fredoka One',cursive; font-size: 16px; color: #ff4444; text-align: center; margin-bottom: 4px"></div>
-            <div id="lap-rename-wrap" style="display: none; margin-bottom: 6px">
-                <div style="display: flex; gap: 6px">
-                    <input id="lap-rename-input" type="text" maxlength="20" placeholder="Новый ник" style="flex: 1; padding: 6px 10px; border-radius: 8px; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,100,0,0.4); font-family: 'Fredoka One',cursive; font-size: 13px; outline: none">
-                    <button onclick="lapRenameConfirm()" style="padding: 6px 12px; background: rgba(0,180,0,0.2); color: #66ff88; border: 1px solid rgba(0,200,0,0.3); border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 12px">✓</button>
-                    <button onclick="lapRenameCancel()" style="padding: 6px 10px; background: rgba(180,0,0,0.15); color: #ff6666; border: 1px solid rgba(200,0,0,0.2); border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 12px">✕</button>
+        <!-- Профиль игрока -->
+        <div id="lobby-admin-profile" style="display:none;">
+            <div id="lap-name" style="font-family:'Fredoka One',cursive;font-size:16px;color:#ff4444;text-align:center;margin-bottom:8px;"></div>
+            <div style="height:1px;background:linear-gradient(90deg,transparent,#ffd700,transparent);margin-bottom:10px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="color:rgba(255,255,255,0.6);font-size:13px;font-family:Nunito,sans-serif;">Баланс:</span>
+                <span id="lap-bal" style="color:#ffd700;font-family:'Fredoka One',cursive;font-size:16px;"></span>
+            </div>
+            <div id="lap-egg-wrap" style="display:none;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="color:rgba(255,255,255,0.6);font-size:13px;font-family:Nunito,sans-serif;">Яйца:</span>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span id="lap-egg-count" style="color:#ffdd44;font-family:'Fredoka One',cursive;font-size:15px;"></span>
+                    <button onclick="lapClearEggs()" style="padding:3px 9px;border-radius:7px;background:rgba(255,50,0,0.2);border:1px solid rgba(255,50,0,0.3);color:#ff8844;font-family:'Fredoka One',cursive;font-size:10px;cursor:pointer;">✕ УБРАТЬ</button>
                 </div>
             </div>
-            <button onclick="lapRenameOpen()" style="width: 100%; padding: 5px; margin-bottom: 6px; background: transparent; color: rgba(255,180,0,0.5); border: 1px solid rgba(255,180,0,0.2); border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 11px; letter-spacing: 1px">✏️ ИЗМЕНИТЬ НИК</button>
-            <div style="height: 1px; background: linear-gradient(90deg,transparent,#ffd700,transparent); margin-bottom: 10px"></div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
-                <span style="color: rgba(255,255,255,0.6); font-size: 13px; font-family: Nunito,sans-serif">Баланс:</span>
-                <span id="lap-bal" style="color: #ffd700; font-family: 'Fredoka One',cursive; font-size: 16px"></span>
+            <div style="display:flex;gap:6px;margin-bottom:8px;">
+                <button onclick="lapMod(1)" style="flex:1;padding:7px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">+1</button>
+                <button onclick="lapMod(10)" style="flex:1;padding:7px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">+10</button>
+                <button onclick="lapMod(-1)" style="flex:1;padding:7px;background:rgba(180,0,0,0.2);color:#ff6666;border:1px solid rgba(200,0,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">−1</button>
+                <button onclick="lapMod(-10)" style="flex:1;padding:7px;background:rgba(180,0,0,0.2);color:#ff6666;border:1px solid rgba(200,0,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">−10</button>
             </div>
-            <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap">
-                <button onclick="lapMod(1)" style="flex: 1; padding: 7px; background: rgba(0,180,0,0.2); color: #66ff88; border: 1px solid rgba(0,200,0,0.3); border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 13px">+1</button>
-                <button onclick="lapMod(10)" style="flex: 1; padding: 7px; background: rgba(0,180,0,0.2); color: #66ff88; border: 1px solid rgba(0,200,0,0.3); border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 13px">+10</button>
-                <button onclick="lapMod(-1)" style="flex: 1; padding: 7px; background: rgba(180,0,0,0.2); color: #ff6666; border: 1px solid rgba(200,0,0,0.3); border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 13px">−1</button>
-                <button onclick="lapMod(-10)" style="flex: 1; padding: 7px; background: rgba(180,0,0,0.2); color: #ff6666; border: 1px solid rgba(200,0,0,0.3); border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 13px">−10</button>
+            <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+                <button onclick="lapToggleVerified()" id="lap-verified-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;border:none;min-width:80px;">✓ ПРОВЕРЕН</button>
+                <button onclick="lapTogglePinned()" id="lap-pinned-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;border:none;min-width:80px;">📌 ЗАКРЕП</button>
             </div>
-            <div style="display: flex; gap: 6px; margin-bottom: 8px">
-                <button onclick="lapToggleVerified()" id="lap-verified-btn" style="flex: 1; padding: 7px; border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 12px; border: none">✓ ПРОВЕРЕН</button>
-                <button onclick="lapTogglePinned()" id="lap-pinned-btn" style="flex: 1; padding: 7px; border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 12px; border: none">📌 ЗАКРЕП</button>
-                <button onclick="lapToggleAdmin()" id="lap-admin-btn" style="flex: 1; padding: 7px; border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 12px; border: none">👑 АДМИН</button>
+            <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+                <button onclick="lapToggleAdmin()" id="lap-admin-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;border:none;min-width:80px;">👑 АДМИН</button>
+                <button onclick="lapToggleDailyEnabled()" id="lap-daily-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;border:none;min-width:80px;">🎁 НАГРАДА</button>
             </div>
-            <div style="display: flex; gap: 6px; margin-bottom: 8px">
-                <button onclick="lapToggleDaily()" id="lap-daily-btn" style="flex: 1; padding: 7px; border-radius: 8px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 12px; border: none">🎁 НАГРАДА</button>
+            <button onclick="lapRenameOpen()" style="width:100%;padding:6px;margin-bottom:6px;background:transparent;color:rgba(255,180,0,0.5);border:1px solid rgba(255,180,0,0.2);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:1px;">✏️ ИЗМЕНИТЬ НИК</button>
+            <div id="lap-rename-wrap" style="display:none;margin-bottom:6px;">
+                <div style="display:flex;gap:6px;">
+                    <input id="lap-rename-input" type="text" maxlength="20" placeholder="Новый ник" style="flex:1;padding:6px 10px;border-radius:8px;background:rgba(0,0,0,0.5);color:#fff;border:1px solid rgba(255,100,0,0.4);font-family:'Fredoka One',cursive;font-size:13px;outline:none;">
+                    <button onclick="lapRenameConfirm()" style="padding:6px 12px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;">✓</button>
+                    <button onclick="lapRenameCancel()" style="padding:6px 10px;background:rgba(180,0,0,0.15);color:#ff6666;border:1px solid rgba(200,0,0,0.2);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;">✕</button>
+                </div>
             </div>
-            <div style="font-family: 'Fredoka One',cursive; font-size: 12px; color: rgba(255,180,0,0.6); margin-bottom: 6px; letter-spacing: 2px">ВСЯ ИСТОРИЯ</div>
-            <div id="lap-history" style="max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 10px; padding: 8px; font-size: 11px; color: rgba(255,255,255,0.6); font-family: Nunito,sans-serif; scrollbar-width: thin; margin-bottom: 8px"></div>
-            <div style="display: flex; gap: 6px">
-                <button onclick="document.getElementById('lobby-admin-profile').style.display='none';document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';" style="flex: 1; padding: 8px; background: transparent; color: #ffd700; border: 1px solid rgba(255,215,0,0.3); border-radius: 10px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 12px; letter-spacing: 2px">← НАЗАД</button>
-                <button onclick="lapDelete()" style="flex: 1; padding: 8px; background: rgba(200,0,0,0.2); color: #ff4444; border: 1px solid rgba(200,0,0,0.3); border-radius: 10px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 12px; letter-spacing: 2px">🗑 УДАЛИТЬ</button>
-            </div>
-            <a href="admin.html" style="display: block; width: 100%; padding: 8px; margin-top: 6px; text-align: center; background: rgba(0,255,180,0.08); color: #00ffb3; border: 1px solid rgba(0,255,180,0.25); border-radius: 10px; cursor: pointer; font-family: 'Fredoka One',cursive; font-size: 12px; letter-spacing: 2px; text-decoration: none">⚙ ПОЛНАЯ АДМИН-ПАНЕЛЬ</a>
+            <button onclick="lapFate()" style="width:100%;padding:6px;margin-bottom:6px;background:rgba(255,0,0,0.12);color:#ff6666;border:1px solid rgba(255,0,0,0.25);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:1px;">⚠️ СУДЬБА</button>
+            <button onclick="openAdminForUser(lapUser)" style="width:100%;padding:7px;margin-bottom:6px;background:rgba(0,180,0,0.15);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:1px;">🔗 ОТКРЫТЬ В АДМИНКЕ</button>
+            <div style="max-height:100px;overflow-y:auto;background:rgba(0,0,0,0.3);border-radius:8px;padding:6px;margin-bottom:6px;scrollbar-width:thin;font-size:11px;font-family:Nunito,sans-serif;color:rgba(255,255,255,0.5);" id="lap-history"></div>
+            <button onclick="document.getElementById('lobby-admin-profile').style.display='none';document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';" style="width:100%;padding:7px;background:transparent;color:rgba(255,180,0,0.4);border:1px solid rgba(255,180,0,0.15);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;">← НАЗАД</button>
         </div>
-        <button onclick="document.getElementById('lobby-admin-panel').style.display='none'" style="width: 100%; padding: 9px; margin-top: 8px; border-radius: 12px; background: transparent; color: rgba(255,180,0,0.45); border: 1px solid rgba(255,180,0,0.2); cursor: pointer; font-family: 'Nunito',sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 3px">✕ ЗАКРЫТЬ</button>
+        <button onclick="openVip()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.4);border:1px solid rgba(255,180,0,0.15);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
     </div>
-
-    
-    <div id="quests-panel" style="display: none; background: linear-gradient(160deg,#0d001a,#1a0030); border: 2px solid rgba(150,0,255,0.3); padding: 18px; border-radius: 22px; margin-bottom: 14px">
-        <div style="font-family: 'Fredoka One',cursive; font-size: 17px; letter-spacing: 2px; text-align: center; margin-bottom: 4px; color: #cc88ff">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div>
-        <div style="font-size: 10px; text-align: center; color: rgba(200,150,255,0.4); letter-spacing: 2px; margin-bottom: 12px" id="quests-reset-time"></div>
-        <div id="quests-list"></div>
-        <button onclick="document.getElementById('quests-panel').style.display='none'" style="width: 100%; padding: 9px; margin-top: 10px; border-radius: 12px; background: transparent; color: rgba(150,0,255,0.45); border: 1px solid rgba(150,0,255,0.2); cursor: pointer; font-family: 'Nunito',sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 3px">✕ ЗАКРЫТЬ</button>
-    </div>
-
-    
-    <div id="leaderboard-panel" style="display: none; background: linear-gradient(160deg,#0a0015,#180020); border: 2px solid rgba(0,150,255,0.3); padding: 18px; border-radius: 22px; margin-bottom: 14px">
-        <div style="font-family: 'Fredoka One',cursive; font-size: 17px; letter-spacing: 2px; text-align: center; margin-bottom: 12px; color: #88ccff">🏆 ТАБЛИЦА ЛИДЕРОВ</div>
-        <div style="display: flex; gap: 8px; margin-bottom: 10px">
-            <button onclick="lbTab('ar')" id="lb-tab-ar" style="flex: 1; padding: 8px; border-radius: 10px; background: rgba(0,150,255,0.2); color: #88ccff; border: 1px solid rgba(0,150,255,0.4); font-family: 'Fredoka One',cursive; font-size: 12px; cursor: pointer; letter-spacing: 1px">💰 ТОП ПО АР</button>
-            <button onclick="lbTab('games')" id="lb-tab-games" style="flex: 1; padding: 8px; border-radius: 10px; background: transparent; color: rgba(0,150,255,0.5); border: 1px solid rgba(0,150,255,0.2); font-family: 'Fredoka One',cursive; font-size: 12px; cursor: pointer; letter-spacing: 1px">🎮 ТОП ПО ИГРАМ</button>
-        </div>
-        <div id="lb-list" style="max-height: 220px; overflow-y: auto; scrollbar-width: thin"></div>
-        <button onclick="document.getElementById('leaderboard-panel').style.display='none'" style="width: 100%; padding: 9px; margin-top: 10px; border-radius: 12px; background: transparent; color: rgba(0,150,255,0.45); border: 1px solid rgba(0,150,255,0.2); cursor: pointer; font-family: 'Nunito',sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 3px">✕ ЗАКРЫТЬ</button>
-    </div>
-
     <!-- ДУЭЛИ -->
     <div id="duel-panel" style="display: none; background: linear-gradient(160deg,#1a0010,#200015); border: 2px solid rgba(255,0,80,0.3); padding: 18px; border-radius: 22px; margin-bottom: 14px">
         <div style="font-family: 'Fredoka One',cursive; font-size: 17px; letter-spacing: 2px; text-align: center; margin-bottom: 12px; color: #ff88aa">⚔️ ДУЭЛИ</div>
@@ -1095,6 +1106,7 @@ input:-webkit-autofill:focus {
         localStorage.setItem('lobbyUid', currentUid);
         showUserBlock();
         startOnlinePing();
+        checkEasterEvent();
     }
 
     auth.onAuthStateChanged(firebaseUser=>{
@@ -1106,6 +1118,7 @@ input:-webkit-autofill:focus {
                     localStorage.setItem('lobbyUser', currentUser);
                     showUserBlock();
                     startOnlinePing();
+                    checkEasterEvent();
                 }
             });
         }
@@ -1135,7 +1148,7 @@ input:-webkit-autofill:focus {
             else if(/Win/.test(navigator.platform)) platform='Windows';
             else if(/Mac/.test(navigator.platform)) platform='macOS';
             else platform='Unknown';
-db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Лобби', deviceInfo:{browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)}});
+            db.ref('players/'+currentUid).update({lastSeen:Date.now(),currentPage:'🏠 Лобби'});
         } catch(e){}
         db.ref('players/'+currentUid+'/questDay').once('value').then(s=>{
             const today=new Date().toDateString();
@@ -1156,29 +1169,15 @@ db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Л�
             if(vipBtn) vipBtn.style.display='';
             const badge=d.verified?'✅ ':d.admin?'👑 ':d.pinned?'📌 ':'';
             const _unEl2=document.getElementById('lobby-username');
-            _unEl2.textContent=badge+currentUser.toUpperCase();
-            _unEl2.style.fontSize=currentUser.length>10?'13px':currentUser.length>7?'15px':'18px';
-            // Радужный ник
             if(d.rainbowNick){
-                _unEl2.style.background='linear-gradient(90deg,#ff4488,#ffdd00,#44ffaa,#4488ff,#ff4488)';
-                _unEl2.style.backgroundSize='200%';
-                _unEl2.style.webkitBackgroundClip='text';
-                _unEl2.style.webkitTextFillColor='transparent';
-                _unEl2.style.animation='rainbowShift 2s linear infinite';
+                _unEl2.innerHTML='<span>'+badge+'</span><span style="background:linear-gradient(90deg,#ff4488,#ffdd00,#44ffaa,#4488ff,#ff4488);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:rainbowShift 2s linear infinite;">'+currentUser.toUpperCase()+'</span>';
             } else {
-                _unEl2.style.background='';
-                _unEl2.style.webkitBackgroundClip='';
-                _unEl2.style.webkitTextFillColor='';
-                _unEl2.style.animation='';
+                _unEl2.textContent=badge+currentUser.toUpperCase();
+                _unEl2.style.cssText='';
             }
-            // Магазин — обновляем кнопки ника
-            updateNickShopBtn(!!d.rainbowNick);
-            // Яйца
-            if(typeof easterEggs!=='undefined'){
-                var eggsEl=document.getElementById('lobby-eggs');
-                easterEggs=d.eggs||0;
-                if(eggsEl)eggsEl.textContent=easterEggs+' 🥚';
-            }
+            _unEl2.style.fontSize=currentUser.length>10?'13px':currentUser.length>7?'15px':'18px';
+            if(typeof updateNickShopBtn==='function')updateNickShopBtn(!!d.rainbowNick);
+            easterEggs=d.eggs||0; var egEl=document.getElementById('lobby-eggs'); if(egEl)egEl.textContent=easterEggs+' 🥚';
         });
     }
 
@@ -1198,7 +1197,7 @@ db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Л�
     document.addEventListener('click', function(e){
         const panels=['lobby-admin-panel','leaderboard-panel','quests-panel','shop-panel'];
         const inside=panels.some(id=>document.getElementById(id)&&document.getElementById(id).contains(e.target));
-        const onBtn=e.target.closest('button')&&(e.target.closest('button').getAttribute('onclick')||'').match(/openVip|openLeaderboard|openQuests|openLobbyAdmin|openShop|toggleNavMenu/);
+        const onBtn=e.target.closest('button')&&(e.target.closest('button').getAttribute('onclick')||'').match(/openVip|openLeaderboard|openQuests|openLobbyAdmin|openShop|toggleNavMenu|openSupportChat/);
         if(!inside&&!onBtn) panels.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
     });
 
@@ -1307,14 +1306,14 @@ db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Л�
             snap.forEach(ch=>{
                 const d=ch.val()||{};
                 if(d.hidden&&!isAdmin) return;
-                players.push({uid:ch.key,name:d.username||ch.key,balance:d.balance||0,games:d.questDayGames||0,verified:d.verified,admin:d.admin,hidden:d.hidden,pinned:d.pinned,rainbow:d.rainbowNick});
+                players.push({uid:ch.key,name:d.username||ch.key,balance:d.balance||0,games:d.questDayGames||0,verified:d.verified,admin:d.admin,hidden:d.hidden,pinned:d.pinned,rainbow:!!d.rainbowNick});
             });
             players.sort((a,b)=>tab==='ar'?b.balance-a.balance:b.games-a.games);
             let rank=0;
             el.innerHTML=players.slice(0,20).map(p=>{
                 const badge=p.admin?'👑':p.verified?'✅':p.pinned?'📌':'';
                 const isMe=p.uid===currentUid;
-                const rainbowStyle=p.rainbow?'background:linear-gradient(90deg,#ff4488,#ffdd00,#44ffaa,#4488ff,#ff4488);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:rainbowShift 2s linear infinite;':'';
+                const nameHtml=p.rainbow?'<span style="background:linear-gradient(90deg,#ff4488,#ffdd00,#44ffaa,#4488ff,#ff4488);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:rainbowShift 2s linear infinite;">'+p.name+'</span>':p.name;
                 if(!p.hidden) rank++;
                 const num=p.hidden?'<span style="color: rgba(255,255,255,0.15); font-size: 11px">—</span>':'<span style="color: rgba(255,255,255,0.4); font-size: 11px; font-family: \'Fredoka One\',cursive">#'+rank+'</span>';
                 const nameColor=p.hidden?'rgba(255,255,255,0.25)':isMe?'#ffd700':'rgba(255,255,255,0.85)';
@@ -1322,7 +1321,7 @@ db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Л�
                 return `<div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; background: ${isMe&&!p.hidden?'rgba(255,180,0,0.08)': 'transparent'}; border-bottom: 1px solid rgba(255,255,255,0.04)">
                     <span style="width: 26px; text-align: center">${num}</span>
                     <span style="font-size: 13px; opacity: ${p.hidden?'0.3': '1'}">${badge}</span>
-                    <span style="flex: 1; font-family: 'Fredoka One',cursive; font-size: 13px; color: ${nameColor};${rainbowStyle}">${p.name}</span>
+                    <span style="flex: 1; font-family: 'Fredoka One',cursive; font-size: 13px; color: ${nameColor}">${nameHtml}</span>
                     <span style="font-size: 12px; font-family: Nunito,sans-serif; font-weight: 700; color: rgba(255,180,0,0.8)">${tab==='ar'?p.balance+' АР':p.games+' игр'}</span>
                     ${hideBtn}
                 </div>`;
@@ -1410,6 +1409,14 @@ db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Л�
             const d=s.val()||{};
             document.getElementById('lap-name').textContent=(d.username||uid).toUpperCase();
             document.getElementById('lap-bal').textContent=(d.balance||0)+' АР';
+            // Яйца — показываем только при ивенте и если > 0
+            var lapEW=document.getElementById('lap-egg-wrap');
+            if(lapEW){
+                if(typeof easterActive!=='undefined'&&easterActive&&(d.eggs||0)>0){
+                    lapEW.style.display='flex';
+                    document.getElementById('lap-egg-count').textContent=(d.eggs||0)+' 🥚';
+                } else lapEW.style.display='none';
+            }
             document.getElementById('lap-history').innerHTML=[...(d.history||[])].reverse().map(h=>`<div style="padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05)">${h}</div>`).join('');
             const vb=document.getElementById('lap-verified-btn');
             vb.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.verified?'rgba(0,180,0,0.3)':'rgba(255,255,255,0.05)'};color:${d.verified?'#66ff88':'rgba(255,255,255,0.5)'};border:${d.verified?'1px solid rgba(0,200,0,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
@@ -1422,6 +1429,21 @@ db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Л�
             document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='none';
             document.getElementById('lobby-admin-profile').style.display='block';
         });
+    }
+
+    function lapClearEggs(){
+        if(!lapUser)return;
+        if(!confirm('Убрать все яйца?'))return;
+        db.ref('players/'+lapUser+'/eggs').set(0);
+        var ew=document.getElementById('lap-egg-wrap');
+        if(ew)ew.style.display='none';
+    }
+    function lapToggleDailyEnabled(){
+        lapToggle('dailyEnabled','lap-daily-btn',{bg:'rgba(0,200,100,0.3)',color:'#00e676',border:'1px solid rgba(0,200,100,0.4)'});
+    }
+    function openAdminForUser(uid){
+        var url='admin.html?user='+encodeURIComponent(uid);
+        window.open(url,'_blank');
     }
     function lapMod(n){
         db.ref('players/'+lapUser+'/balance').once('value').then(s=>{
@@ -1807,58 +1829,48 @@ db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Л�
     }
 
 var EASTER_START=1744736400000, EASTER_END=1745341200000;
-var BUNNY_TYPES=[{"file":"bunny1.png","name":"Белый","rarity":"ОБЫЧНЫЙ","eggs":1,"chance":40,"color":"#ffffff","glow":"rgba(255,255,255,0.4)"},{"file":"bunny2.png","name":"Пухлый","rarity":"ОБЫЧНЫЙ+","eggs":2,"chance":25,"color":"#ddddff","glow":"rgba(200,200,255,0.4)"},{"file":"bunny3.png","name":"Огненный","rarity":"НЕОБЫЧНЫЙ","eggs":3,"chance":15,"color":"#ff8800","glow":"rgba(255,140,0,0.5)"},{"file":"bunny4.png","name":"Железный","rarity":"РЕДКИЙ","eggs":4,"chance":8,"color":"#aaaaaa","glow":"rgba(160,160,160,0.5)"},{"file":"bunny5.png","name":"Кристальный","rarity":"РЕДКИЙ+","eggs":5,"chance":5,"color":"#aaeeff","glow":"rgba(100,220,255,0.6)"},{"file":"bunny6.png","name":"Золотой","rarity":"ЭПИЧЕСКИЙ","eggs":6,"chance":3,"color":"#ffd700","glow":"rgba(255,215,0,0.7)"},{"file":"bunny7.png","name":"Изумрудный","rarity":"ЭПИЧЕСКИЙ+","eggs":7,"chance":2,"color":"#00e676","glow":"rgba(0,230,120,0.6)"},{"file":"bunny8.png","name":"Аметистовый","rarity":"ЛЕГЕНДАРНЫЙ","eggs":8,"chance":1.5,"color":"#cc88ff","glow":"rgba(180,100,255,0.7)"},{"file":"bunny9.png","name":"Радужный","rarity":"МИФИЧЕСКИЙ","eggs":10,"chance":0.5,"color":"#ffaaff","glow":"rgba(255,100,255,0.8)"}];
+var BUNNY_TYPES=[{"file":"bunny1.png","name":"Белый","rarity":"ОБЫЧНЫЙ","eggs":1,"chance":40,"color":"#fff","glow":"rgba(255,255,255,0.4)"},{"file":"bunny2.png","name":"Жирный","rarity":"ОБЫЧНЫЙ+","eggs":2,"chance":25,"color":"#ddddff","glow":"rgba(200,200,255,0.4)"},{"file":"bunny3.png","name":"Бронзавый","rarity":"НЕОБЫЧНЫЙ","eggs":3,"chance":15,"color":"#ff8800","glow":"rgba(255,140,0,0.5)"},{"file":"bunny4.png","name":"Железный","rarity":"РЕДКИЙ","eggs":4,"chance":8,"color":"#aaa","glow":"rgba(160,160,160,0.5)"},{"file":"bunny5.png","name":"Серебряный","rarity":"РЕДКИЙ+","eggs":5,"chance":5,"color":"#aaeeff","glow":"rgba(100,220,255,0.6)"},{"file":"bunny6.png","name":"Золотой","rarity":"ЭПИЧЕСКИЙ","eggs":6,"chance":3,"color":"#ffd700","glow":"rgba(255,215,0,0.7)"},{"file":"bunny7.png","name":"Изумрудный","rarity":"ЭПИЧЕСКИЙ+","eggs":7,"chance":2,"color":"#00e676","glow":"rgba(0,230,120,0.6)"},{"file":"bunny8.png","name":"Аметистовый","rarity":"ЛЕГЕНДАРНЫЙ","eggs":8,"chance":1.5,"color":"#cc88ff","glow":"rgba(180,100,255,0.7)"},{"file":"bunny9.png","name":"Радужный","rarity":"МИФИЧЕСКИЙ","eggs":10,"chance":0.5,"color":"#ffaaff","glow":"rgba(255,100,255,0.8)"}];
 var BUNNY_SLOTS=[{"x":8,"y":18},{"x":72,"y":12},{"x":18,"y":52},{"x":62,"y":44},{"x":82,"y":28},{"x":12,"y":72},{"x":48,"y":68},{"x":78,"y":62},{"x":33,"y":32},{"x":55,"y":22}];
-var easterActive=false, easterEggs=0;
-var activeBunnies={}, bunnyTimer=null, shopTimerIv=null;
+var SUP_QA=[["Что такое слоты и как в них играть?","🍓 Слоты — барабаны останавливаются на символах. Два одинаковых — выигрыш, три — крупный! Ставка 1 АР."],["Как работает игра Полёт?","✈️ Краш-игра — самолёт летит, множитель растёт. Нажми нырнуть до падения. Чем дольше — тем больше выигрыш. От 3 АР."],["Что такое Сапёр и как играть?","💣 Открываешь ячейки и получаешь АР за золото. Нажми ВЫВЕСТИ в любой момент. Мина — теряешь всё. Ставка 3 АР."],["Как работают Шарики?","🔵 Плинко — шарик падает в ячейку с множителем (0x–3x). Ставка 1–100 АР за шарик."],["Где найти промокоды?","🎁 Нажми 🎁 ПРОМОКОД в любой игре и введи код. Следи за новостями казино!"],["Что такое дуэль?","⚔️ Вызов другого игрока онлайн. Выбери игрока, игру, раунды и ставку. Победитель забирает ставку."]];
+var easterActive=false, easterEggs=0, activeBunnies={}, bunnyTimer=null, shopTimerIv=null, _supUnsub=null;
 
 function toggleNavMenu(){
-    var m=document.getElementById('nav-menu'), b=document.getElementById('nav-toggle-btn');
-    var open=m.style.display==='block';
-    m.style.display=open?'none':'block';
+    var m=document.getElementById('nav-menu'),b=document.getElementById('nav-toggle-btn');
+    var open=m&&m.style.display==='block';
+    if(m)m.style.display=open?'none':'block';
     if(b)b.textContent=open?'▼':'▲';
 }
-
-function updateNickShopBtn(hasRainbow){
-    var buy=document.getElementById('shop-nick-buy');
-    var reset=document.getElementById('shop-nick-reset');
-    if(buy) buy.style.display=hasRainbow?'none':'block';
-    if(reset) reset.style.display=hasRainbow?'block':'none';
+function updateNickShopBtn(has){
+    var buy=document.getElementById('shop-nick-buy'),reset=document.getElementById('shop-nick-reset');
+    if(buy)buy.style.display=has?'none':'block';
+    if(reset)reset.style.display=has?'block':'none';
 }
-
 function buyRainbowNick(){
     if(!currentUid)return;
     db.ref('players/'+currentUid+'/balance').once('value').then(function(s){
         var bal=s.val()||0;
-        if(bal<100){alert('Нужно 100 АР. У тебя '+bal+' АР.');return;}
+        if(bal<100){alert('Нужно 100 АР.');return;}
         if(!confirm('Купить Блатной ник за 100 АР?'))return;
         db.ref('players/'+currentUid+'/balance').set(bal-100);
         db.ref('players/'+currentUid+'/rainbowNick').set(true);
-        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){
-            var h=hs.val()||[];h.push('✨ Куплен Блатной ник — 100 АР');
-            db.ref('players/'+currentUid+'/history').set(h.slice(-50));
-        });
+        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){var h=hs.val()||[];h.push('✨ Блатной ник — 100 АР');db.ref('players/'+currentUid+'/history').set(h.slice(-50));});
     });
 }
 function buyNormalNick(){
     if(!currentUid)return;
     db.ref('players/'+currentUid+'/balance').once('value').then(function(s){
         var bal=s.val()||0;
-        if(bal<50){alert('Нужно 50 АР. У тебя '+bal+' АР.');return;}
+        if(bal<50){alert('Нужно 50 АР.');return;}
         if(!confirm('Вернуть обычный ник за 50 АР?'))return;
         db.ref('players/'+currentUid+'/balance').set(bal-50);
         db.ref('players/'+currentUid+'/rainbowNick').set(false);
-        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){
-            var h=hs.val()||[];h.push('🔤 Возврат обычного ника — 50 АР');
-            db.ref('players/'+currentUid+'/history').set(h.slice(-50));
-        });
+        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){var h=hs.val()||[];h.push('🔤 Обычный ник — 50 АР');db.ref('players/'+currentUid+'/history').set(h.slice(-50));});
     });
 }
-
 function openShop(){
-    var panels=['lobby-admin-panel','leaderboard-panel','quests-panel'];
-    panels.forEach(function(p){var el=document.getElementById(p);if(el)el.style.display='none';});
+    ['lobby-admin-panel','leaderboard-panel','quests-panel'].forEach(function(p){var el=document.getElementById(p);if(el)el.style.display='none';});
     var sp=document.getElementById('shop-panel');
+    if(!sp)return;
     var open=sp.style.display==='block';
     sp.style.display=open?'none':'block';
     if(!open){
@@ -1877,28 +1889,29 @@ function updateShopTimer(){
     var now=Date.now();
     var item=document.getElementById('shop-easter-item');
     if(!item)return;
-    if(!easterActive){item.style.display='none';return;}
-    item.style.display='block';
+    // Показываем если ивент вкл
+    item.style.display=easterActive?'block':'none';
+    if(!easterActive)return;
     var badge=document.getElementById('shop-easter-badge');
     var label=document.getElementById('shop-timer-label');
-    var timerEl=document.getElementById('shop-timer');
-    var exWrap=document.getElementById('shop-exchange-wrap');
+    var tel=document.getElementById('shop-timer');
+    var ex=document.getElementById('shop-exchange-wrap');
     function fmt(ms){var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return(h>9?h:'0'+h)+':'+(m>9?m:'0'+m)+':'+(sc>9?sc:'0'+sc);}
     if(now<EASTER_START){
         if(badge){badge.textContent='СКОРО';badge.style.cssText='background:rgba(255,180,0,0.12);color:#ffd700;font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:6px;';}
         if(label)label.textContent='Акция начнётся через:';
-        if(timerEl)timerEl.textContent=fmt(EASTER_START-now);
-        if(exWrap)exWrap.style.display='none';
+        if(tel)tel.textContent=fmt(EASTER_START-now);
+        if(ex)ex.style.display='none';
     } else if(now<EASTER_END){
         if(badge){badge.textContent='АКТИВНО';badge.style.cssText='background:rgba(0,200,100,0.12);color:#00e676;font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:6px;';}
-        if(label)label.textContent='Акция закончится через:';
-        if(timerEl)timerEl.textContent=fmt(EASTER_END-now);
-        if(exWrap)exWrap.style.display='block';
+        if(label)label.textContent='Закончится через:';
+        if(tel)tel.textContent=fmt(EASTER_END-now);
+        if(ex)ex.style.display='block';
     } else {
-        if(badge){badge.textContent='ЗАВЕРШЕНО';badge.style.cssText='color:rgba(255,255,255,0.3);font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:6px;';}
+        if(badge){badge.textContent='ЗАВЕРШЕНО';badge.style.cssText='color:rgba(255,255,255,0.3);font-size:9px;padding:2px 6px;border-radius:6px;';}
         if(label)label.textContent='Акция завершена';
-        if(timerEl)timerEl.textContent='00:00:00';
-        if(exWrap)exWrap.style.display='none';
+        if(tel)tel.textContent='00:00:00';
+        if(ex)ex.style.display='none';
     }
 }
 function doExchange(){
@@ -1906,38 +1919,50 @@ function doExchange(){
     if(!easterActive||now<EASTER_START||now>=EASTER_END){alert('Акция не активна');return;}
     var inp=document.getElementById('shop-egg-input');
     var amt=Math.max(1,parseInt(inp.value)||1);
-    if(amt>easterEggs){alert('Недостаточно яиц! У тебя '+easterEggs+' 🥚');return;}
-    var gain=amt*3;
+    if(amt>easterEggs){alert('Недостаточно яиц!');return;}
     db.ref('players/'+currentUid+'/eggs').set(easterEggs-amt);
     db.ref('players/'+currentUid+'/balance').once('value').then(function(s){
+        var gain=amt*3;
         db.ref('players/'+currentUid+'/balance').set((s.val()||0)+gain);
-        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){
-            var h=hs.val()||[];h.push('🥚 Обмен '+amt+' яиц → +'+gain+' АР');
-            db.ref('players/'+currentUid+'/history').set(h.slice(-50));
-        });
-        alert('✅ +'+gain+' АР!');
+        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){var h=hs.val()||[];h.push('🥚 '+amt+' яиц → +'+gain+' АР');db.ref('players/'+currentUid+'/history').set(h.slice(-50));});
+        alert('✅ +'+(amt*3)+' АР!');
     });
 }
-setTimeout(function(){
-    var inp=document.getElementById('shop-egg-input');
-    if(inp)inp.addEventListener('input',function(){var p=document.getElementById('shop-ar-preview');if(p)p.textContent=(parseInt(this.value)||1)*3;});
-},600);
+setTimeout(function(){var i=document.getElementById('shop-egg-input');if(i)i.addEventListener('input',function(){var p=document.getElementById('shop-ar-preview');if(p)p.textContent=(parseInt(this.value)||1)*3;});},500);
 
+// ПАСХА — вызывается ПОСЛЕ установки currentUid
 function checkEasterEvent(){
-    db.ref('settings/easterEvent').on('value',function(snap){
-        easterActive=snap.val()===true;
-        var wrap=document.getElementById('egg-balance-wrap');
-        if(wrap)wrap.style.display=easterActive?'block':'none';
-        if(easterActive)startBunnySpawner(); else{stopBunnySpawner();clearAllBunnies();}
+    var wrap = document.getElementById('egg-balance-wrap');
+
+    db.ref('settings/easterEvent').on('value', function(snap){
+        easterActive = snap.val() === true;
+
+        if(easterActive) startBunnySpawner();
+        else {
+            stopBunnySpawner();
+            clearAllBunnies();
+        }
+
+        // 👇 отслеживание яиц
+        if (currentUid) {
+            db.ref('players/' + currentUid + '/eggs').on('value', function(snap){
+                var eggs = snap.val() || 0;
+
+                if (wrap) {
+                    if (easterActive && eggs > 0) {
+                        wrap.style.display = 'block';
+                    } else {
+                        wrap.style.display = 'none';
+                    }
+                }
+            });
+        }
+
         updateShopTimer();
     });
 }
 
-function pickBunny(){
-    var roll=Math.random()*100,cum=0;
-    for(var i=0;i<BUNNY_TYPES.length;i++){cum+=BUNNY_TYPES[i].chance;if(roll<cum)return BUNNY_TYPES[i];}
-    return BUNNY_TYPES[0];
-}
+function pickBunny(){var r=Math.random()*100,c=0;for(var i=0;i<BUNNY_TYPES.length;i++){c+=BUNNY_TYPES[i].chance;if(r<c)return BUNNY_TYPES[i];}return BUNNY_TYPES[0];}
 function spawnBunny(){
     if(!easterActive||!currentUid)return;
     if(Object.keys(activeBunnies).length>=2)return;
@@ -1947,19 +1972,15 @@ function spawnBunny(){
     if(!free.length)return;
     var si=free[Math.floor(Math.random()*free.length)];
     var slot=BUNNY_SLOTS[si];
-    var id='b'+Date.now();
-    var size=70+Math.random()*35;
+    var id='b'+Date.now(), size=70+Math.random()*35;
     var el=document.createElement('div');
     el.className='bunny-el';el.id=id;
-    el.style.cssText='left:'+slot.x+'vw;top:'+slot.y+'vh;width:'+size+'px;height:'+size+'px;filter:drop-shadow(0 0 10px '+type.glow+');animation:bunnyAppear 0.4s ease-out;pointer-events:all;';
-    el.innerHTML='<img src="'+type.file+'" style="width:100%;height:100%;object-fit:contain;pointer-events:none;" draggable="false">'
-        +'<div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:'+type.color+';font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:7px;white-space:nowrap;border:1px solid '+type.color+'55;">'+type.rarity+'</div>';
+    el.style.cssText='left:'+slot.x+'vw;top:'+slot.y+'vh;width:'+size+'px;height:'+size+'px;filter:drop-shadow(0 0 10px '+type.glow+');animation:bunnyAppear 0.4s ease-out;';
+    el.innerHTML='<img src="'+type.file+'" style="width:100%;height:100%;object-fit:contain;pointer-events:none;" draggable="false"><div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:'+type.color+';font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:7px;white-space:nowrap;border:1px solid '+type.color+'55;">'+type.rarity+'</div>';
     var clicks=[];
     el.addEventListener('click',function(e){
-        e.stopPropagation();
-        var now=Date.now();clicks.push(now);
-        el.style.animation='bunnyShake 0.25s';
-        setTimeout(function(){el.style.animation='';},260);
+        e.stopPropagation();var now=Date.now();clicks.push(now);
+        el.style.animation='bunnyShake 0.25s';setTimeout(function(){el.style.animation='';},270);
         spawnParticles(e.clientX,e.clientY,type.color);
         clicks=clicks.filter(function(t){return now-t<=5000;});
         if(clicks.length>=3)catchBunny(id,type);
@@ -1970,47 +1991,100 @@ function spawnBunny(){
 }
 function catchBunny(id,type){
     if(!activeBunnies[id])return;
-    var el=activeBunnies[id].el;
-    delete activeBunnies[id];
+    var el=activeBunnies[id].el;delete activeBunnies[id];
     el.style.animation='bunnyPop 0.45s ease-out forwards';
-    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},450);
+    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},460);
     db.ref('players/'+currentUid+'/eggs').once('value').then(function(s){
-        var n=(s.val()||0)+type.eggs;
-        db.ref('players/'+currentUid+'/eggs').set(n);
-        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){
-            var h=hs.val()||[];h.push('🥚 Поймал '+type.name+'! +'+type.eggs+' 🥚');
-            db.ref('players/'+currentUid+'/history').set(h.slice(-50));
-        });
+        db.ref('players/'+currentUid+'/eggs').set((s.val()||0)+type.eggs);
+        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){var h=hs.val()||[];h.push('🥚 Поймал '+type.name+'! +'+type.eggs+' 🥚');db.ref('players/'+currentUid+'/history').set(h.slice(-50));});
     });
     showBunnyNotif(type);
 }
-function despawnBunny(id){
-    if(!activeBunnies[id])return;
-    var el=activeBunnies[id].el;delete activeBunnies[id];
-    el.style.opacity='0';el.style.transition='opacity 0.35s';
-    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},360);
-}
+function despawnBunny(id){if(!activeBunnies[id])return;var el=activeBunnies[id].el;delete activeBunnies[id];el.style.opacity='0';el.style.transition='opacity 0.35s';setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},360);}
 function clearAllBunnies(){Object.keys(activeBunnies).forEach(function(id){despawnBunny(id);});}
-function startBunnySpawner(){
-    stopBunnySpawner();
-    setTimeout(spawnBunny,1500);
-    bunnyTimer=setInterval(function(){if(Math.random()<0.45)spawnBunny();},14000);
-}
+function startBunnySpawner(){stopBunnySpawner();setTimeout(spawnBunny,1500);bunnyTimer=setInterval(function(){if(Math.random()<0.45)spawnBunny();},14000);}
 function stopBunnySpawner(){if(bunnyTimer){clearInterval(bunnyTimer);bunnyTimer=null;}}
-function spawnParticles(x,y,color){
-    for(var i=0;i<8;i++){
-        var p=document.createElement('div');p.className='particle';
-        var a=(Math.PI*2/8)*i,d=25+Math.random()*35;
-        p.style.cssText='left:'+(x-4)+'px;top:'+(y-4)+'px;width:7px;height:7px;background:'+color+';--tx:'+(Math.cos(a)*d)+'px;--ty:'+(Math.sin(a)*d)+'px;';
-        document.body.appendChild(p);setTimeout(function(){if(p.parentNode)p.remove();},630);
-    }
+function spawnParticles(x,y,color){for(var i=0;i<8;i++){var p=document.createElement('div');p.className='particle';var a=(Math.PI*2/8)*i,d=25+Math.random()*35;p.style.cssText='left:'+(x-4)+'px;top:'+(y-4)+'px;width:7px;height:7px;background:'+color+';--tx:'+(Math.cos(a)*d)+'px;--ty:'+(Math.sin(a)*d)+'px;';document.body.appendChild(p);setTimeout(function(){if(p.parentNode)p.remove();},630);}}
+function showBunnyNotif(type){var n=document.createElement('div');n.style.cssText='position:fixed;top:44%;left:50%;transform:translate(-50%,-50%);z-index:9500;background:rgba(0,0,0,0.9);border:2px solid '+type.color+';border-radius:18px;padding:18px 28px;text-align:center;pointer-events:none;';n.innerHTML='<div style="font-family:Fredoka One,cursive;font-size:13px;color:'+type.color+';letter-spacing:2px;margin-bottom:4px;">🎉 ПОЙМАЛ!</div><div style="font-size:20px;font-family:Fredoka One,cursive;color:#fff;margin-bottom:4px;">'+type.name+' Бурмалдаец</div><div style="font-size:14px;color:'+type.color+';">+'+type.eggs+' 🥚</div>';document.body.appendChild(n);setTimeout(function(){if(n.parentNode)n.remove();},2000);}
+// Поддержка
+function openSupportChat(){
+    if(!currentUid){alert('Войди в аккаунт');return;}
+    if(typeof bgMusic!=='undefined'&&bgMusic)bgMusic.pause();
+    document.getElementById('sup-ov').style.display='flex';
+    loadSupportChat();
 }
-function showBunnyNotif(type){
-    var n=document.createElement('div');
-    n.style.cssText='position:fixed;top:44%;left:50%;transform:translate(-50%,-50%);z-index:9500;background:rgba(0,0,0,0.9);border:2px solid '+type.color+';border-radius:18px;padding:18px 28px;text-align:center;pointer-events:none;animation:msgIn 0.3s;';
-    n.innerHTML='<div style="font-family:Fredoka One,cursive;font-size:13px;color:'+type.color+';letter-spacing:2px;margin-bottom:4px;">🎉 ПОЙМАЛ!</div><div style="font-size:20px;font-family:Fredoka One,cursive;color:#fff;margin-bottom:4px;">'+type.name+' Бурмалдаец</div><div style="font-size:14px;color:'+type.color+';">+'+type.eggs+' 🥚</div>';
-    document.body.appendChild(n);setTimeout(function(){if(n.parentNode)n.remove();},2000);
+function closeSupportChat(){
+    document.getElementById('sup-ov').style.display='none';
+    if(_supUnsub){_supUnsub();_supUnsub=null;}
+    if(typeof bgMusic!=='undefined'&&bgMusic&&typeof mOn!=='undefined'&&mOn)bgMusic.play().catch(function(){});
 }
+function loadSupportChat(){
+    var balEl=document.getElementById('lobby-balance');
+    db.ref('support_chats/'+currentUid).update({username:currentUser,balance:(balEl?balEl.textContent.replace(' АР','').trim():'0'),uid:currentUid,lastActive:Date.now()});
+    if(_supUnsub){_supUnsub();_supUnsub=null;}
+    var ref=db.ref('support_chats/'+currentUid+'/messages');
+    ref.on('value',function(snap){
+        var msgs=snap.val()||{};
+        var box=document.getElementById('sup-msgs');
+        var welcome=box.firstElementChild.cloneNode(true);
+        box.innerHTML='';box.appendChild(welcome);
+        Object.values(msgs).sort(function(a,b){return a.ts-b.ts;}).forEach(function(m){
+            var div=document.createElement('div');
+            var isUser=m.from==='user';
+            div.className='sup-msg-base '+(isUser?'sup-msg-user':'sup-msg-ai');
+            var t=new Date(m.ts).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+            div.innerHTML=m.text.split('\n').join('<br>')+'<div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px;'+(isUser?'text-align:right;':'')+'">'+t+(m.from==='support'?' · Поддержка':'')+'</div>';
+            box.appendChild(div);
+        });
+        box.scrollTop=box.scrollHeight;
+    });
+    _supUnsub=function(){ref.off();};
+}
+function sendSupportMsg(){
+    var inp=document.getElementById('sup-inp');
+    var text=(inp.value||'').trim();if(!text||!currentUid)return;inp.value='';
+    db.ref('support_chats/'+currentUid+'/messages').push({text:text,from:'user',ts:Date.now()});
+    db.ref('support_chats/'+currentUid).update({lastMsg:text,lastMsgTs:Date.now(),hasNew:true,username:currentUser});
+}
+function supQuick(idx){
+    var qa=SUP_QA[idx];if(!qa||!currentUid)return;
+    var box=document.getElementById('sup-msgs');
+    var t=new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+    var qd=document.createElement('div');qd.className='sup-msg-base sup-msg-user';qd.textContent=qa[0];box.appendChild(qd);
+    var ad=document.createElement('div');ad.className='sup-msg-base sup-msg-ai';ad.innerHTML=qa[1]+'<div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px;">'+t+' · Поддержка</div>';box.appendChild(ad);
+    box.scrollTop=box.scrollHeight;
+    db.ref('support_chats/'+currentUid+'/messages').push({text:qa[0],from:'user',ts:Date.now()});
+    db.ref('support_chats/'+currentUid+'/messages').push({text:qa[1],from:'support',ts:Date.now()+1});
+    db.ref('support_chats/'+currentUid).update({lastMsg:qa[0],lastMsgTs:Date.now(),username:currentUser});
+}
+setTimeout(function(){var si=document.getElementById('sup-inp');if(si)si.addEventListener('keypress',function(e){if(e.key==='Enter')sendSupportMsg();});},800);
 </script>
+
+    <div id="bunny-container" style="position:fixed;inset:0;pointer-events:none;z-index:8000;"></div>
+    <button class="support-fab" onclick="openSupportChat()">💬</button>
+    <div id="sup-ov" style="display:none;position:fixed;inset:0;z-index:9000;background:radial-gradient(ellipse at 60% 30%,#2a0a1a,#0a0010);flex-direction:column;align-items:center;">
+        <div style="width:100%;max-width:460px;height:100%;display:flex;flex-direction:column;">
+            <div style="padding:14px 16px 12px;background:linear-gradient(160deg,#1a0008,#0d0000);border-bottom:1px solid rgba(255,69,0,0.25);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#cc2200,#8b0000);display:flex;align-items:center;justify-content:center;font-size:22px;">🎰</div>
+                <div style="flex:1;"><div style="font-family:'Fredoka One',cursive;font-size:16px;letter-spacing:2px;">ПОДДЕРЖКА</div><div style="font-size:11px;color:rgba(255,150,100,0.45);margin-top:2px;">Отвечаем в порядке очереди</div></div>
+                <button onclick="closeSupportChat()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,69,0,0.2);border-radius:10px;padding:6px 12px;color:rgba(255,100,50,0.55);font-family:'Fredoka One',cursive;font-size:11px;cursor:pointer;">✕</button>
+            </div>
+            <div id="sup-msgs" style="flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;">
+                <div class="sup-msg-base sup-msg-ai">Привет! Напиши свой вопрос — ответим как только освободимся 🎰<br><span style="font-size:12px;color:rgba(255,150,100,0.5);">⏳ Небольшая команда — ответ может занять время.</span></div>
+            </div>
+            <div style="padding:6px 10px 4px;display:flex;gap:5px;flex-wrap:wrap;background:rgba(0,0,0,0.25);flex-shrink:0;">
+                <button class="sup-qbtn" onclick="supQuick(0)">🍓 Слоты</button>
+                <button class="sup-qbtn" onclick="supQuick(1)">✈️ Полёт</button>
+                <button class="sup-qbtn" onclick="supQuick(2)">💣 Сапёр</button>
+                <button class="sup-qbtn" onclick="supQuick(3)">🔵 Шарики</button>
+                <button class="sup-qbtn" onclick="supQuick(4)">🎁 Промокод</button>
+                <button class="sup-qbtn" onclick="supQuick(5)">⚔️ Дуэль</button>
+            </div>
+            <div style="padding:10px 12px;display:flex;gap:8px;background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,69,0,0.12);flex-shrink:0;">
+                <div style="flex:1;display:flex;align-items:center;background:rgba(0,0,0,0.45);border:1px solid rgba(255,69,0,0.2);border-radius:12px;padding:0 12px;"><input id="sup-inp" type="text" placeholder="Написать сообщение..." autocomplete="off" maxlength="500" style="flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;padding:9px 0;"></div>
+                <button onclick="sendSupportMsg()" style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#cc2200,#8b0000);border:none;color:#fff;font-size:17px;cursor:pointer;">➤</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
