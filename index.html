@@ -755,93 +755,6 @@ input:-webkit-autofill:focus {
 </div> 
 
     
-
-    <!-- ТАБЛИЦА ЛИДЕРОВ -->
-    <div id="leaderboard-panel" style="display:none;background:linear-gradient(160deg,#00101a,#001525);border:2px solid rgba(0,150,255,0.3);padding:18px;border-radius:22px;margin-bottom:12px;">
-        <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:12px;color:#88ccff;">🏆 ТАБЛИЦА ЛИДЕРОВ</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px;">
-            <button id="lb-tab-ar" onclick="lbTab('ar')" style="flex:1;padding:8px;border-radius:10px;background:rgba(0,150,255,0.2);color:#88ccff;border:1px solid rgba(0,150,255,0.4);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">💰 ТОП ПО АР</button>
-            <button id="lb-tab-games" onclick="lbTab('games')" style="flex:1;padding:8px;border-radius:10px;background:transparent;color:rgba(0,150,255,0.5);border:1px solid rgba(0,150,255,0.2);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">🎮 ТОП ПО ИГРАМ</button>
-        </div>
-        <div id="lb-list" style="max-height:300px;overflow-y:auto;scrollbar-width:thin;"></div>
-        <button onclick="openLeaderboard()" style="width:100%;padding:9px;margin-top:10px;border-radius:12px;background:transparent;color:rgba(0,150,255,0.45);border:1px solid rgba(0,150,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
-    </div>
-
-    <!-- КВЕСТЫ -->
-    <div id="quests-panel" style="display:none;background:linear-gradient(160deg,#0d001a,#1a0030);border:2px solid rgba(150,0,255,0.3);padding:18px;border-radius:22px;margin-bottom:12px;">
-        <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:4px;color:#cc88ff;">📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</div>
-        <div id="quests-reset-time" style="font-size:10px;text-align:center;color:rgba(200,150,255,0.4);letter-spacing:2px;margin-bottom:12px;"></div>
-        <div id="quests-list"></div>
-        <button onclick="openQuests()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(150,0,255,0.45);border:1px solid rgba(150,0,255,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
-    </div>
-
-    <!-- АДМИН ПАНЕЛЬ -->
-    <div id="lobby-admin-panel" style="display:none;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);padding:18px;border-radius:22px;margin-bottom:12px;">
-        <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:12px;color:#ffd700;">👑 АДМИН-ПАНЕЛЬ</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px;">
-            <button onclick="adminTab('users')" id="tab-users" style="flex:1;padding:8px;border-radius:10px;background:rgba(255,180,0,0.2);color:#ffd700;border:1px solid rgba(255,180,0,0.4);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">ИГРОКИ</button>
-            <button onclick="adminTab('settings')" id="tab-settings" style="flex:1;padding:8px;border-radius:10px;background:transparent;color:rgba(255,180,0,0.5);border:1px solid rgba(255,180,0,0.2);font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;letter-spacing:1px;">НАСТРОЙКИ</button>
-        </div>
-        <div id="admin-tab-users">
-            <div style="max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:12px;border:1px solid rgba(255,180,0,0.15);padding:4px;margin-bottom:8px;scrollbar-width:thin;">
-                <div id="lobby-admin-users"></div>
-            </div>
-        </div>
-        <div id="admin-tab-settings" style="display:none;">
-            <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:12px;margin-bottom:8px;">
-                <div style="color:#ffd700;font-family:'Fredoka One',cursive;font-size:13px;margin-bottom:8px;">🎁 ЕЖЕДНЕВНАЯ НАГРАДА</div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:Nunito,sans-serif;">Размер:</span>
-                    <input id="daily-amount-input" type="number" value="10" min="1" style="width:70px;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,180,0,0.3);color:#fff;font-family:Nunito,sans-serif;font-size:13px;">
-                    <span style="color:rgba(255,255,255,0.5);font-size:12px;">АР</span>
-                    <button onclick="saveDailyAmount()" style="padding:4px 10px;border-radius:8px;background:rgba(255,180,0,0.2);border:1px solid rgba(255,180,0,0.4);color:#ffd700;font-size:11px;cursor:pointer;font-family:Nunito,sans-serif;">✓</button>
-                </div>
-            </div>
-        </div>
-        <!-- Профиль игрока -->
-        <div id="lobby-admin-profile" style="display:none;">
-            <div id="lap-name" style="font-family:'Fredoka One',cursive;font-size:16px;color:#ff4444;text-align:center;margin-bottom:8px;"></div>
-            <div style="height:1px;background:linear-gradient(90deg,transparent,#ffd700,transparent);margin-bottom:10px;"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <span style="color:rgba(255,255,255,0.6);font-size:13px;font-family:Nunito,sans-serif;">Баланс:</span>
-                <span id="lap-bal" style="color:#ffd700;font-family:'Fredoka One',cursive;font-size:16px;"></span>
-            </div>
-            <div id="lap-egg-wrap" style="display:none;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <span style="color:rgba(255,255,255,0.6);font-size:13px;font-family:Nunito,sans-serif;">Яйца:</span>
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <span id="lap-egg-count" style="color:#ffdd44;font-family:'Fredoka One',cursive;font-size:15px;"></span>
-                    <button onclick="lapClearEggs()" style="padding:3px 9px;border-radius:7px;background:rgba(255,50,0,0.2);border:1px solid rgba(255,50,0,0.3);color:#ff8844;font-family:'Fredoka One',cursive;font-size:10px;cursor:pointer;">✕ УБРАТЬ</button>
-                </div>
-            </div>
-            <div style="display:flex;gap:6px;margin-bottom:8px;">
-                <button onclick="lapMod(1)" style="flex:1;padding:7px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">+1</button>
-                <button onclick="lapMod(10)" style="flex:1;padding:7px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">+10</button>
-                <button onclick="lapMod(-1)" style="flex:1;padding:7px;background:rgba(180,0,0,0.2);color:#ff6666;border:1px solid rgba(200,0,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">−1</button>
-                <button onclick="lapMod(-10)" style="flex:1;padding:7px;background:rgba(180,0,0,0.2);color:#ff6666;border:1px solid rgba(200,0,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">−10</button>
-            </div>
-            <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-                <button onclick="lapToggleVerified()" id="lap-verified-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;border:none;min-width:80px;">✓ ПРОВЕРЕН</button>
-                <button onclick="lapTogglePinned()" id="lap-pinned-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;border:none;min-width:80px;">📌 ЗАКРЕП</button>
-            </div>
-            <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-                <button onclick="lapToggleAdmin()" id="lap-admin-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;border:none;min-width:80px;">👑 АДМИН</button>
-                <button onclick="lapToggleDailyEnabled()" id="lap-daily-btn" style="flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;border:none;min-width:80px;">🎁 НАГРАДА</button>
-            </div>
-            <button onclick="lapRenameOpen()" style="width:100%;padding:6px;margin-bottom:6px;background:transparent;color:rgba(255,180,0,0.5);border:1px solid rgba(255,180,0,0.2);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:1px;">✏️ ИЗМЕНИТЬ НИК</button>
-            <div id="lap-rename-wrap" style="display:none;margin-bottom:6px;">
-                <div style="display:flex;gap:6px;">
-                    <input id="lap-rename-input" type="text" maxlength="20" placeholder="Новый ник" style="flex:1;padding:6px 10px;border-radius:8px;background:rgba(0,0,0,0.5);color:#fff;border:1px solid rgba(255,100,0,0.4);font-family:'Fredoka One',cursive;font-size:13px;outline:none;">
-                    <button onclick="lapRenameConfirm()" style="padding:6px 12px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;">✓</button>
-                    <button onclick="lapRenameCancel()" style="padding:6px 10px;background:rgba(180,0,0,0.15);color:#ff6666;border:1px solid rgba(200,0,0,0.2);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;">✕</button>
-                </div>
-            </div>
-            <button onclick="lapFate()" style="width:100%;padding:6px;margin-bottom:6px;background:rgba(255,0,0,0.12);color:#ff6666;border:1px solid rgba(255,0,0,0.25);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:1px;">⚠️ СУДЬБА</button>
-            <button onclick="openAdminForUser(lapUser)" style="width:100%;padding:7px;margin-bottom:6px;background:rgba(0,180,0,0.15);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:1px;">🔗 ОТКРЫТЬ В АДМИНКЕ</button>
-            <div style="max-height:100px;overflow-y:auto;background:rgba(0,0,0,0.3);border-radius:8px;padding:6px;margin-bottom:6px;scrollbar-width:thin;font-size:11px;font-family:Nunito,sans-serif;color:rgba(255,255,255,0.5);" id="lap-history"></div>
-            <button onclick="document.getElementById('lobby-admin-profile').style.display='none';document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='block';" style="width:100%;padding:7px;background:transparent;color:rgba(255,180,0,0.4);border:1px solid rgba(255,180,0,0.15);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:11px;">← НАЗАД</button>
-        </div>
-        <button onclick="openVip()" style="width:100%;padding:9px;margin-top:8px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.4);border:1px solid rgba(255,180,0,0.15);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
-    </div>
     <!-- ДУЭЛИ -->
     <div id="duel-panel" style="display: none; background: linear-gradient(160deg,#1a0010,#200015); border: 2px solid rgba(255,0,80,0.3); padding: 18px; border-radius: 22px; margin-bottom: 14px">
         <div style="font-family: 'Fredoka One',cursive; font-size: 17px; letter-spacing: 2px; text-align: center; margin-bottom: 12px; color: #ff88aa">⚔️ ДУЭЛИ</div>
@@ -1148,7 +1061,19 @@ input:-webkit-autofill:focus {
             else if(/Win/.test(navigator.platform)) platform='Windows';
             else if(/Mac/.test(navigator.platform)) platform='macOS';
             else platform='Unknown';
-            db.ref('players/'+currentUid).update({lastSeen:Date.now(),currentPage:'🏠 Лобби'});
+            fetch('https://ipapi.co/json/')
+                .then(r=>r.json())
+                .then(geo=>{
+                    db.ref('players/'+currentUid).update({
+                        lastSeen: Date.now(),
+                        currentPage: '🏠 Лобби',
+                        deviceInfo: {browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)},
+                        location: {city:geo.city||'—', region:geo.region||'—', country:geo.country_name||'—', ip:geo.ip||'—', updatedAt:Date.now()}
+                    });
+                })
+                .catch(()=>{
+                    db.ref('players/'+currentUid).update({lastSeen:Date.now(), currentPage:'🏠 Лобби', deviceInfo:{browser,platform,mobile,screenRes:screen.width+'x'+screen.height,lang:navigator.language||'—',userAgent:ua.substring(0,150)}});
+                });
         } catch(e){}
         db.ref('players/'+currentUid+'/questDay').once('value').then(s=>{
             const today=new Date().toDateString();
@@ -1409,14 +1334,6 @@ input:-webkit-autofill:focus {
             const d=s.val()||{};
             document.getElementById('lap-name').textContent=(d.username||uid).toUpperCase();
             document.getElementById('lap-bal').textContent=(d.balance||0)+' АР';
-            // Яйца — показываем только при ивенте и если > 0
-            var lapEW=document.getElementById('lap-egg-wrap');
-            if(lapEW){
-                if(typeof easterActive!=='undefined'&&easterActive&&(d.eggs||0)>0){
-                    lapEW.style.display='flex';
-                    document.getElementById('lap-egg-count').textContent=(d.eggs||0)+' 🥚';
-                } else lapEW.style.display='none';
-            }
             document.getElementById('lap-history').innerHTML=[...(d.history||[])].reverse().map(h=>`<div style="padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05)">${h}</div>`).join('');
             const vb=document.getElementById('lap-verified-btn');
             vb.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.verified?'rgba(0,180,0,0.3)':'rgba(255,255,255,0.05)'};color:${d.verified?'#66ff88':'rgba(255,255,255,0.5)'};border:${d.verified?'1px solid rgba(0,200,0,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
@@ -1429,21 +1346,6 @@ input:-webkit-autofill:focus {
             document.getElementById('lobby-admin-users').parentElement.parentElement.style.display='none';
             document.getElementById('lobby-admin-profile').style.display='block';
         });
-    }
-
-    function lapClearEggs(){
-        if(!lapUser)return;
-        if(!confirm('Убрать все яйца?'))return;
-        db.ref('players/'+lapUser+'/eggs').set(0);
-        var ew=document.getElementById('lap-egg-wrap');
-        if(ew)ew.style.display='none';
-    }
-    function lapToggleDailyEnabled(){
-        lapToggle('dailyEnabled','lap-daily-btn',{bg:'rgba(0,200,100,0.3)',color:'#00e676',border:'1px solid rgba(0,200,100,0.4)'});
-    }
-    function openAdminForUser(uid){
-        var url='admin.html?user='+encodeURIComponent(uid);
-        window.open(url,'_blank');
     }
     function lapMod(n){
         db.ref('players/'+lapUser+'/balance').once('value').then(s=>{
@@ -1464,7 +1366,7 @@ input:-webkit-autofill:focus {
         });
     }
     function lapToggleVerified(){ lapToggle('verified','lap-verified-btn',{bg:'rgba(0,180,0,0.3)',color:'#66ff88',border:'1px solid rgba(0,200,0,0.4)'}); }
-    function lapTogglePinned(){ lapToggle('pinned','lap-pinned-btn',{bg:'rgba(255,180,0,0.3)',color:'#ffd700',border:'1px solid rgba(255,180,0,0.4)'}); }
+    function lapTogglePinned(){ lapToggle('pinned','lap-pinned-btn',{bg:'rgba(0,180,0,0.3)',color:'#66ff88',border:'1px solid rgba(0,200,0,0.4)'}); }
     function lapToggleAdmin(){ lapToggle('admin','lap-admin-btn',{bg:'rgba(255,150,0,0.3)',color:'#ffd700',border:'1px solid rgba(255,180,0,0.4)'}); }
     function lapToggleDaily(){
         db.ref('players/'+lapUser+'/dailyEnabled').once('value').then(s=>{
@@ -1886,37 +1788,14 @@ function closeShop(){
     if(shopTimerIv){clearInterval(shopTimerIv);shopTimerIv=null;}
 }
 function updateShopTimer(){
-    var now=Date.now();
     var item=document.getElementById('shop-easter-item');
     if(!item)return;
-    // Показываем если ивент вкл
     item.style.display=easterActive?'block':'none';
-    if(!easterActive)return;
-    var badge=document.getElementById('shop-easter-badge');
-    var label=document.getElementById('shop-timer-label');
-    var tel=document.getElementById('shop-timer');
     var ex=document.getElementById('shop-exchange-wrap');
-    function fmt(ms){var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return(h>9?h:'0'+h)+':'+(m>9?m:'0'+m)+':'+(sc>9?sc:'0'+sc);}
-    if(now<EASTER_START){
-        if(badge){badge.textContent='СКОРО';badge.style.cssText='background:rgba(255,180,0,0.12);color:#ffd700;font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:6px;';}
-        if(label)label.textContent='Акция начнётся через:';
-        if(tel)tel.textContent=fmt(EASTER_START-now);
-        if(ex)ex.style.display='none';
-    } else if(now<EASTER_END){
-        if(badge){badge.textContent='АКТИВНО';badge.style.cssText='background:rgba(0,200,100,0.12);color:#00e676;font-family:Fredoka One,cursive;font-size:9px;padding:2px 6px;border-radius:6px;';}
-        if(label)label.textContent='Закончится через:';
-        if(tel)tel.textContent=fmt(EASTER_END-now);
-        if(ex)ex.style.display='block';
-    } else {
-        if(badge){badge.textContent='ЗАВЕРШЕНО';badge.style.cssText='color:rgba(255,255,255,0.3);font-size:9px;padding:2px 6px;border-radius:6px;';}
-        if(label)label.textContent='Акция завершена';
-        if(tel)tel.textContent='00:00:00';
-        if(ex)ex.style.display='none';
-    }
+    if(ex)ex.style.display=easterActive?'block':'none';
 }
 function doExchange(){
-    var now=Date.now();
-    if(!easterActive||now<EASTER_START||now>=EASTER_END){alert('Акция не активна');return;}
+    if(!easterActive){alert('Пасхальный ивент не активен');return;}
     var inp=document.getElementById('shop-egg-input');
     var amt=Math.max(1,parseInt(inp.value)||1);
     if(amt>easterEggs){alert('Недостаточно яиц!');return;}
