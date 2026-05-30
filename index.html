@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="data:,">
     <link rel="manifest" href="./manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1632,10 +1633,11 @@ input:-webkit-autofill:focus {
     {file:'sounds/zapakhlo_vesnoy.mp3', name:'Запахло Весной'},
     {file:'sounds/zemlya_v_illyuminatore.mp3', name:'Земля в Иллюминаторе'}
 ];
-    let currentTrackIdx=parseInt(localStorage.getItem('musicTrack')||'0'), mOn=true;
+    let currentTrackIdx=parseInt(localStorage.getItem('musicTrack')||'0'), mOn=true; if(currentTrackIdx>=playlist.length)currentTrackIdx=0;
     let bgMusic=new Audio(playlist[currentTrackIdx].file);
     bgMusic.loop=localStorage.getItem('musicLoop')==='1'; bgMusic.volume=0.3;
     bgMusic.onended=()=>{ if(!bgMusic.loop) playTrack((currentTrackIdx+1)%playlist.length); };
+    bgMusic.onerror=()=>{ playTrack((currentTrackIdx+1)%playlist.length); };
     function renderPlaylist(){
         document.getElementById('music-playlist').innerHTML=playlist.map((t,i)=>`
             <div class="music-item ${i===currentTrackIdx?'active':''}">
@@ -1652,6 +1654,7 @@ input:-webkit-autofill:focus {
         bgMusic.volume=document.getElementById('music-vol').value;
         if(mOn) bgMusic.play().catch(()=>{});
         bgMusic.onended=()=>{ if(!bgMusic.loop) playTrack((currentTrackIdx+1)%playlist.length); };
+        bgMusic.onerror=()=>{ playTrack((currentTrackIdx+1)%playlist.length); };
         renderPlaylist();
     }
     function applyVolume(){ bgMusic.volume=mOn?document.getElementById('music-vol').value:0; }
