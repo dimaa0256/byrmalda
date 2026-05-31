@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="data:,">
     <link rel="manifest" href="./manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -641,7 +642,8 @@ input:-webkit-autofill:focus {
 <div class="machine" onclick="event.stopPropagation()">
 
     
-    <div id="auth-section">
+    <div id="loading-screen" style="text-align:center;padding:60px 20px;font-family:'Fredoka One',cursive;font-size:18px;color:rgba(255,180,0,0.5);letter-spacing:3px;">ЗАГРУЗКА...</div>
+<div id="auth-section" style="display:none;">
         <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
         <div class="casino-title">✈️ ПОЛЁТ</div>
         <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
@@ -860,11 +862,11 @@ document.getElementById('auth-section').style.display='none';
 document.getElementById('auth-section').parentNode.insertBefore(_loadingDiv, document.getElementById('auth-section'));
 
 auth.onAuthStateChanged(firebaseUser=>{
-    _loadingDiv.remove();
+    document.getElementById('loading-screen').style.display='none';
     if(firebaseUser && !uid){
         uid=firebaseUser.uid;
         db.ref('players/'+uid+'/username').once('value').then(s=>{
-            if(s.exists()){ user=s.val(); go(); }
+            if(s.exists()){ user=String(s.val()); go(); }
             else { document.getElementById('auth-section').style.display='block'; }
         });
     } else if(!firebaseUser){
@@ -1420,7 +1422,7 @@ async function endGame(landed){
 function hideResult(){document.getElementById('result-overlay').classList.remove('show');drawIdle();}
 
 const playlist=[
-    {file:'sounds/2_dnevni_zapoi_1.mp3', name:'2 Дневных Запоя'},
+    {file:'sounds/bam_bam_bam_1.mp3', name:'Бэм Бэм Бэм'},
     {file:'sounds/Okolo_tebya.mp3', name:'Около Тебя'},
     {file:'sounds/U_menya_est_qr_code.mp3', name:'У Меня Есть QR Code'},
     {file:'sounds/a4.mp3', name:'A4'},
@@ -1431,28 +1433,24 @@ const playlist=[
     {file:'sounds/around_the_world.mp3', name:'Around the World'},
     {file:'sounds/bablgam_1.mp3', name:'Баблгам 1'},
     {file:'sounds/bablgam_2.mp3', name:'Баблгам 2'},
-    {file:'sounds/baclachn.mp3', name:'Балаклан'},
+    {file:'sounds/baclachn.mp3', name:'Баклажан'},
     {file:'sounds/bad_piggies.mp3', name:'Bad Piggies'},
-    {file:'sounds/bam_bam_bam_1.mp3', name:'Бам Бам Бам'},
     {file:'sounds/banyu_zatopili.mp3', name:'Баню Затопили'},
     {file:'sounds/bayu_bayushki_boyu.mp3', name:'Баю Баюшки Баю'},
     {file:'sounds/begi_dorogaya_begi.mp3', name:'Беги Дорогая Беги'},
     {file:'sounds/bibi.mp3', name:'Bibi'},
     {file:'sounds/burmaldance.mp3', name:'Бурмалданс'},
     {file:'sounds/burmalfunk.mp3', name:'Бурмалфанк'},
-    {file:'sounds/chto_ty_ne_moy.mp3', name:'Что Ты Не Мой'},
+    {file:'sounds/chto_ty_ne_moy.mp3', name:'Батарейка'},
     {file:'sounds/dabbackwood.mp3', name:'Dabbackwood'},
     {file:'sounds/daft_punk.mp3', name:'Daft Punk'},
-    {file:'sounds/dai_cledychi_spin_1.mp3', name:'Дай Следующий Спин'},
     {file:'sounds/dame_tu_cosita.mp3', name:'Dame Tu Cosita'},
     {file:'sounds/devchonki_lyubyat_v_dubayakh_otdykhat.mp3', name:'Девчонки в Дубаях'},
     {file:'sounds/discipline.mp3', name:'Discipline'},
     {file:'sounds/drunne.mp3', name:'Drunne'},
-    {file:'sounds/echo_posedim_1.mp3', name:'Эхо Посидим'},
     {file:'sounds/ela_desce.mp3', name:'Ela Desce'},
     {file:'sounds/fall_from_the_sky.mp3', name:'Fall from the Sky'},
-    {file:'sounds/feel good.mp3', name:'Feel Good'},
-    {file:'sounds/fiksiki.mp3', name:'Фиксики'},
+        {file:'sounds/fiksiki.mp3', name:'Фиксики'},
     {file:'sounds/fnaf.mp3', name:'FNAF'},
     {file:'sounds/gangnam_style.mp3', name:'Gangnam Style'},
     {file:'sounds/gigi_za_shagi.mp3', name:'Гиги за Шаги'},
@@ -1465,24 +1463,19 @@ const playlist=[
     {file:'sounds/just_the_way_you_are.mp3', name:'Just the Way You Are'},
     {file:'sounds/koshka_brosila_kotyat.mp3', name:'Кошка Бросила Котят'},
     {file:'sounds/krasnaya_stoyka.mp3', name:'Красная Стойка'},
-    {file:'sounds/kto_lychi_1.mp3', name:'Кто Лучше'},
-    {file:'sounds/led_led_sutki_na_prolet.mp3', name:'Лёд Лёд Сутки Напролёт'},
+    {file:'sounds/led_led_sutki_na_prolet.mp3', name:'Лёд Сутки Напролёт'},
     {file:'sounds/leto.mp3', name:'Лето'},
     {file:'sounds/mama_ya_lyublyu....mp3', name:'Мама Я Люблю'},
-    {file:'sounds/mne tak tak plokho.mp3', name:'Мне Так Плохо'},
-    {file:'sounds/moya_mechta.mp3', name:'Моя Мечта'},
+        {file:'sounds/moya_mechta.mp3', name:'Моя Мечта'},
     {file:'sounds/mozart.mp3', name:'Моцарт'},
-    {file:'sounds/nauchitsya_by_ne_paritsya po_pustyakam.mp3', name:'Не Париться по Пустякам'},
-    {file:'sounds/no_nekto_ne_prishel.mp3', name:'Никто Не Пришёл'},
+        {file:'sounds/no_nekto_ne_prishel.mp3', name:'Но Никто Не Пришёл'},
     {file:'sounds/nobody.mp3', name:'Nobody'},
     {file:'sounds/ny_pogodi.mp3', name:'Ну Погоди'},
     {file:'sounds/nyan_cat.mp3', name:'Nyan Cat'},
-    {file:'sounds/odin_banan_1.mp3', name:'Один Банан'},
-    {file:'sounds/oi_oi_oi_oi_1.mp3', name:'Ой Ой Ой'},
     {file:'sounds/on_chuzhoy.mp3', name:'Он Чужой'},
     {file:'sounds/onion.mp3', name:'Onion'},
-    {file:'sounds/orcestr_BAM_1.mp3', name:'Оркестр БАМ'},
-    {file:'sounds/ot_ulybki_raduga_svetley.mp3', name:'От Улыбки Радуга Светлей'},
+    {file:'sounds/orcestr_BAM_1.mp3', name:'Оркестр БЭМ'},
+    {file:'sounds/ot_ulybki_raduga_svetley.mp3', name:'От Улыбки'},
     {file:'sounds/otpysti_menya.mp3', name:'Отпусти Меня'},
     {file:'sounds/pay_pay_pay.mp3', name:'Pay Pay Pay'},
     {file:'sounds/pochemu_ty_s_nim_a_ne_so_mnoy.mp3', name:'Почему Ты с Ним'},
@@ -1491,7 +1484,7 @@ const playlist=[
     {file:'sounds/poshlaya_molli.mp3', name:'Пошлая Молли'},
     {file:'sounds/pou.mp3', name:'Pou'},
     {file:'sounds/ptichki_1.mp3', name:'Птички'},
-    {file:'sounds/pubertat.mp3', name:'Pubertat'},
+    {file:'sounds/pubertat.mp3', name:'Пубертат'},
     {file:'sounds/pura_aura.mp3', name:'Pura Aura'},
     {file:'sounds/rush_e.mp3', name:'Rush E'},
     {file:'sounds/rvanye_dzhinsy.mp3', name:'Рваные Джинсы'},
@@ -1507,12 +1500,11 @@ const playlist=[
     {file:'sounds/tung_tung_sahur.mp3', name:'Tung Tung Sahur'},
     {file:'sounds/u_tebya_est_rendzh_rover.mp3', name:'У Тебя Есть Range Rover'},
     {file:'sounds/vechno_molodoy.mp3', name:'Вечно Молодой'},
-    {file:'sounds/vernite_v_mody_lybov'.mp3', name:'Верните в Моду Любовь'},
+    {file:'sounds/vernite_v_mody_lybov.mp3', name:'Верните в Моду Любовь'},
     {file:'sounds/ya_banan.mp3', name:'Я Банан'},
     {file:'sounds/ya_eby_detei.mp3', name:'Я Ебу Детей'},
     {file:'sounds/ya_ey_ona_mne.mp3', name:'Я Ей Она Мне'},
     {file:'sounds/ya_lyublyu_basy_pizdets.mp3', name:'Я Люблю Басы'},
-    {file:'sounds/ya_nemnochko_menays_1.mp3', name:'Я Немножко Меняюсь'},
     {file:'sounds/yara_yara.mp3', name:'Yara Yara'},
     {file:'sounds/youtube_shorts.mp3', name:'YouTube Shorts'},
     {file:'sounds/zakroy_glaza.mp3', name:'Закрой Глаза'},
