@@ -2,7 +2,6 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-    <link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <title>Шарики — Бурмалда</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
@@ -343,7 +342,7 @@ body {
 
 /* Панели */
 
-#settings-panel,#admin-panel,#user-profile-panel,#quests-panel,#promo-panel {
+#admin-panel,#user-profile-panel,#quests-panel,#promo-panel {
     display:none;
     background:rgba(10,5,25,0.97);
     border:1px solid rgba(255,180,0,0.2);
@@ -351,6 +350,21 @@ body {
     padding:16px;
     margin-bottom:14px;
     box-shadow:0 8px 32px rgba(0,0,0,0.6);
+}
+#settings-panel {
+    display:none;
+    position:fixed;
+    bottom:80px;
+    right:16px;
+    z-index:200;
+    width:270px;
+    background:linear-gradient(160deg,#180020,#0a0015);
+    border:2px solid rgba(255,200,0,0.4);
+    padding:16px;
+    border-radius:20px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.9);
+    max-height:75vh;
+    overflow-y:auto;
 }
 
 .panel-title {
@@ -563,8 +577,7 @@ body {
 <div class="casino-machine" onclick="event.stopPropagation()">
 
 <!-- АВТОРИЗАЦИЯ -->
-<div id="loading-screen" style="text-align:center;padding:60px 20px;font-family:'Fredoka One',cursive;font-size:18px;color:rgba(255,180,0,0.5);letter-spacing:3px;">ЗАГРУЗКА...</div>
-<div id="auth-section" style="display:none;">
+<div id="auth-section">
   <a href="index.html" style="display: block; text-align: center; font-family: 'Fredoka One',cursive; font-size: 12px; letter-spacing: 2px; color: rgba(255,180,0,0.5); text-decoration: none; margin-bottom: 8px">← ГЛАВНАЯ</a>
   <h1 class="casino-title">🔵 ШАРИКИ</h1>
   <div class="title-lights"><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div></div>
@@ -773,7 +786,8 @@ const playlist=[
     {file:'sounds/drunne.mp3', name:'Drunne'},
     {file:'sounds/ela_desce.mp3', name:'Ela Desce'},
     {file:'sounds/fall_from_the_sky.mp3', name:'Fall from the Sky'},
-        {file:'sounds/fiksiki.mp3', name:'Фиксики'},
+    {file:'sounds/feel good.mp3', name:'Feel Good'},
+    {file:'sounds/fiksiki.mp3', name:'Фиксики'},
     {file:'sounds/fnaf.mp3', name:'FNAF'},
     {file:'sounds/gangnam_style.mp3', name:'Gangnam Style'},
     {file:'sounds/gigi_za_shagi.mp3', name:'Гиги за Шаги'},
@@ -789,9 +803,11 @@ const playlist=[
     {file:'sounds/led_led_sutki_na_prolet.mp3', name:'Лёд Сутки Напролёт'},
     {file:'sounds/leto.mp3', name:'Лето'},
     {file:'sounds/mama_ya_lyublyu....mp3', name:'Мама Я Люблю'},
-        {file:'sounds/moya_mechta.mp3', name:'Моя Мечта'},
+    {file:'sounds/mne tak tak plokho.mp3', name:'Мне Так Плохо'},
+    {file:'sounds/moya_mechta.mp3', name:'Моя Мечта'},
     {file:'sounds/mozart.mp3', name:'Моцарт'},
-        {file:'sounds/no_nekto_ne_prishel.mp3', name:'Но Никто Не Пришёл'},
+    {file:'sounds/nauchitsya_by_ne_paritsya po_pustyakam.mp3', name:'Универ'},
+    {file:'sounds/no_nekto_ne_prishel.mp3', name:'Но Никто Не Пришёл'},
     {file:'sounds/nobody.mp3', name:'Nobody'},
     {file:'sounds/ny_pogodi.mp3', name:'Ну Погоди'},
     {file:'sounds/nyan_cat.mp3', name:'Nyan Cat'},
@@ -834,7 +850,7 @@ const playlist=[
     {file:'sounds/zapakhlo_vesnoy.mp3', name:'Запахло Весной'},
     {file:'sounds/zemlya_v_illyuminatore.mp3', name:'Земля в Иллюминаторе'}
 ];
-let curTrack=parseInt(localStorage.getItem('musicTrack')||'0');
+let curTrack=parseInt(localStorage.getItem('musicTrack')||'0'); if(curTrack>=playlist.length)curTrack=0;
 let bgMusic=new Audio(playlist[curTrack].file);
 bgMusic.loop=true;
 let mOn=localStorage.getItem('musicOn')!=='0';
@@ -899,19 +915,25 @@ function login(){
     });
 }
 
+const _loadingDiv=document.createElement('div');
+_loadingDiv.style.cssText='text-align:center;padding:40px;font-family:Fredoka One,cursive;font-size:18px;letter-spacing:3px;color:rgba(255,180,0,0.5);';
+_loadingDiv.textContent='ЗАГРУЗКА...';
+document.getElementById('auth-section').style.display='none';
+document.getElementById('auth-section').parentNode.insertBefore(_loadingDiv,document.getElementById('auth-section'));
+
 auth.onAuthStateChanged(fu=>{
-    document.getElementById('loading-screen').style.display='none';
+    _loadingDiv.remove();
     if(fu){uid=fu.uid;
         db.ref('players/'+uid).once('value').then(s=>{
             if(s.exists()&&s.val().username){user=String(s.val().username);go();}
-            else{auth.signOut();uid='';document.getElementById('auth-section').style.display='block';}
+            else{auth.signOut();uid='';}
         });
-    } else {
-        document.getElementById('auth-section').style.display='block';
     }
 });
 
+var _gameReady=false;
 function go(){
+    _gameReady=true;
     document.getElementById('auth-section').style.display='none';
     document.getElementById('game-section').style.display='block';
     document.getElementById('display-name').textContent=user.toUpperCase();
