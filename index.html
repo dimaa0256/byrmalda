@@ -754,7 +754,9 @@ input:-webkit-autofill:focus {
     <!-- 🎩 ШЛЯПЫ -->
     <div id="shop-hats-block" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;" onclick="toggleHatsShop()">
-            <img src="images/hats-shop-icon.png" alt="Шляпы" style="width:28px;height:28px;object-fit:contain;border-radius:8px;flex-shrink:0;">
+            <span style="width:28px;height:28px;overflow:hidden;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <img src="images/hats-shop-icon.png" alt="" width="28" height="28" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
+            </span>
             <div style="flex:1;">
                 <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#fff;">ШЛЯПЫ</div>
                 <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">Собирай шляпы и прокачивай их в <a href="upgrade.html" style="color:#ffd700;" onclick="event.stopPropagation()">апгрейде</a></div>
@@ -978,7 +980,9 @@ input:-webkit-autofill:focus {
         </a>
         <a href="upgrade.html" class="game-card">
             <div class="game-card-inner">
-                <div class="game-icon"><img src="images/upgrade-icon.png" alt="Апгрейд" style="width:44px;height:44px;object-fit:contain;border-radius:10px;filter:drop-shadow(0 0 8px rgba(255,180,0,0.5));"></div>
+                <div class="game-icon" style="width:44px;height:44px;overflow:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);filter:drop-shadow(0 0 8px rgba(255,180,0,0.5));">
+                    <img src="images/upgrade-icon.png" alt="" width="44" height="44" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
+                </div>
                 <div style="flex: 1">
                     <div class="game-name">АПГРЕЙД</div>
                     <div class="game-desc">Поставь свои шляпы и попробуй выбить редкую. Чем ближе ставка к цене — тем выше шанс.</div>
@@ -1961,29 +1965,30 @@ function buyNormalNick(){
     });
 }
 /* ===== 🎩 ШЛЯПЫ: каталог и магазин ===== */
-/* img: путь к своей картинке (например 'images/hats/h1.png'). Если img пустой — показывается emoji как заглушка. */
+/* img: путь к своей картинке (например 'images/hats/h1.png'). Пока img не задан — плитка просто пустая (без смайликов). */
 const HAT_CATALOG=[
-    {id:'h1',name:'Кепка "Дно"',emoji:'🧢',img:'',rarity:'common',price:3},
-    {id:'h2',name:'Рыночная панама',emoji:'👒',img:'',rarity:'common',price:5},
-    {id:'h3',name:'Строительная каска',emoji:'⛑️',img:'',rarity:'common',price:8},
-    {id:'h4',name:'Ушанка турбо',emoji:'🧢',img:'',rarity:'uncommon',price:12},
-    {id:'h5',name:'Выпускной берет',emoji:'🎓',img:'',rarity:'uncommon',price:18},
-    {id:'h6',name:'Каска прораба',emoji:'⛑️',img:'',rarity:'uncommon',price:25},
-    {id:'h7',name:'Цилиндр джентльмена',emoji:'🎩',img:'',rarity:'rare',price:40},
-    {id:'h8',name:'Шляпа магната',emoji:'👒',img:'',rarity:'rare',price:60},
-    {id:'h9',name:'Военный шлем "Элит"',emoji:'🪖',img:'',rarity:'rare',price:80},
-    {id:'h10',name:'Цилиндр казино',emoji:'🎩',img:'',rarity:'epic',price:120},
-    {id:'h11',name:'Шлем чемпиона',emoji:'🪖',img:'',rarity:'epic',price:180},
-    {id:'h12',name:'Бриллиантовая каска',emoji:'⛑️',img:'',rarity:'epic',price:250},
-    {id:'h13',name:'Золотой цилиндр',emoji:'🎩',img:'',rarity:'legendary',price:400},
-    {id:'h14',name:'Корона авторитета',emoji:'👑',img:'',rarity:'legendary',price:650},
-    {id:'h15',name:'Корона Бурмалды',emoji:'👑',img:'',rarity:'mythical',price:1200},
-    {id:'h16',name:'Мифический цилиндр',emoji:'🎩',img:'',rarity:'mythical',price:2000}
+    {id:'h1',name:'Кепка "Дно"',img:'',rarity:'common',price:3},
+    {id:'h2',name:'Рыночная панама',img:'',rarity:'common',price:5},
+    {id:'h3',name:'Строительная каска',img:'',rarity:'common',price:8},
+    {id:'h4',name:'Ушанка турбо',img:'',rarity:'uncommon',price:12},
+    {id:'h5',name:'Выпускной берет',img:'',rarity:'uncommon',price:18},
+    {id:'h6',name:'Каска прораба',img:'',rarity:'uncommon',price:25},
+    {id:'h7',name:'Цилиндр джентльмена',img:'',rarity:'rare',price:40},
+    {id:'h8',name:'Шляпа магната',img:'',rarity:'rare',price:60},
+    {id:'h9',name:'Военный шлем "Элит"',img:'',rarity:'rare',price:80},
+    {id:'h10',name:'Цилиндр казино',img:'',rarity:'epic',price:120},
+    {id:'h11',name:'Шлем чемпиона',img:'',rarity:'epic',price:180},
+    {id:'h12',name:'Бриллиантовая каска',img:'',rarity:'epic',price:250},
+    {id:'h13',name:'Золотой цилиндр',img:'',rarity:'legendary',price:400},
+    {id:'h14',name:'Корона авторитета',img:'',rarity:'legendary',price:650},
+    {id:'h15',name:'Корона Бурмалды',img:'',rarity:'mythical',price:1200},
+    {id:'h16',name:'Мифический цилиндр',img:'',rarity:'mythical',price:2000}
 ];
 function hatIcon(h,size){
-    return h.img
-        ? '<img src="'+h.img+'" alt="'+h.name+'" style="width:'+size+'px;height:'+size+'px;object-fit:contain;">'
-        : '<span style="font-size:'+Math.round(size*0.55)+'px;">'+h.emoji+'</span>';
+    if(!h.img) return '<span style="display:inline-block;width:'+size+'px;height:'+size+'px;"></span>';
+    return '<span style="display:inline-flex;width:'+size+'px;height:'+size+'px;overflow:hidden;border-radius:8px;align-items:center;justify-content:center;flex-shrink:0;">'
+        +'<img src="'+h.img+'" alt="" width="'+size+'" height="'+size+'" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility=\'hidden\'">'
+        +'</span>';
 }
 const RARITY_COLORS={common:'#9e9e9e',uncommon:'#4caf50',rare:'#2196f3',epic:'#a855f7',legendary:'#ffb700',mythical:'#ff2255'};
 const RARITY_NAMES={common:'Обычная',uncommon:'Необычная',rare:'Редкая',epic:'Эпическая',legendary:'Легендарная',mythical:'Мифическая'};
@@ -2028,7 +2033,7 @@ function buyHat(hatId){
         var key=db.ref('players/'+currentUid+'/hats').push().key;
         var updates={};
         updates['balance']=bal-hat.price;
-        updates['hats/'+key]={catalogId:hat.id,name:hat.name,emoji:hat.emoji,rarity:hat.rarity,price:hat.price,ts:Date.now()};
+        updates['hats/'+key]={catalogId:hat.id,price:hat.price,ts:Date.now()};
         updates['history']=(d.history||[]).concat(['🎩 Куплена шляпа: '+hat.name+' -'+hat.price+' АР']).slice(-50);
         db.ref('players/'+currentUid).update(updates).then(function(){
             renderHatsShop();

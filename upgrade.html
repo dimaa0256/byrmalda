@@ -83,6 +83,8 @@ body {
 .hat-tile .emo { font-size:24px; }
 .hat-tile .pr { font-size:9px; font-weight:900; color:#ffd700; margin-top:2px; }
 .hat-tile .check { position:absolute; top:3px; right:3px; width:15px; height:15px; border-radius:50%; background:#ffd700; color:#1a0800; font-size:10px; font-weight:900; display:flex; align-items:center; justify-content:center; }
+.hat-tile .sell-btn { position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:rgba(0,0,0,0.65); border:1px solid rgba(77,255,150,0.6); color:#8effa1; font-size:9px; font-weight:900; display:flex; align-items:center; justify-content:center; z-index:2; }
+.hat-tile .sell-btn:active { background:rgba(77,255,150,0.3); }
 .empty-inv { text-align:center; padding:24px 10px; color:rgba(255,255,255,0.4); font-size:12px; font-weight:700; line-height:1.6; }
 .empty-inv a { color:#ffd700; text-decoration:none; }
 
@@ -125,7 +127,7 @@ body {
 <!-- АВТОРИЗАЦИЯ -->
 <div id="auth-section">
   <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
-  <div class="title">🎩 АПГРЕЙД</div>
+  <div class="title">АПГРЕЙД</div>
   <div class="subtitle">СТАВЬ ШЛЯПЫ · ЛОВИ ШАНС</div>
   <input type="text" id="username" placeholder="НИК" autocomplete="username">
   <input type="password" id="password" placeholder="ПАРОЛЬ" autocomplete="current-password">
@@ -135,7 +137,7 @@ body {
 <!-- ИГРА -->
 <div id="game-section" style="display:none">
   <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
-  <div class="title">🎩 АПГРЕЙД</div>
+  <div class="title">АПГРЕЙД</div>
   <div class="subtitle">СТАВЬ ШЛЯПЫ · ЛОВИ ШАНС</div>
 
   <div class="balance-bar">
@@ -292,32 +294,34 @@ function go(){
 }
 
 /* ===== каталог шляп (совпадает с магазином на главной) ===== */
-/* img: путь к своей картинке (например 'images/hats/h1.png'). Если img пустой — показывается emoji как заглушка.
-   ВАЖНО: этот каталог должен быть идентичен каталогу в index.html (те же id/картинки/названия). */
+/* img: путь к своей картинке (например 'images/hats/h1.png'). Пока img не задан — плитка просто пустая (без смайликов).
+   ВАЖНО: этот каталог должен быть идентичен каталогу в index.html (те же id/картинки/названия/цены). */
 const HAT_CATALOG=[
-    {id:'h1',name:'Кепка "Дно"',emoji:'🧢',img:'',rarity:'common',price:3},
-    {id:'h2',name:'Рыночная панама',emoji:'👒',img:'',rarity:'common',price:5},
-    {id:'h3',name:'Строительная каска',emoji:'⛑️',img:'',rarity:'common',price:8},
-    {id:'h4',name:'Ушанка турбо',emoji:'🧢',img:'',rarity:'uncommon',price:12},
-    {id:'h5',name:'Выпускной берет',emoji:'🎓',img:'',rarity:'uncommon',price:18},
-    {id:'h6',name:'Каска прораба',emoji:'⛑️',img:'',rarity:'uncommon',price:25},
-    {id:'h7',name:'Цилиндр джентльмена',emoji:'🎩',img:'',rarity:'rare',price:40},
-    {id:'h8',name:'Шляпа магната',emoji:'👒',img:'',rarity:'rare',price:60},
-    {id:'h9',name:'Военный шлем "Элит"',emoji:'🪖',img:'',rarity:'rare',price:80},
-    {id:'h10',name:'Цилиндр казино',emoji:'🎩',img:'',rarity:'epic',price:120},
-    {id:'h11',name:'Шлем чемпиона',emoji:'🪖',img:'',rarity:'epic',price:180},
-    {id:'h12',name:'Бриллиантовая каска',emoji:'⛑️',img:'',rarity:'epic',price:250},
-    {id:'h13',name:'Золотой цилиндр',emoji:'🎩',img:'',rarity:'legendary',price:400},
-    {id:'h14',name:'Корона авторитета',emoji:'👑',img:'',rarity:'legendary',price:650},
-    {id:'h15',name:'Корона Бурмалды',emoji:'👑',img:'',rarity:'mythical',price:1200},
-    {id:'h16',name:'Мифический цилиндр',emoji:'🎩',img:'',rarity:'mythical',price:2000}
+    {id:'h1',name:'Кепка "Дно"',img:'',rarity:'common',price:3},
+    {id:'h2',name:'Рыночная панама',img:'',rarity:'common',price:5},
+    {id:'h3',name:'Строительная каска',img:'',rarity:'common',price:8},
+    {id:'h4',name:'Ушанка турбо',img:'',rarity:'uncommon',price:12},
+    {id:'h5',name:'Выпускной берет',img:'',rarity:'uncommon',price:18},
+    {id:'h6',name:'Каска прораба',img:'',rarity:'uncommon',price:25},
+    {id:'h7',name:'Цилиндр джентльмена',img:'',rarity:'rare',price:40},
+    {id:'h8',name:'Шляпа магната',img:'',rarity:'rare',price:60},
+    {id:'h9',name:'Военный шлем "Элит"',img:'',rarity:'rare',price:80},
+    {id:'h10',name:'Цилиндр казино',img:'',rarity:'epic',price:120},
+    {id:'h11',name:'Шлем чемпиона',img:'',rarity:'epic',price:180},
+    {id:'h12',name:'Бриллиантовая каска',img:'',rarity:'epic',price:250},
+    {id:'h13',name:'Золотой цилиндр',img:'',rarity:'legendary',price:400},
+    {id:'h14',name:'Корона авторитета',img:'',rarity:'legendary',price:650},
+    {id:'h15',name:'Корона Бурмалды',img:'',rarity:'mythical',price:1200},
+    {id:'h16',name:'Мифический цилиндр',img:'',rarity:'mythical',price:2000}
 ];
 function hatIcon(h,size){
-    return h.img
-        ? '<img src="'+h.img+'" alt="'+h.name+'" style="width:'+size+'px;height:'+size+'px;object-fit:contain;">'
-        : '<span style="font-size:'+Math.round(size*0.6)+'px;">'+h.emoji+'</span>';
+    if(!h.img) return '<span style="display:inline-block;width:'+size+'px;height:'+size+'px;"></span>';
+    return '<span style="display:inline-flex;width:'+size+'px;height:'+size+'px;overflow:hidden;border-radius:8px;align-items:center;justify-content:center;flex-shrink:0;">'
+        +'<img src="'+h.img+'" alt="" width="'+size+'" height="'+size+'" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility=\'hidden\'">'
+        +'</span>';
 }
 function catalogOf(catalogId){ return HAT_CATALOG.find(h=>h.id===catalogId); }
+const SELL_RATE=0.9; // возврат при продаже — 90% от цены покупки
 const RARITY_COLORS={common:'#9e9e9e',uncommon:'#4caf50',rare:'#2196f3',epic:'#a855f7',legendary:'#ffb700',mythical:'#ff2255'};
 const RARITY_NAMES={common:'Обычная',uncommon:'Необычная',rare:'Редкая',epic:'Эпическая',legendary:'Легендарная',mythical:'Мифическая'};
 const HOUSE_EDGE=0.90; // 10% в пользу казино
@@ -336,14 +340,32 @@ function renderInventory(){
     }
     grid.innerHTML=inventory.map(h=>{
         const cat=catalogOf(h.catalogId)||h;
-        const c=RARITY_COLORS[h.rarity];
+        const c=RARITY_COLORS[cat.rarity];
         const sel=stakeKeys.has(h.key);
+        const sellPrice=Math.floor(h.price*SELL_RATE);
         return `<div class="hat-tile${sel?' sel':''}" style="--c:${c}" onclick="toggleStake('${h.key}')">
             ${sel?'<div class="check">✓</div>':''}
-            <div class="emo">${hatIcon(cat,26)}</div>
+            <div class="sell-btn" title="Продать за ${sellPrice} АР" onclick="event.stopPropagation();sellHat('${h.key}')">💰</div>
+            <div class="emo">${hatIcon(cat,30)}</div>
             <div class="pr">${h.price} АР</div>
         </div>`;
     }).join('');
+}
+
+function sellHat(key){
+    const h=inventory.find(x=>x.key===key);
+    if(!h) return;
+    const refund=Math.floor(h.price*SELL_RATE);
+    const cat=catalogOf(h.catalogId);
+    if(!confirm('Продать «'+(cat?cat.name:'шляпу')+'» за '+refund+' АР?')) return;
+    db.ref('players/'+uid).once('value').then(s=>{
+        const d=s.val()||{};
+        const updates={};
+        updates['balance']=(d.balance||0)+refund;
+        updates['hats/'+key]=null;
+        updates['history']=(d.history||[]).concat(['💰 Продана шляпа: '+(cat?cat.name:'?')+' +'+refund+' АР']).slice(-50);
+        db.ref('players/'+uid).update(updates);
+    });
 }
 
 function toggleStake(key){
@@ -445,7 +467,7 @@ function finishUpgrade(win){
         let historyLine;
         if(win){
             const newKey=db.ref('players/'+uid+'/hats').push().key;
-            updates['hats/'+newKey]={catalogId:target.id,name:target.name,emoji:target.emoji,rarity:target.rarity,price:target.price,ts:Date.now()};
+            updates['hats/'+newKey]={catalogId:target.id,price:target.price,ts:Date.now()};
             historyLine='🎩 Апгрейд ✅: '+stakedHats.length+' шляп → '+target.name;
         } else {
             historyLine='🎩 Апгрейд ❌: сгорело '+stakedHats.length+' шляп ('+stakedHats.reduce((s,h)=>s+h.price,0)+' АР)';
@@ -468,7 +490,7 @@ function showResult(win){
     document.getElementById('result-emo').style.color=win?'#4dff7a':'#ff5a5a';
     document.getElementById('result-title').textContent=win?'Апгрейд успешен!':'Апгрейд провален';
     document.getElementById('result-desc').textContent=win
-        ? 'Ты получил: '+target.emoji+' '+target.name
+        ? 'Ты получил: '+target.name
         : 'Все поставленные шляпы сгорели. Бывает — в следующий раз повезёт больше.';
     document.getElementById('result-modal').classList.add('open');
 }
