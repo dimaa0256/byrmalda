@@ -55,7 +55,8 @@ body {
 .gauge-percent.mid { color:#ffd94a; text-shadow:0 0 14px rgba(255,210,60,0.5); }
 .gauge-percent.low { color:#ff5a5a; text-shadow:0 0 14px rgba(255,60,60,0.5); }
 .gauge-label { font-size:10px; letter-spacing:2px; color:rgba(255,255,255,0.35); font-weight:800; margin-bottom:2px; }
-.needle { transform-origin:100px 100px; transition:transform 1.8s cubic-bezier(.2,.8,.15,1); }
+.needle { transform-origin:100px 100px; transition:transform 3.2s cubic-bezier(0.08,0.82,0.15,1); }
+.needle.spinning { transition:none; }
 
 /* ---- stake / target ---- */
 .pick-row { display:flex; gap:10px; align-items:center; margin-bottom:14px; }
@@ -144,18 +145,20 @@ body {
 
   <!-- ГЕЙДЖ ШАНСА -->
   <div class="gauge-card">
-    <svg viewBox="0 0 200 115" style="width:100%;max-width:260px;">
+    <svg viewBox="0 0 200 200" style="width:100%;max-width:230px;">
       <defs>
-        <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#ff3b3b"/>
           <stop offset="50%" stop-color="#ffcc00"/>
           <stop offset="100%" stop-color="#4dff7a"/>
         </linearGradient>
       </defs>
-      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14" stroke-linecap="round"/>
-      <path id="arc-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#arcGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 251.4"/>
-      <line id="needle" class="needle" x1="100" y1="100" x2="100" y2="28" stroke="#fff" stroke-width="4" stroke-linecap="round" style="transform:rotate(-90deg)"/>
-      <circle cx="100" cy="100" r="7" fill="#fff"/>
+      <circle cx="100" cy="100" r="82" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14"/>
+      <circle id="arc-fill" cx="100" cy="100" r="82" fill="none" stroke="url(#arcGrad)" stroke-width="14" stroke-linecap="round"
+              stroke-dasharray="0 515.2" transform="rotate(-90 100 100)"/>
+      <line id="needle" class="needle" x1="100" y1="100" x2="100" y2="22" stroke="#fff" stroke-width="4" stroke-linecap="round" style="transform:rotate(0deg)"/>
+      <circle cx="100" cy="100" r="8" fill="#fff"/>
+      <circle cx="100" cy="100" r="8" fill="none" stroke="#1c0030" stroke-width="2"/>
     </svg>
     <div class="gauge-label">СРЕДНИЙ ШАНС</div>
     <div class="gauge-percent mid" id="chance-text">0.00%</div>
@@ -289,24 +292,32 @@ function go(){
 }
 
 /* ===== каталог шляп (совпадает с магазином на главной) ===== */
+/* img: путь к своей картинке (например 'images/hats/h1.png'). Если img пустой — показывается emoji как заглушка.
+   ВАЖНО: этот каталог должен быть идентичен каталогу в index.html (те же id/картинки/названия). */
 const HAT_CATALOG=[
-    {id:'h1',name:'Кепка "Дно"',emoji:'🧢',rarity:'common',price:3},
-    {id:'h2',name:'Рыночная панама',emoji:'👒',rarity:'common',price:5},
-    {id:'h3',name:'Строительная каска',emoji:'⛑️',rarity:'common',price:8},
-    {id:'h4',name:'Ушанка турбо',emoji:'🧢',rarity:'uncommon',price:12},
-    {id:'h5',name:'Выпускной берет',emoji:'🎓',rarity:'uncommon',price:18},
-    {id:'h6',name:'Каска прораба',emoji:'⛑️',rarity:'uncommon',price:25},
-    {id:'h7',name:'Цилиндр джентльмена',emoji:'🎩',rarity:'rare',price:40},
-    {id:'h8',name:'Шляпа магната',emoji:'👒',rarity:'rare',price:60},
-    {id:'h9',name:'Военный шлем "Элит"',emoji:'🪖',rarity:'rare',price:80},
-    {id:'h10',name:'Цилиндр казино',emoji:'🎩',rarity:'epic',price:120},
-    {id:'h11',name:'Шлем чемпиона',emoji:'🪖',rarity:'epic',price:180},
-    {id:'h12',name:'Бриллиантовая каска',emoji:'⛑️',rarity:'epic',price:250},
-    {id:'h13',name:'Золотой цилиндр',emoji:'🎩',rarity:'legendary',price:400},
-    {id:'h14',name:'Корона авторитета',emoji:'👑',rarity:'legendary',price:650},
-    {id:'h15',name:'Корона Бурмалды',emoji:'👑',rarity:'mythical',price:1200},
-    {id:'h16',name:'Мифический цилиндр',emoji:'🎩',rarity:'mythical',price:2000}
+    {id:'h1',name:'Кепка "Дно"',emoji:'🧢',img:'',rarity:'common',price:3},
+    {id:'h2',name:'Рыночная панама',emoji:'👒',img:'',rarity:'common',price:5},
+    {id:'h3',name:'Строительная каска',emoji:'⛑️',img:'',rarity:'common',price:8},
+    {id:'h4',name:'Ушанка турбо',emoji:'🧢',img:'',rarity:'uncommon',price:12},
+    {id:'h5',name:'Выпускной берет',emoji:'🎓',img:'',rarity:'uncommon',price:18},
+    {id:'h6',name:'Каска прораба',emoji:'⛑️',img:'',rarity:'uncommon',price:25},
+    {id:'h7',name:'Цилиндр джентльмена',emoji:'🎩',img:'',rarity:'rare',price:40},
+    {id:'h8',name:'Шляпа магната',emoji:'👒',img:'',rarity:'rare',price:60},
+    {id:'h9',name:'Военный шлем "Элит"',emoji:'🪖',img:'',rarity:'rare',price:80},
+    {id:'h10',name:'Цилиндр казино',emoji:'🎩',img:'',rarity:'epic',price:120},
+    {id:'h11',name:'Шлем чемпиона',emoji:'🪖',img:'',rarity:'epic',price:180},
+    {id:'h12',name:'Бриллиантовая каска',emoji:'⛑️',img:'',rarity:'epic',price:250},
+    {id:'h13',name:'Золотой цилиндр',emoji:'🎩',img:'',rarity:'legendary',price:400},
+    {id:'h14',name:'Корона авторитета',emoji:'👑',img:'',rarity:'legendary',price:650},
+    {id:'h15',name:'Корона Бурмалды',emoji:'👑',img:'',rarity:'mythical',price:1200},
+    {id:'h16',name:'Мифический цилиндр',emoji:'🎩',img:'',rarity:'mythical',price:2000}
 ];
+function hatIcon(h,size){
+    return h.img
+        ? '<img src="'+h.img+'" alt="'+h.name+'" style="width:'+size+'px;height:'+size+'px;object-fit:contain;">'
+        : '<span style="font-size:'+Math.round(size*0.6)+'px;">'+h.emoji+'</span>';
+}
+function catalogOf(catalogId){ return HAT_CATALOG.find(h=>h.id===catalogId); }
 const RARITY_COLORS={common:'#9e9e9e',uncommon:'#4caf50',rare:'#2196f3',epic:'#a855f7',legendary:'#ffb700',mythical:'#ff2255'};
 const RARITY_NAMES={common:'Обычная',uncommon:'Необычная',rare:'Редкая',epic:'Эпическая',legendary:'Легендарная',mythical:'Мифическая'};
 const HOUSE_EDGE=0.90; // 10% в пользу казино
@@ -324,11 +335,12 @@ function renderInventory(){
         return;
     }
     grid.innerHTML=inventory.map(h=>{
+        const cat=catalogOf(h.catalogId)||h;
         const c=RARITY_COLORS[h.rarity];
         const sel=stakeKeys.has(h.key);
         return `<div class="hat-tile${sel?' sel':''}" style="--c:${c}" onclick="toggleStake('${h.key}')">
             ${sel?'<div class="check">✓</div>':''}
-            <div class="emo">${h.emoji}</div>
+            <div class="emo">${hatIcon(cat,26)}</div>
             <div class="pr">${h.price} АР</div>
         </div>`;
     }).join('');
@@ -349,7 +361,7 @@ function openTargetPicker(){
     list.innerHTML=HAT_CATALOG.map(h=>{
         const c=RARITY_COLORS[h.rarity];
         return `<div class="cat-item" style="--c:${c}" onclick="pickTarget('${h.id}')">
-            <div class="emo">${h.emoji}</div>
+            <div class="emo">${hatIcon(h,22)}</div>
             <div><div class="nm">${h.name}</div><div class="rn">${RARITY_NAMES[h.rarity]}</div></div>
             <div class="pr">${h.price} АР</div>
         </div>`;
@@ -360,7 +372,7 @@ function closeTargetPicker(){ document.getElementById('target-modal').classList.
 function pickTarget(hatId){
     target=HAT_CATALOG.find(h=>h.id===hatId);
     document.getElementById('target-box').classList.add('filled');
-    document.getElementById('target-emo').textContent=target.emoji;
+    document.getElementById('target-emo').innerHTML=hatIcon(target,30);
     document.getElementById('target-name').textContent=target.name;
     document.getElementById('target-price').textContent=target.price+' АР';
     closeTargetPicker();
@@ -390,9 +402,9 @@ function updateGauge(){
     pctText.className='gauge-percent '+(chance>=55?'':chance>=25?'mid':'low');
 
     const frac=chance/100;
-    const arcLen=251.4; // приблизительная длина дуги (π*80)
-    document.getElementById('arc-fill').setAttribute('stroke-dasharray',(arcLen*frac).toFixed(1)+' '+arcLen);
-    const angle=-90+frac*180;
+    const circumference=2*Math.PI*82; // длина полной окружности ≈ 515.2
+    document.getElementById('arc-fill').setAttribute('stroke-dasharray',(circumference*frac).toFixed(1)+' '+circumference.toFixed(1));
+    const angle=frac*360; // 0% = стрелка вверх (12 часов), по часовой стрелке
     document.getElementById('needle').style.transform='rotate('+angle+'deg)';
 
     return {total,chance,ok};
@@ -406,16 +418,22 @@ function doUpgrade(){
 
     const roll=Math.random()*100;
     const win=roll<=state.chance;
-    const finalAngle=-90+(roll/100)*180;
+    const landingAngle=(roll/100)*360;      // где стрелка окажется на круге (0-360°)
+    const SPINS=2;                          // сколько полных кругов "намотать" перед остановкой
     const needle=document.getElementById('needle');
-    // «раскрутка»: сначала лишний оборот, затем плавно на итоговый угол
-    needle.style.transition='none';
-    needle.style.transform='rotate('+(finalAngle-360)+'deg)';
-    void needle.offsetWidth;
-    needle.style.transition='transform 1.8s cubic-bezier(.2,.8,.15,1)';
-    needle.style.transform='rotate('+finalAngle+'deg)';
 
-    setTimeout(()=>finishUpgrade(win), 1900);
+    // мгновенно ставим стрелку в текущую позицию без анимации, чтобы не было рывка назад
+    needle.classList.add('spinning');
+    void needle.offsetWidth;
+    needle.classList.remove('spinning');
+
+    // затем — долгий плавный поворот: 2 полных оборота + финальный угол.
+    // cubic-bezier(0.08,0.82,0.15,1) даёт быстрый разгон в начале и долгое плавное торможение в конце.
+    requestAnimationFrame(()=>{
+        needle.style.transform='rotate('+(SPINS*360+landingAngle)+'deg)';
+    });
+
+    setTimeout(()=>finishUpgrade(win), 3300);
 }
 
 function finishUpgrade(win){
