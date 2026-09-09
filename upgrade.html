@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Апгрейд — Бурмалда</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 100%);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    font-family:'Nunito',sans-serif;
+    color:#fff;
+}
+.wrap { width:100%; max-width:420px; padding:16px 16px 40px; }
+.back-link { display:block; text-align:center; font-family:'Fredoka One',cursive; font-size:12px; letter-spacing:2px; color:rgba(255,180,0,0.5); text-decoration:none; margin-bottom:8px; }
+.title { font-family:'Fredoka One',cursive; font-size:26px; letter-spacing:4px; text-align:center; color:#fff; text-shadow:0 0 16px rgba(255,150,0,0.5); margin-bottom:4px; }
+.subtitle { text-align:center; font-size:11px; color:rgba(255,200,150,0.4); font-weight:800; letter-spacing:1px; margin-bottom:14px; }
+
+#auth-section input {
+    width:100%; padding:12px; margin-bottom:10px; border-radius:12px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,180,0,0.25);
+    color:#fff; font-family:'Nunito',sans-serif; font-weight:800; outline:none; font-size:14px;
+}
+.btn-login {
+    width:100%; padding:13px; border-radius:12px; border:none; cursor:pointer;
+    background:linear-gradient(135deg,#ff8800,#ffcc00); color:#1a0800;
+    font-family:'Fredoka One',cursive; font-size:14px; letter-spacing:2px;
+}
+
+.balance-bar {
+    display:flex; justify-content:space-between; align-items:center;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,180,0,0.2);
+    border-radius:16px; padding:12px 16px; margin-bottom:14px;
+}
+.balance-bar .lab { font-size:10px; letter-spacing:2px; color:rgba(255,200,100,0.5); font-weight:900; }
+.balance-bar .val { font-family:'Fredoka One',cursive; font-size:18px; color:#ffd700; }
+
+.section-title { font-family:'Fredoka One',cursive; font-size:13px; letter-spacing:2px; color:rgba(255,200,100,0.7); margin:16px 0 8px; }
+
+/* ---- gauge ---- */
+.gauge-card {
+    background:linear-gradient(160deg,#150022,#1c0030);
+    border:2px solid rgba(255,150,0,0.25);
+    border-radius:22px; padding:16px; text-align:center; margin-bottom:14px;
+}
+.gauge-percent { font-family:'Fredoka One',cursive; font-size:34px; color:#8effa1; text-shadow:0 0 14px rgba(120,255,120,0.5); margin-top:-8px; }
+.gauge-percent.mid { color:#ffd94a; text-shadow:0 0 14px rgba(255,210,60,0.5); }
+.gauge-percent.low { color:#ff5a5a; text-shadow:0 0 14px rgba(255,60,60,0.5); }
+.gauge-label { font-size:10px; letter-spacing:2px; color:rgba(255,255,255,0.35); font-weight:800; margin-bottom:2px; }
+.needle { transform-origin:100px 100px; transition:transform 1.8s cubic-bezier(.2,.8,.15,1); }
+
+/* ---- stake / target ---- */
+.pick-row { display:flex; gap:10px; align-items:center; margin-bottom:14px; }
+.pick-box {
+    flex:1; background:rgba(255,255,255,0.04); border:2px dashed rgba(255,255,255,0.15);
+    border-radius:16px; padding:12px; text-align:center; min-height:96px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;
+}
+.pick-box.filled { border-style:solid; border-color:rgba(255,180,0,0.4); background:rgba(255,180,0,0.06); }
+.pick-box .cap { font-size:9px; letter-spacing:2px; color:rgba(255,255,255,0.35); font-weight:900; margin-bottom:6px; }
+.pick-box .emo { font-size:30px; }
+.pick-box .nm { font-size:11px; font-weight:800; color:#fff; margin-top:4px; }
+.pick-box .pr { font-family:'Fredoka One',cursive; font-size:13px; color:#ffd700; margin-top:2px; }
+.pick-arrow { font-size:20px; color:rgba(255,255,255,0.3); }
+
+/* ---- inventory grid ---- */
+.inv-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px; }
+.hat-tile {
+    position:relative; aspect-ratio:1; border-radius:14px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(255,255,255,0.03); border:2px solid var(--c,#666); transition:all .15s;
+}
+.hat-tile.sel { background:rgba(255,215,0,0.14); box-shadow:0 0 0 2px #ffd700, 0 0 14px rgba(255,215,0,0.5); }
+.hat-tile .emo { font-size:24px; }
+.hat-tile .pr { font-size:9px; font-weight:900; color:#ffd700; margin-top:2px; }
+.hat-tile .check { position:absolute; top:3px; right:3px; width:15px; height:15px; border-radius:50%; background:#ffd700; color:#1a0800; font-size:10px; font-weight:900; display:flex; align-items:center; justify-content:center; }
+.empty-inv { text-align:center; padding:24px 10px; color:rgba(255,255,255,0.4); font-size:12px; font-weight:700; line-height:1.6; }
+.empty-inv a { color:#ffd700; text-decoration:none; }
+
+.stake-sum { display:flex; justify-content:space-between; align-items:center; padding:10px 4px; font-size:12px; font-weight:800; color:rgba(255,255,255,0.5); }
+.stake-sum b { color:#ffd700; font-family:'Fredoka One',cursive; font-size:15px; }
+
+.warn { text-align:center; font-size:12px; font-weight:800; color:#ff5a5a; padding:8px; min-height:18px; }
+
+.btn-upgrade {
+    width:100%; padding:15px; border-radius:16px; border:none; cursor:pointer;
+    background:linear-gradient(135deg,#ffb700,#ff7a00); color:#1a0800;
+    font-family:'Fredoka One',cursive; font-size:15px; letter-spacing:3px;
+    box-shadow:0 6px 0 #8a4600;
+}
+.btn-upgrade:disabled { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.3); box-shadow:none; cursor:not-allowed; }
+.btn-upgrade:active:not(:disabled) { transform:translateY(4px); box-shadow:0 2px 0 #8a4600; }
+
+/* ---- modal (target picker & result) ---- */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:50; align-items:center; justify-content:center; padding:16px; }
+.modal-overlay.open { display:flex; }
+.modal-box { background:linear-gradient(160deg,#150022,#1c0030); border:2px solid rgba(255,180,0,0.3); border-radius:20px; padding:16px; width:100%; max-width:380px; max-height:80vh; overflow-y:auto; }
+.modal-title { font-family:'Fredoka One',cursive; font-size:15px; text-align:center; color:#ffd700; margin-bottom:12px; }
+.cat-item { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid var(--c,#666); border-radius:14px; padding:9px; margin-bottom:7px; cursor:pointer; }
+.cat-item:active { transform:scale(0.98); }
+.cat-item .emo { width:38px; height:38px; border-radius:11px; background:radial-gradient(circle,var(--c,#666) 0%,transparent 70%); border:2px solid var(--c,#666); display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
+.cat-item .nm { font-family:'Fredoka One',cursive; font-size:12px; color:#fff; }
+.cat-item .rn { font-size:9px; font-weight:900; color:var(--c,#888); letter-spacing:1px; }
+.cat-item .pr { margin-left:auto; font-family:'Fredoka One',cursive; font-size:12px; color:#ffd700; }
+.modal-close { width:100%; padding:10px; margin-top:4px; border-radius:12px; background:transparent; color:rgba(255,180,0,0.5); border:1px solid rgba(255,180,0,0.25); cursor:pointer; font-family:'Nunito',sans-serif; font-size:11px; font-weight:900; letter-spacing:2px; }
+
+.result-box { text-align:center; }
+.result-emo { font-size:56px; margin-bottom:8px; filter:drop-shadow(0 0 20px currentColor); }
+.result-title { font-family:'Fredoka One',cursive; font-size:18px; margin-bottom:6px; }
+.result-desc { font-size:12px; color:rgba(255,255,255,0.5); font-weight:700; margin-bottom:16px; }
+</style>
+</head>
+<body>
+<div class="wrap" onclick="event.stopPropagation()">
+
+<!-- АВТОРИЗАЦИЯ -->
+<div id="auth-section">
+  <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
+  <div class="title">🎩 АПГРЕЙД</div>
+  <div class="subtitle">СТАВЬ ШЛЯПЫ · ЛОВИ ШАНС</div>
+  <input type="text" id="username" placeholder="НИК" autocomplete="username">
+  <input type="password" id="password" placeholder="ПАРОЛЬ" autocomplete="current-password">
+  <button class="btn-login" onclick="login()">ВОЙТИ</button>
+</div>
+
+<!-- ИГРА -->
+<div id="game-section" style="display:none">
+  <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
+  <div class="title">🎩 АПГРЕЙД</div>
+  <div class="subtitle">СТАВЬ ШЛЯПЫ · ЛОВИ ШАНС</div>
+
+  <div class="balance-bar">
+    <div><div class="lab">БАЛАНС</div><div class="val" id="balance">0 АР</div></div>
+    <div><div class="lab" style="text-align:right">ШЛЯП В ИНВЕНТАРЕ</div><div class="val" id="inv-count" style="text-align:right">0</div></div>
+  </div>
+
+  <!-- ГЕЙДЖ ШАНСА -->
+  <div class="gauge-card">
+    <svg viewBox="0 0 200 115" style="width:100%;max-width:260px;">
+      <defs>
+        <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ff3b3b"/>
+          <stop offset="50%" stop-color="#ffcc00"/>
+          <stop offset="100%" stop-color="#4dff7a"/>
+        </linearGradient>
+      </defs>
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14" stroke-linecap="round"/>
+      <path id="arc-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#arcGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 251.4"/>
+      <line id="needle" class="needle" x1="100" y1="100" x2="100" y2="28" stroke="#fff" stroke-width="4" stroke-linecap="round" style="transform:rotate(-90deg)"/>
+      <circle cx="100" cy="100" r="7" fill="#fff"/>
+    </svg>
+    <div class="gauge-label">СРЕДНИЙ ШАНС</div>
+    <div class="gauge-percent mid" id="chance-text">0.00%</div>
+  </div>
+
+  <!-- СТАВКА / ЦЕЛЬ -->
+  <div class="pick-row">
+    <div class="pick-box filled">
+      <div class="cap">ВАША СТАВКА</div>
+      <div class="emo">🎒</div>
+      <div class="nm" id="stake-count-lbl">0 шляп</div>
+      <div class="pr" id="stake-sum-lbl">0 АР</div>
+    </div>
+    <div class="pick-arrow">→</div>
+    <div class="pick-box" id="target-box" onclick="openTargetPicker()">
+      <div class="cap">ЦЕЛЬ</div>
+      <div class="emo" id="target-emo">❓</div>
+      <div class="nm" id="target-name">Выбрать</div>
+      <div class="pr" id="target-price"></div>
+    </div>
+  </div>
+
+  <div class="section-title">🎒 ИНВЕНТАРЬ (нажми, чтобы поставить)</div>
+  <div class="inv-grid" id="inv-grid"></div>
+
+  <div class="stake-sum">
+    <span>Сумма ставки:</span>
+    <b id="stake-sum-2">0 АР</b>
+  </div>
+
+  <div class="warn" id="warn-text"></div>
+
+  <button class="btn-upgrade" id="upgrade-btn" disabled onclick="doUpgrade()">🎩 ПРОКАЧАТЬ</button>
+</div>
+
+</div>
+
+<!-- МОДАЛКА ВЫБОРА ЦЕЛИ -->
+<div class="modal-overlay" id="target-modal">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">🎯 ВЫБЕРИ ЦЕЛЬ</div>
+    <div id="target-list"></div>
+    <button class="modal-close" onclick="closeTargetPicker()">✕ ЗАКРЫТЬ</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА РЕЗУЛЬТАТА -->
+<div class="modal-overlay" id="result-modal">
+  <div class="modal-box result-box" onclick="event.stopPropagation()">
+    <div class="result-emo" id="result-emo">🎉</div>
+    <div class="result-title" id="result-title">Апгрейд успешен!</div>
+    <div class="result-desc" id="result-desc"></div>
+    <button class="btn-login" onclick="closeResult()">ОК</button>
+  </div>
+</div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyCYptPoeocCbngAMfG_R-t32FOfIGJY13s",databaseURL:"https://dima256-default-rtdb.europe-west1.firebasedatabase.app",projectId:"dima256",appId:"1:208400853144:web:78eb608f5aacd57e8848ed"};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db=firebase.database(), auth=firebase.auth();
+let uid='',user='';
+
+function toEmail(u){return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app';}
+
+function login(){
+    const u=document.getElementById('username').value.trim();
+    const p=document.getElementById('password').value;
+    if(!u||!p) return;
+    const fp=p+'_Brm9!';
+    const isAuthErr=c=>['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c);
+    db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
+        if(snap.exists()){
+            auth.signInWithEmailAndPassword(toEmail(u),fp)
+                .then(c=>{uid=c.user.uid;user=u;go();})
+                .catch(e1=>{
+                    if(!isAuthErr(e1.code)) return;
+                    auth.signInWithEmailAndPassword(toEmail(u),p)
+                        .then(c=>{c.user.updatePassword(fp).catch(()=>{});uid=c.user.uid;user=u;go();})
+                        .catch(()=>alert('Неверный пароль!'));
+                });
+        } else {
+            auth.createUserWithEmailAndPassword(toEmail(u),fp)
+                .then(c=>{
+                    uid=c.user.uid;user=u;
+                    db.ref('usernames/'+u.toLowerCase()).set(uid);
+                    db.ref('players/'+uid).set({username:String(u),balance:5,history:['Регистрация'],usedPromos:{}});
+                    go();
+                })
+                .catch(e=>{
+                    if(e.code==='auth/email-already-in-use'){
+                        auth.signInWithEmailAndPassword(toEmail(u),fp)
+                            .then(c=>{uid=c.user.uid;user=u;go();})
+                            .catch(()=>alert('Ошибка входа'));
+                    }
+                });
+        }
+    });
+}
+
+const _loadingDiv=document.createElement('div');
+_loadingDiv.style.cssText='text-align:center;padding:40px;font-family:Fredoka One,cursive;font-size:16px;letter-spacing:3px;color:rgba(255,180,0,0.5);';
+_loadingDiv.textContent='ЗАГРУЗКА...';
+document.getElementById('auth-section').style.display='none';
+document.getElementById('auth-section').parentNode.insertBefore(_loadingDiv,document.getElementById('auth-section'));
+
+auth.onAuthStateChanged(fu=>{
+    _loadingDiv.remove();
+    if(fu){uid=fu.uid;
+        db.ref('players/'+uid).once('value').then(s=>{
+            if(s.exists()&&s.val().username){user=String(s.val().username);go();}
+            else{auth.signOut();uid='';}
+        });
+    }
+});
+
+function go(){
+    document.getElementById('auth-section').style.display='none';
+    document.getElementById('game-section').style.display='block';
+    localStorage.setItem('lobbyUser', user);
+    localStorage.setItem('lobbyUid', uid);
+    db.ref('players/'+uid).update({lastSeen:Date.now(),currentPage:'🎩 Апгрейд'});
+    db.ref('players/'+uid).on('value', s=>{
+        const d=s.val()||{};
+        document.getElementById('balance').textContent=(d.balance||0)+' АР';
+        inventory=Object.entries(d.hats||{}).map(([key,h])=>({key,...h}));
+        // убираем из выбора то, чего больше нет
+        stakeKeys=new Set([...stakeKeys].filter(k=>inventory.some(h=>h.key===k)));
+        renderInventory();
+        updateGauge();
+    });
+}
+
+/* ===== каталог шляп (совпадает с магазином на главной) ===== */
+const HAT_CATALOG=[
+    {id:'h1',name:'Кепка "Дно"',emoji:'🧢',rarity:'common',price:3},
+    {id:'h2',name:'Рыночная панама',emoji:'👒',rarity:'common',price:5},
+    {id:'h3',name:'Строительная каска',emoji:'⛑️',rarity:'common',price:8},
+    {id:'h4',name:'Ушанка турбо',emoji:'🧢',rarity:'uncommon',price:12},
+    {id:'h5',name:'Выпускной берет',emoji:'🎓',rarity:'uncommon',price:18},
+    {id:'h6',name:'Каска прораба',emoji:'⛑️',rarity:'uncommon',price:25},
+    {id:'h7',name:'Цилиндр джентльмена',emoji:'🎩',rarity:'rare',price:40},
+    {id:'h8',name:'Шляпа магната',emoji:'👒',rarity:'rare',price:60},
+    {id:'h9',name:'Военный шлем "Элит"',emoji:'🪖',rarity:'rare',price:80},
+    {id:'h10',name:'Цилиндр казино',emoji:'🎩',rarity:'epic',price:120},
+    {id:'h11',name:'Шлем чемпиона',emoji:'🪖',rarity:'epic',price:180},
+    {id:'h12',name:'Бриллиантовая каска',emoji:'⛑️',rarity:'epic',price:250},
+    {id:'h13',name:'Золотой цилиндр',emoji:'🎩',rarity:'legendary',price:400},
+    {id:'h14',name:'Корона авторитета',emoji:'👑',rarity:'legendary',price:650},
+    {id:'h15',name:'Корона Бурмалды',emoji:'👑',rarity:'mythical',price:1200},
+    {id:'h16',name:'Мифический цилиндр',emoji:'🎩',rarity:'mythical',price:2000}
+];
+const RARITY_COLORS={common:'#9e9e9e',uncommon:'#4caf50',rare:'#2196f3',epic:'#a855f7',legendary:'#ffb700',mythical:'#ff2255'};
+const RARITY_NAMES={common:'Обычная',uncommon:'Необычная',rare:'Редкая',epic:'Эпическая',legendary:'Легендарная',mythical:'Мифическая'};
+const HOUSE_EDGE=0.90; // 10% в пользу казино
+const MAX_CHANCE=95;   // потолок шанса, чтобы гарантия была невозможна
+
+let inventory=[];
+let stakeKeys=new Set();
+let target=null;
+
+function renderInventory(){
+    const grid=document.getElementById('inv-grid');
+    document.getElementById('inv-count').textContent=inventory.length;
+    if(!inventory.length){
+        grid.innerHTML='<div class="empty-inv" style="grid-column:1/-1">У вас пока нет шляп.<br>Загляните в <a href="index.html">🛒 Магазин</a> на главной!</div>';
+        return;
+    }
+    grid.innerHTML=inventory.map(h=>{
+        const c=RARITY_COLORS[h.rarity];
+        const sel=stakeKeys.has(h.key);
+        return `<div class="hat-tile${sel?' sel':''}" style="--c:${c}" onclick="toggleStake('${h.key}')">
+            ${sel?'<div class="check">✓</div>':''}
+            <div class="emo">${h.emoji}</div>
+            <div class="pr">${h.price} АР</div>
+        </div>`;
+    }).join('');
+}
+
+function toggleStake(key){
+    if(stakeKeys.has(key)) stakeKeys.delete(key); else stakeKeys.add(key);
+    renderInventory();
+    updateGauge();
+}
+
+function stakeTotal(){
+    return inventory.filter(h=>stakeKeys.has(h.key)).reduce((s,h)=>s+h.price,0);
+}
+
+function openTargetPicker(){
+    const list=document.getElementById('target-list');
+    list.innerHTML=HAT_CATALOG.map(h=>{
+        const c=RARITY_COLORS[h.rarity];
+        return `<div class="cat-item" style="--c:${c}" onclick="pickTarget('${h.id}')">
+            <div class="emo">${h.emoji}</div>
+            <div><div class="nm">${h.name}</div><div class="rn">${RARITY_NAMES[h.rarity]}</div></div>
+            <div class="pr">${h.price} АР</div>
+        </div>`;
+    }).join('');
+    document.getElementById('target-modal').classList.add('open');
+}
+function closeTargetPicker(){ document.getElementById('target-modal').classList.remove('open'); }
+function pickTarget(hatId){
+    target=HAT_CATALOG.find(h=>h.id===hatId);
+    document.getElementById('target-box').classList.add('filled');
+    document.getElementById('target-emo').textContent=target.emoji;
+    document.getElementById('target-name').textContent=target.name;
+    document.getElementById('target-price').textContent=target.price+' АР';
+    closeTargetPicker();
+    updateGauge();
+}
+
+function updateGauge(){
+    const total=stakeTotal();
+    document.getElementById('stake-count-lbl').textContent=stakeKeys.size+' шляп';
+    document.getElementById('stake-sum-lbl').textContent=total+' АР';
+    document.getElementById('stake-sum-2').textContent=total+' АР';
+
+    const btn=document.getElementById('upgrade-btn');
+    const warn=document.getElementById('warn-text');
+    let chance=0, ok=true, msg='';
+
+    if(!stakeKeys.size){ ok=false; msg='Выбери хотя бы одну шляпу для ставки'; }
+    else if(!target){ ok=false; msg='Выбери цель апгрейда'; }
+    else if(total>=target.price){ ok=false; msg='🙅 Невыгодно! Ставка дороже (или равна) цели — так апгрейднуть нельзя.'; }
+    else { chance=Math.min(MAX_CHANCE,(total/target.price)*100*HOUSE_EDGE); }
+
+    warn.textContent=msg;
+    btn.disabled=!ok;
+
+    const pctText=document.getElementById('chance-text');
+    pctText.textContent=chance.toFixed(2)+'%';
+    pctText.className='gauge-percent '+(chance>=55?'':chance>=25?'mid':'low');
+
+    const frac=chance/100;
+    const arcLen=251.4; // приблизительная длина дуги (π*80)
+    document.getElementById('arc-fill').setAttribute('stroke-dasharray',(arcLen*frac).toFixed(1)+' '+arcLen);
+    const angle=-90+frac*180;
+    document.getElementById('needle').style.transform='rotate('+angle+'deg)';
+
+    return {total,chance,ok};
+}
+
+function doUpgrade(){
+    const state=updateGauge();
+    if(!state.ok||!target) return;
+    const btn=document.getElementById('upgrade-btn');
+    btn.disabled=true;
+
+    const roll=Math.random()*100;
+    const win=roll<=state.chance;
+    const finalAngle=-90+(roll/100)*180;
+    const needle=document.getElementById('needle');
+    // «раскрутка»: сначала лишний оборот, затем плавно на итоговый угол
+    needle.style.transition='none';
+    needle.style.transform='rotate('+(finalAngle-360)+'deg)';
+    void needle.offsetWidth;
+    needle.style.transition='transform 1.8s cubic-bezier(.2,.8,.15,1)';
+    needle.style.transform='rotate('+finalAngle+'deg)';
+
+    setTimeout(()=>finishUpgrade(win), 1900);
+}
+
+function finishUpgrade(win){
+    const stakedHats=inventory.filter(h=>stakeKeys.has(h.key));
+    db.ref('players/'+uid).once('value').then(s=>{
+        const d=s.val()||{};
+        const updates={};
+        stakedHats.forEach(h=>{ updates['hats/'+h.key]=null; });
+        let historyLine;
+        if(win){
+            const newKey=db.ref('players/'+uid+'/hats').push().key;
+            updates['hats/'+newKey]={catalogId:target.id,name:target.name,emoji:target.emoji,rarity:target.rarity,price:target.price,ts:Date.now()};
+            historyLine='🎩 Апгрейд ✅: '+stakedHats.length+' шляп → '+target.name;
+        } else {
+            historyLine='🎩 Апгрейд ❌: сгорело '+stakedHats.length+' шляп ('+stakedHats.reduce((s,h)=>s+h.price,0)+' АР)';
+        }
+        updates['history']=(d.history||[]).concat([historyLine]).slice(-50);
+        db.ref('players/'+uid).update(updates).then(()=>{
+            showResult(win);
+            stakeKeys=new Set();
+            target=null;
+            document.getElementById('target-box').classList.remove('filled');
+            document.getElementById('target-emo').textContent='❓';
+            document.getElementById('target-name').textContent='Выбрать';
+            document.getElementById('target-price').textContent='';
+        });
+    });
+}
+
+function showResult(win){
+    document.getElementById('result-emo').textContent=win?'🎉':'💀';
+    document.getElementById('result-emo').style.color=win?'#4dff7a':'#ff5a5a';
+    document.getElementById('result-title').textContent=win?'Апгрейд успешен!':'Апгрейд провален';
+    document.getElementById('result-desc').textContent=win
+        ? 'Ты получил: '+target.emoji+' '+target.name
+        : 'Все поставленные шляпы сгорели. Бывает — в следующий раз повезёт больше.';
+    document.getElementById('result-modal').classList.add('open');
+}
+function closeResult(){
+    document.getElementById('result-modal').classList.remove('open');
+    document.getElementById('upgrade-btn').disabled=false;
+    updateGauge();
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',()=>m.classList.remove('open')));
+</script>
+</body>
+</html>
