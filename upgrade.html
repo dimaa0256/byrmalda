@@ -266,10 +266,14 @@ _loadingDiv.textContent='ЗАГРУЗКА...';
 document.getElementById('auth-section').style.display='none';
 document.getElementById('auth-section').parentNode.insertBefore(_loadingDiv,document.getElementById('auth-section'));
 
+let sessionReady=false;
+
 auth.onAuthStateChanged(fu=>{
     _loadingDiv.remove();
+    if(sessionReady) return; // сессия уже поднята через login(), не мешаем повторной асинхронной проверкой
     if(fu){uid=fu.uid;
         db.ref('players/'+uid).once('value').then(s=>{
+            if(sessionReady) return;
             if(s.exists()&&s.val().username){user=String(s.val().username);go();}
             else{document.getElementById('auth-section').style.display='block';}
         });
@@ -279,6 +283,7 @@ auth.onAuthStateChanged(fu=>{
 });
 
 function go(){
+    sessionReady=true;
     document.getElementById('auth-section').style.display='none';
     document.getElementById('game-section').style.display='block';
     localStorage.setItem('lobbyUser', user);
