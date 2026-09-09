@@ -55,7 +55,7 @@ body {
 .gauge-percent.mid { color:#ffd94a; text-shadow:0 0 14px rgba(255,210,60,0.5); }
 .gauge-percent.low { color:#ff5a5a; text-shadow:0 0 14px rgba(255,60,60,0.5); }
 .gauge-label { font-size:10px; letter-spacing:2px; color:rgba(255,255,255,0.35); font-weight:800; margin-bottom:2px; }
-.needle { transform-origin:100px 100px; transition:transform 3.2s cubic-bezier(0.08,0.82,0.15,1); }
+.needle { transform-origin:100px 100px; transition:transform 4.5s cubic-bezier(0.1,0.7,0.1,1); }
 .needle.spinning { transition:none; }
 
 /* ---- stake / target ---- */
@@ -271,8 +271,10 @@ auth.onAuthStateChanged(fu=>{
     if(fu){uid=fu.uid;
         db.ref('players/'+uid).once('value').then(s=>{
             if(s.exists()&&s.val().username){user=String(s.val().username);go();}
-            else{auth.signOut();uid='';}
+            else{document.getElementById('auth-section').style.display='block';}
         });
+    } else {
+        document.getElementById('auth-section').style.display='block';
     }
 });
 
@@ -297,22 +299,22 @@ function go(){
 /* img: путь к своей картинке (например 'images/hats/h1.png'). Пока img не задан — плитка просто пустая (без смайликов).
    ВАЖНО: этот каталог должен быть идентичен каталогу в index.html (те же id/картинки/названия/цены). */
 const HAT_CATALOG=[
-    {id:'h1',name:'Кепка "Дно"',img:'',rarity:'common',price:3},
-    {id:'h2',name:'Рыночная панама',img:'',rarity:'common',price:5},
-    {id:'h3',name:'Строительная каска',img:'',rarity:'common',price:8},
-    {id:'h4',name:'Ушанка турбо',img:'',rarity:'uncommon',price:12},
-    {id:'h5',name:'Выпускной берет',img:'',rarity:'uncommon',price:18},
-    {id:'h6',name:'Каска прораба',img:'',rarity:'uncommon',price:25},
-    {id:'h7',name:'Цилиндр джентльмена',img:'',rarity:'rare',price:40},
-    {id:'h8',name:'Шляпа магната',img:'',rarity:'rare',price:60},
-    {id:'h9',name:'Военный шлем "Элит"',img:'',rarity:'rare',price:80},
-    {id:'h10',name:'Цилиндр казино',img:'',rarity:'epic',price:120},
-    {id:'h11',name:'Шлем чемпиона',img:'',rarity:'epic',price:180},
-    {id:'h12',name:'Бриллиантовая каска',img:'',rarity:'epic',price:250},
-    {id:'h13',name:'Золотой цилиндр',img:'',rarity:'legendary',price:400},
-    {id:'h14',name:'Корона авторитета',img:'',rarity:'legendary',price:650},
-    {id:'h15',name:'Корона Бурмалды',img:'',rarity:'mythical',price:1200},
-    {id:'h16',name:'Мифический цилиндр',img:'',rarity:'mythical',price:2000}
+    {id:'h1',name:'Оригинальная шляпа',img:'Zalypki/z1.jpg',rarity:'common',price:3},
+    {id:'h2',name:'Пельменная шляпа',img:'Zalypki/z2.jpg',rarity:'common',price:5},
+    {id:'h3',name:'Картонная шляпа',img:'Zalypki/z3.jpg',rarity:'common',price:8},
+    {id:'h4',name:'Деревянная шляпа',img:'Zalypki/z4.jpg',rarity:'uncommon',price:12},
+    {id:'h5',name:'Восковая шляпа',img:'Zalypki/z5.jpg',rarity:'uncommon',price:18},
+    {id:'h6',name:'Резиновая шляпа',img:'Zalypki/z6.jpg',rarity:'uncommon',price:25},
+    {id:'h7',name:'Бетонная шляпа',img:'Zalypki/z7.jpg',rarity:'rare',price:40},
+    {id:'h8',name:'Кварцевая шляпа',img:'Zalypki/z8.jpg',rarity:'rare',price:60},
+    {id:'h9',name:'Железная шляпа',img:'Zalypki/z9.jpg',rarity:'rare',price:80},
+    {id:'h10',name:'Золотая шляпа',img:'Zalypki/z10.jpg',rarity:'epic',price:120},
+    {id:'h11',name:'Рубиновая шляпа',img:'Zalypki/z11.jpg',rarity:'epic',price:180},
+    {id:'h12',name:'Аметистовая шляпа',img:'Zalypki/z12.jpg',rarity:'epic',price:250},
+    {id:'h13',name:'Сапфировая шляпа',img:'Zalypki/z13.jpg',rarity:'legendary',price:400},
+    {id:'h14',name:'Алмазная шляпа',img:'Zalypki/z14.jpg',rarity:'legendary',price:650},
+    {id:'h15',name:'Драгоценная шляпа',img:'Zalypki/z15.jpg',rarity:'mythical',price:1200},
+    {id:'h16',name:'Космическая шляпа',img:'Zalypki/z16.jpg',rarity:'mythical',price:2000}
 ];
 function hatIcon(h,size){
     if(!h.img) return '<span style="display:inline-block;width:'+size+'px;height:'+size+'px;"></span>';
@@ -441,7 +443,7 @@ function doUpgrade(){
     const roll=Math.random()*100;
     const win=roll<=state.chance;
     const landingAngle=(roll/100)*360;      // где стрелка окажется на круге (0-360°)
-    const SPINS=2;                          // сколько полных кругов "намотать" перед остановкой
+    const SPINS=4;                          // сколько полных кругов "намотать" перед остановкой
     const needle=document.getElementById('needle');
 
     // мгновенно ставим стрелку в текущую позицию без анимации, чтобы не было рывка назад
@@ -449,13 +451,13 @@ function doUpgrade(){
     void needle.offsetWidth;
     needle.classList.remove('spinning');
 
-    // затем — долгий плавный поворот: 2 полных оборота + финальный угол.
-    // cubic-bezier(0.08,0.82,0.15,1) даёт быстрый разгон в начале и долгое плавное торможение в конце.
+    // затем — долгий плавный поворот: 4 полных оборота + финальный угол.
+    // cubic-bezier(0.1,0.7,0.1,1) даёт быстрый разгон в начале и долгое плавное торможение в конце (~4.5 сек).
     requestAnimationFrame(()=>{
         needle.style.transform='rotate('+(SPINS*360+landingAngle)+'deg)';
     });
 
-    setTimeout(()=>finishUpgrade(win), 3300);
+    setTimeout(()=>finishUpgrade(win), 4700);
 }
 
 function finishUpgrade(win){

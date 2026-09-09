@@ -755,7 +755,7 @@ input:-webkit-autofill:focus {
     <div id="shop-hats-block" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;" onclick="toggleHatsShop()">
             <span style="width:28px;height:28px;overflow:hidden;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <img src="images/hats-shop-icon.png" alt="" width="28" height="28" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
+                <img src="Zalypki/z1.jpg" alt="" width="28" height="28" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
             </span>
             <div style="flex:1;">
                 <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#fff;">ШЛЯПЫ</div>
@@ -981,7 +981,7 @@ input:-webkit-autofill:focus {
         <a href="upgrade.html" class="game-card">
             <div class="game-card-inner">
                 <div class="game-icon" style="width:44px;height:44px;overflow:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);filter:drop-shadow(0 0 8px rgba(255,180,0,0.5));">
-                    <img src="images/upgrade-icon.png" alt="" width="44" height="44" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
+                    <img src="Zalypki/z1.jpg" alt="" width="44" height="44" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
                 </div>
                 <div style="flex: 1">
                     <div class="game-name">АПГРЕЙД</div>
@@ -1967,22 +1967,22 @@ function buyNormalNick(){
 /* ===== 🎩 ШЛЯПЫ: каталог и магазин ===== */
 /* img: путь к своей картинке (например 'images/hats/h1.png'). Пока img не задан — плитка просто пустая (без смайликов). */
 const HAT_CATALOG=[
-    {id:'h1',name:'Кепка "Дно"',img:'',rarity:'common',price:3},
-    {id:'h2',name:'Рыночная панама',img:'',rarity:'common',price:5},
-    {id:'h3',name:'Строительная каска',img:'',rarity:'common',price:8},
-    {id:'h4',name:'Ушанка турбо',img:'',rarity:'uncommon',price:12},
-    {id:'h5',name:'Выпускной берет',img:'',rarity:'uncommon',price:18},
-    {id:'h6',name:'Каска прораба',img:'',rarity:'uncommon',price:25},
-    {id:'h7',name:'Цилиндр джентльмена',img:'',rarity:'rare',price:40},
-    {id:'h8',name:'Шляпа магната',img:'',rarity:'rare',price:60},
-    {id:'h9',name:'Военный шлем "Элит"',img:'',rarity:'rare',price:80},
-    {id:'h10',name:'Цилиндр казино',img:'',rarity:'epic',price:120},
-    {id:'h11',name:'Шлем чемпиона',img:'',rarity:'epic',price:180},
-    {id:'h12',name:'Бриллиантовая каска',img:'',rarity:'epic',price:250},
-    {id:'h13',name:'Золотой цилиндр',img:'',rarity:'legendary',price:400},
-    {id:'h14',name:'Корона авторитета',img:'',rarity:'legendary',price:650},
-    {id:'h15',name:'Корона Бурмалды',img:'',rarity:'mythical',price:1200},
-    {id:'h16',name:'Мифический цилиндр',img:'',rarity:'mythical',price:2000}
+    {id:'h1',name:'Оригинальная шляпа',img:'Zalypki/z1.jpg',rarity:'common',price:3},
+    {id:'h2',name:'Пельменная шляпа',img:'Zalypki/z2.jpg',rarity:'common',price:5},
+    {id:'h3',name:'Картонная шляпа',img:'Zalypki/z3.jpg',rarity:'common',price:8},
+    {id:'h4',name:'Деревянная шляпа',img:'Zalypki/z4.jpg',rarity:'uncommon',price:12},
+    {id:'h5',name:'Восковая шляпа',img:'Zalypki/z5.jpg',rarity:'uncommon',price:18},
+    {id:'h6',name:'Резиновая шляпа',img:'Zalypki/z6.jpg',rarity:'uncommon',price:25},
+    {id:'h7',name:'Бетонная шляпа',img:'Zalypki/z7.jpg',rarity:'rare',price:40},
+    {id:'h8',name:'Кварцевая шляпа',img:'Zalypki/z8.jpg',rarity:'rare',price:60},
+    {id:'h9',name:'Железная шляпа',img:'Zalypki/z9.jpg',rarity:'rare',price:80},
+    {id:'h10',name:'Золотая шляпа',img:'Zalypki/z10.jpg',rarity:'epic',price:120},
+    {id:'h11',name:'Рубиновая шляпа',img:'Zalypki/z11.jpg',rarity:'epic',price:180},
+    {id:'h12',name:'Аметистовая шляпа',img:'Zalypki/z12.jpg',rarity:'epic',price:250},
+    {id:'h13',name:'Сапфировая шляпа',img:'Zalypki/z13.jpg',rarity:'legendary',price:400},
+    {id:'h14',name:'Алмазная шляпа',img:'Zalypki/z14.jpg',rarity:'legendary',price:650},
+    {id:'h15',name:'Драгоценная шляпа',img:'Zalypki/z15.jpg',rarity:'mythical',price:1200},
+    {id:'h16',name:'Космическая шляпа',img:'Zalypki/z16.jpg',rarity:'mythical',price:2000}
 ];
 function hatIcon(h,size){
     if(!h.img) return '<span style="display:inline-block;width:'+size+'px;height:'+size+'px;"></span>';
