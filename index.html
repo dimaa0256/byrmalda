@@ -752,7 +752,7 @@ input:-webkit-autofill:focus {
         </div>
     </div>
 
-    <!-- 🎩 ШЛЯПЫ -->
+    <!-- ШЛЯПЫ -->
     <div id="shop-hats-block" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;" onclick="toggleHatsShop()">
             <span style="width:28px;height:28px;overflow:hidden;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -774,7 +774,7 @@ input:-webkit-autofill:focus {
 <div id="inventory-panel" style="display:none;background:linear-gradient(160deg,#0a0015,#150020);border:2px solid rgba(80,220,120,0.3);border-radius:22px;padding:18px;margin-bottom:12px;" onclick="event.stopPropagation()">
     <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:14px;color:#8effa1;">🎒 ИНВЕНТАРЬ</div>
     <div id="inventory-list" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:340px;overflow-y:auto;margin-bottom:10px;"></div>
-    <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px;">Хочешь прокачать шляпу до редкой? Загляни в <a href="upgrade.html" style="color:#ffd700;">🎩 Апгрейд</a></div>
+    <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px;">Хочешь прокачать шляпу до редкой? Загляни в <a href="upgrade.html" style="color:#ffd700;">Апгрейд</a></div>
     <button onclick="closeInventory()" style="width:100%;padding:9px;margin-top:4px;border-radius:12px;background:transparent;color:rgba(80,220,120,0.45);border:1px solid rgba(80,220,120,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
 </div> 
 
@@ -835,7 +835,7 @@ input:-webkit-autofill:focus {
                 </div>
             </div>
             <div style="margin-bottom:8px;">
-                <div style="color:rgba(255,255,255,0.6);font-size:13px;font-family:Nunito,sans-serif;margin-bottom:6px;">🎩 Шляпы (<span id="lap-hats-count">0</span>):</div>
+                <div style="color:rgba(255,255,255,0.6);font-size:13px;font-family:Nunito,sans-serif;margin-bottom:6px;">Шляпы (<span id="lap-hats-count">0</span>):</div>
                 <div id="lap-hats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-height:160px;overflow-y:auto;background:rgba(0,0,0,0.3);border-radius:8px;padding:6px;"></div>
             </div>
             <div style="display:flex;gap:6px;margin-bottom:8px;">
@@ -993,7 +993,7 @@ input:-webkit-autofill:focus {
         </a>
         <a href="upgrade.html" class="game-card">
             <div class="game-card-inner">
-                <div class="game-icon" style="width:44px;height:44px;overflow:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);filter:drop-shadow(0 0 8px rgba(255,180,0,0.5));">
+                <div class="game-icon" style="width:44px;height:44px;overflow:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);">
                     <img src="ap.png" alt="" width="44" height="44" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
                 </div>
                 <div style="flex: 1">
@@ -2008,7 +2008,7 @@ function buyNormalNick(){
         db.ref('players/'+currentUid+'/history').once('value').then(function(hs){var h=hs.val()||[];h.push('🔤 Обычный ник — 50 АР');db.ref('players/'+currentUid+'/history').set(h.slice(-50));});
     });
 }
-/* ===== 🎩 ШЛЯПЫ: каталог и магазин ===== */
+/* ===== ШЛЯПЫ: каталог и магазин ===== */
 /* img: путь к своей картинке (например 'images/hats/h1.png'). Пока img не задан — плитка просто пустая (без смайликов). */
 const HAT_CATALOG=[
     {id:'h1',name:'Оригинальная шляпа',img:'Zalypki/z1.jpg',rarity:'common',price:3},
@@ -2070,7 +2070,7 @@ function buyHat(hatId){
     if(!currentUid){alert('Сначала войдите в аккаунт');return;}
     var hat=HAT_CATALOG.find(function(h){return h.id===hatId;});
     if(!hat)return;
-    if(hat.buyable===false){alert('Эту шляпу нельзя купить — её можно только выиграть в 🎩 Апгрейде!');return;}
+    if(hat.buyable===false){alert('Эту шляпу нельзя купить — её можно только выиграть в Апгрейде!');return;}
     db.ref('players/'+currentUid).once('value').then(function(s){
         var d=s.val()||{};
         var bal=d.balance||0;
@@ -2079,7 +2079,7 @@ function buyHat(hatId){
         var updates={};
         updates['balance']=bal-hat.price;
         updates['hats/'+key]={catalogId:hat.id,price:hat.price,ts:Date.now()};
-        updates['history']=(d.history||[]).concat(['🎩 Куплена шляпа: '+hat.name+' -'+hat.price+' АР']).slice(-50);
+        updates['history']=(d.history||[]).concat(['Куплена шляпа: '+hat.name+' -'+hat.price+' АР']).slice(-50);
         db.ref('players/'+currentUid).update(updates).then(function(){
             renderHatsShop();
         });
@@ -2126,7 +2126,7 @@ function renderInventoryPanel(){
         var items=Object.entries(d).map(function(e){return {key:e[0],data:e[1]};});
         if(!items.length){
             wrap.style.display='block';
-            wrap.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:24px 10px;color:rgba(255,255,255,0.4);font-size:12px;font-weight:700;line-height:1.6;">У вас пока нет шляп.<br>Загляните в 🎩 раздел «Шляпы» в магазине!</div>';
+            wrap.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:24px 10px;color:rgba(255,255,255,0.4);font-size:12px;font-weight:700;line-height:1.6;">У вас пока нет шляп, их можно приобрести в магазине.<br>Шляпы можно улучшать в <a href="upgrade.html" style="color:#ffd700;">апгрейде</a>.</div>';
             return;
         }
         wrap.style.display='grid';

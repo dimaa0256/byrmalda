@@ -225,7 +225,7 @@ body {
 
   <div class="warn" id="warn-text"></div>
 
-  <button class="btn-upgrade" id="upgrade-btn" disabled onclick="doUpgrade()">🎩 ПРОКАЧАТЬ</button>
+  <button class="btn-upgrade" id="upgrade-btn" disabled onclick="doUpgrade()">ПРОКАЧАТЬ</button>
 </div>
 
 </div>
@@ -476,7 +476,7 @@ function go(){
     applyVolumes(); renderPlaylist();
     localStorage.setItem('lobbyUser', user);
     localStorage.setItem('lobbyUid', uid);
-    db.ref('players/'+uid).update({lastSeen:Date.now(),currentPage:'🎩 Апгрейд'});
+    db.ref('players/'+uid).update({lastSeen:Date.now(),currentPage:'Апгрейд'});
     db.ref('players/'+uid).on('value', s=>{
         const d=s.val()||{};
         document.getElementById('balance').textContent=(d.balance||0)+' АР';
@@ -530,7 +530,7 @@ function renderInventory(){
     const grid=document.getElementById('inv-grid');
     document.getElementById('inv-count').textContent=inventory.length;
     if(!inventory.length){
-        grid.innerHTML='<div class="empty-inv" style="grid-column:1/-1">У вас пока нет шляп.<br>Загляните в <a href="index.html">🛒 Магазин</a> на главной!</div>';
+        grid.innerHTML='<div class="empty-inv" style="grid-column:1/-1">У вас пока нет шляп, их можно приобрести в <a href="index.html">магазине</a>.</div>';
         return;
     }
     grid.innerHTML=inventory.map(h=>{
@@ -663,9 +663,9 @@ function finishUpgrade(win){
         if(win){
             const newKey=db.ref('players/'+uid+'/hats').push().key;
             updates['hats/'+newKey]={catalogId:target.id,price:target.price,ts:Date.now()};
-            historyLine='🎩 Апгрейд ✅: '+stakedHats.length+' шляп → '+target.name;
+            historyLine='Апгрейд ✅: '+stakedHats.length+' шляп → '+target.name;
         } else {
-            historyLine='🎩 Апгрейд ❌: сгорело '+stakedHats.length+' шляп ('+stakedHats.reduce((s,h)=>s+h.price,0)+' АР)';
+            historyLine='Апгрейд ❌: сгорело '+stakedHats.length+' шляп ('+stakedHats.reduce((s,h)=>s+h.price,0)+' АР)';
         }
         updates['history']=(d.history||[]).concat([historyLine]).slice(-50);
         db.ref('players/'+uid).update(updates).then(()=>{
