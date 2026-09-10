@@ -774,7 +774,7 @@ input:-webkit-autofill:focus {
 <div id="inventory-panel" style="display:none;background:linear-gradient(160deg,#0a0015,#150020);border:2px solid rgba(80,220,120,0.3);border-radius:22px;padding:18px;margin-bottom:12px;" onclick="event.stopPropagation()">
     <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:14px;color:#8effa1;">🎒 ИНВЕНТАРЬ</div>
     <div id="inventory-list" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:340px;overflow-y:auto;margin-bottom:10px;"></div>
-    <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px;">Хочешь прокачать шляпу до редкой? Загляни в <a href="upgrade.html" style="color:#ffd700;">Апгрейд</a></div>
+    <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px;">Хочешь прокачать шляпу? Загляни в <a href="upgrade.html" style="color:#ffd700;">Апгрейд</a></div>
     <button onclick="closeInventory()" style="width:100%;padding:9px;margin-top:4px;border-radius:12px;background:transparent;color:rgba(80,220,120,0.45);border:1px solid rgba(80,220,120,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
 </div> 
 
@@ -2126,7 +2126,7 @@ function renderInventoryPanel(){
         var items=Object.entries(d).map(function(e){return {key:e[0],data:e[1]};});
         if(!items.length){
             wrap.style.display='block';
-            wrap.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:24px 10px;color:rgba(255,255,255,0.4);font-size:12px;font-weight:700;line-height:1.6;">У вас пока нет шляп, их можно приобрести в магазине.<br>Шляпы можно улучшать в <a href="upgrade.html" style="color:#ffd700;">апгрейде</a>.</div>';
+            wrap.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:24px 10px;color:rgba(255,255,255,0.4);font-size:12px;font-weight:700;line-height:1.6;">У вас пока нет шляп, их можно приобрести в магазине.</div>';
             return;
         }
         wrap.style.display='grid';
