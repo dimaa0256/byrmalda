@@ -156,7 +156,6 @@ body {
 <div id="game-section" style="display:none">
   <div class="top-row">
     <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
-    <div class="settings-btn" onclick="toggleSettings(event)">⚙️</div>
   </div>
   <div class="title">АПГРЕЙД</div>
   <div class="subtitle">СТАВЬ ШЛЯПЫ · ЛОВИ ШАНС</div>
@@ -171,8 +170,11 @@ body {
 
 
   <div class="balance-bar">
-    <div><div class="lab">БАЛАНС</div><div class="val" id="balance">0 АР</div></div>
-    <div><div class="lab" style="text-align:right">ШЛЯП В ИНВЕНТАРЕ</div><div class="val" id="inv-count" style="text-align:right">0</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex:1;">
+        <div><div class="lab">БАЛАНС</div><div class="val" id="balance">0 АР</div></div>
+        <div><div class="lab" style="text-align:right">ШЛЯП В ИНВЕНТАРЕ</div><div class="val" id="inv-count" style="text-align:right">0</div></div>
+    </div>
+    <div class="settings-btn" onclick="toggleSettings(event)" style="margin-left:10px;width:32px;height:32px;font-size:15px;">⚙️</div>
   </div>
 
   <!-- ГЕЙДЖ ШАНСА -->

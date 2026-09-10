@@ -686,6 +686,7 @@ input:-webkit-autofill:focus {
                 <button onclick="openQuests()" id="quests-btn" class="nmb" style="color:#cc88ff;border-color:rgba(150,0,255,0.3);">📋 КВЕСТЫ</button>
                 <button onclick="openDuels()" id="duels-btn" class="nmb" style="color:#ff88aa;border-color:rgba(255,0,80,0.3);">⚔️ ДУЭЛЬ</button>
                 <button onclick="openShop()" id="shop-btn" class="nmb" style="color:#ffdd88;border-color:rgba(255,200,0,0.3);">🛒 МАГАЗИН</button>
+                <button onclick="openInventory()" id="inventory-btn" class="nmb" style="color:#8effa1;border-color:rgba(80,220,120,0.3);">🎒 ИНВЕНТАРЬ</button>
             </div>
         </div>
 <div id="daily-reward-wrap" style="display: none; margin-top: 8px">
@@ -755,11 +756,11 @@ input:-webkit-autofill:focus {
     <div id="shop-hats-block" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;" onclick="toggleHatsShop()">
             <span style="width:28px;height:28px;overflow:hidden;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <img src="Zalypki/z0.jpg" alt="" width="28" height="28" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
+                <img src="m.png" alt="" width="28" height="28" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
             </span>
             <div style="flex:1;">
                 <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#fff;">ШЛЯПЫ</div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">Собирай шляпы и прокачивай их в <a href="upgrade.html" style="color:#ffd700;" onclick="event.stopPropagation()">апгрейде</a></div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">Собирай и коллекционируй шляпы</div>
             </div>
             <span id="shop-hats-arrow" style="color:rgba(255,200,0,0.6);font-size:14px;transition:transform .2s;">▾</span>
         </div>
@@ -767,6 +768,14 @@ input:-webkit-autofill:focus {
     </div>
 
     <button onclick="closeShop()" style="width:100%;padding:9px;margin-top:4px;border-radius:12px;background:transparent;color:rgba(255,180,0,0.45);border:1px solid rgba(255,180,0,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
+</div> 
+
+<!-- ИНВЕНТАРЬ -->
+<div id="inventory-panel" style="display:none;background:linear-gradient(160deg,#0a0015,#150020);border:2px solid rgba(80,220,120,0.3);border-radius:22px;padding:18px;margin-bottom:12px;" onclick="event.stopPropagation()">
+    <div style="font-family:'Fredoka One',cursive;font-size:17px;letter-spacing:2px;text-align:center;margin-bottom:14px;color:#8effa1;">🎒 ИНВЕНТАРЬ</div>
+    <div id="inventory-list" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:340px;overflow-y:auto;margin-bottom:10px;"></div>
+    <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px;">Хочешь прокачать шляпу до редкой? Загляни в <a href="upgrade.html" style="color:#ffd700;">🎩 Апгрейд</a></div>
+    <button onclick="closeInventory()" style="width:100%;padding:9px;margin-top:4px;border-radius:12px;background:transparent;color:rgba(80,220,120,0.45);border:1px solid rgba(80,220,120,0.2);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;">✕ ЗАКРЫТЬ</button>
 </div> 
 
     
@@ -824,6 +833,10 @@ input:-webkit-autofill:focus {
                     <span id="lap-egg-count" style="color:#ffdd44;font-family:'Fredoka One',cursive;font-size:15px;"></span>
                     <button onclick="lapClearEggs()" style="padding:3px 9px;border-radius:7px;background:rgba(255,50,0,0.2);border:1px solid rgba(255,50,0,0.3);color:#ff8844;font-family:'Fredoka One',cursive;font-size:10px;cursor:pointer;">✕</button>
                 </div>
+            </div>
+            <div style="margin-bottom:8px;">
+                <div style="color:rgba(255,255,255,0.6);font-size:13px;font-family:Nunito,sans-serif;margin-bottom:6px;">🎩 Шляпы (<span id="lap-hats-count">0</span>):</div>
+                <div id="lap-hats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-height:160px;overflow-y:auto;background:rgba(0,0,0,0.3);border-radius:8px;padding:6px;"></div>
             </div>
             <div style="display:flex;gap:6px;margin-bottom:8px;">
                 <button onclick="lapMod(1)" style="flex:1;padding:7px;background:rgba(0,180,0,0.2);color:#66ff88;border:1px solid rgba(0,200,0,0.3);border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:13px;">+1</button>
@@ -981,7 +994,7 @@ input:-webkit-autofill:focus {
         <a href="upgrade.html" class="game-card">
             <div class="game-card-inner">
                 <div class="game-icon" style="width:44px;height:44px;overflow:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);filter:drop-shadow(0 0 8px rgba(255,180,0,0.5));">
-                    <img src="Zalypki/z0.jpg" alt="" width="44" height="44" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
+                    <img src="ap.png" alt="" width="44" height="44" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility='hidden'">
                 </div>
                 <div style="flex: 1">
                     <div class="game-name">АПГРЕЙД</div>
@@ -1218,13 +1231,13 @@ input:-webkit-autofill:focus {
         document.getElementById('auth-block').style.display='block';
         document.getElementById('username').value='';
         document.getElementById('password').value='';
-        ['lobby-admin-panel','leaderboard-panel','quests-panel','shop-panel'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+        ['lobby-admin-panel','leaderboard-panel','quests-panel','shop-panel','inventory-panel'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
     }
 
     document.addEventListener('click', function(e){
-        const panels=['lobby-admin-panel','leaderboard-panel','quests-panel','shop-panel'];
+        const panels=['lobby-admin-panel','leaderboard-panel','quests-panel','shop-panel','inventory-panel'];
         const inside=panels.some(id=>document.getElementById(id)&&document.getElementById(id).contains(e.target));
-        const onBtn=e.target.closest('button')&&(e.target.closest('button').getAttribute('onclick')||'').match(/openVip|openLeaderboard|openQuests|openLobbyAdmin|openShop|toggleNavMenu|openSupportChat/);
+        const onBtn=e.target.closest('button')&&(e.target.closest('button').getAttribute('onclick')||'').match(/openVip|openLeaderboard|openQuests|openLobbyAdmin|openShop|openInventory|toggleNavMenu|openSupportChat/);
         if(!inside&&!onBtn) panels.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
     });
 
@@ -1439,6 +1452,7 @@ input:-webkit-autofill:focus {
             var lapEW=document.getElementById('lap-egg-wrap');
             if(lapEW){if(typeof easterActive!=='undefined'&&easterActive&&(d.eggs||0)>0){lapEW.style.display='flex';document.getElementById('lap-egg-count').textContent=(d.eggs||0)+' 🥚';}else lapEW.style.display='none';}
             document.getElementById('lap-history').innerHTML=[...(d.history||[])].reverse().map(h=>`<div style="padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05)">${h}</div>`).join('');
+            renderLapHats(d.hats||{});
             const vb=document.getElementById('lap-verified-btn');
             vb.style.cssText=`flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:12px;border:none;background:${d.verified?'rgba(0,180,0,0.3)':'rgba(255,255,255,0.05)'};color:${d.verified?'#66ff88':'rgba(255,255,255,0.5)'};border:${d.verified?'1px solid rgba(0,200,0,0.4)':'1px solid rgba(255,255,255,0.1)'};`;
             const pb=document.getElementById('lap-pinned-btn');
@@ -1457,6 +1471,34 @@ input:-webkit-autofill:focus {
         if(!confirm('Убрать все яйца?'))return;
         db.ref('players/'+lapUser+'/eggs').set(0);
         var ew=document.getElementById('lap-egg-wrap');if(ew)ew.style.display='none';
+    }
+    function renderLapHats(hats){
+        var wrap=document.getElementById('lap-hats');
+        var countEl=document.getElementById('lap-hats-count');
+        if(!wrap)return;
+        var items=Object.entries(hats||{});
+        if(countEl)countEl.textContent=items.length;
+        if(!items.length){
+            wrap.innerHTML='<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.3);font-size:11px;padding:8px;">нет шляп</div>';
+            return;
+        }
+        wrap.innerHTML=items.map(function(e){
+            var key=e[0], h=e[1];
+            var cat=(typeof HAT_CATALOG!=='undefined')?HAT_CATALOG.find(function(c){return c.id===h.catalogId;}):null;
+            var c=(typeof RARITY_COLORS!=='undefined'&&cat)?RARITY_COLORS[cat.rarity]:'#888';
+            var icon=(typeof hatIcon==='function'&&cat)?hatIcon(cat,26):'';
+            return '<div style="position:relative;aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,0.04);border:1.5px solid '+c+';display:flex;align-items:center;justify-content:center;">'
+                +icon
+                +'<div onclick="event.stopPropagation();lapDeleteHat(\''+key+'\')" title="Удалить" style="position:absolute;top:1px;right:1px;width:14px;height:14px;border-radius:50%;background:rgba(0,0,0,0.7);border:1px solid rgba(255,80,80,0.6);color:#ff6666;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;">✕</div>'
+                +'</div>';
+        }).join('');
+    }
+    function lapDeleteHat(key){
+        if(!lapUser)return;
+        if(!confirm('Удалить эту шляпу у игрока?'))return;
+        db.ref('players/'+lapUser+'/hats/'+key).remove().then(function(){
+            db.ref('players/'+lapUser+'/hats').once('value').then(function(s){ renderLapHats(s.val()||{}); });
+        });
     }
     function lapToggleDailyEnabled(){ lapToggle('dailyEnabled','lap-daily-btn',{bg:'rgba(0,200,100,0.3)',color:'#00e676',border:'1px solid rgba(0,200,100,0.4)'}); }
     function openAdminForUser(uid){ window.open('admin.html?user='+encodeURIComponent(uid),'_blank'); }
@@ -2061,6 +2103,64 @@ function openShop(){
 function closeShop(){
     var sp=document.getElementById('shop-panel');if(sp)sp.style.display='none';
     if(shopTimerIv){clearInterval(shopTimerIv);shopTimerIv=null;}
+}
+
+/* ===== 🎒 ИНВЕНТАРЬ (просмотр своих шляп из лобби) ===== */
+function openInventory(){
+    if(!currentUid){alert('Сначала войдите в аккаунт');return;}
+    ['lobby-admin-panel','leaderboard-panel','quests-panel','shop-panel'].forEach(function(p){var el=document.getElementById(p);if(el)el.style.display='none';});
+    var ip=document.getElementById('inventory-panel');
+    if(!ip)return;
+    var open=ip.style.display==='block';
+    ip.style.display=open?'none':'block';
+    if(!open)renderInventoryPanel();
+}
+function closeInventory(){
+    var ip=document.getElementById('inventory-panel');if(ip)ip.style.display='none';
+}
+function renderInventoryPanel(){
+    var wrap=document.getElementById('inventory-list');
+    if(!wrap||!currentUid)return;
+    db.ref('players/'+currentUid+'/hats').once('value').then(function(s){
+        var d=s.val()||{};
+        var items=Object.entries(d).map(function(e){return {key:e[0],data:e[1]};});
+        if(!items.length){
+            wrap.style.display='block';
+            wrap.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:24px 10px;color:rgba(255,255,255,0.4);font-size:12px;font-weight:700;line-height:1.6;">У вас пока нет шляп.<br>Загляните в 🎩 раздел «Шляпы» в магазине!</div>';
+            return;
+        }
+        wrap.style.display='grid';
+        wrap.innerHTML=items.map(function(it){
+            var cat=HAT_CATALOG.find(function(h){return h.id===it.data.catalogId;})||{};
+            var c=RARITY_COLORS[cat.rarity]||'#888';
+            var sellPrice=Math.floor((it.data.price||0)*0.9);
+            return '<div style="position:relative;aspect-ratio:1;border-radius:14px;background:rgba(255,255,255,0.03);border:2px solid '+c+';display:flex;flex-direction:column;align-items:center;justify-content:center;">'
+                +'<div title="Продать за '+sellPrice+' АР" onclick="event.stopPropagation();sellHatLobby(\''+it.key+'\')" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,0.65);border:1px solid rgba(77,255,150,0.6);color:#8effa1;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;">💰</div>'
+                +hatIcon(cat,30)
+                +'<div style="font-size:9px;font-weight:900;color:#ffd700;margin-top:2px;">'+(it.data.price||0)+' АР</div>'
+                +'</div>';
+        }).join('');
+    });
+}
+function sellHatLobby(key){
+    if(!currentUid)return;
+    db.ref('players/'+currentUid+'/hats/'+key).once('value').then(function(s){
+        var h=s.val();
+        if(!h)return;
+        var cat=HAT_CATALOG.find(function(c){return c.id===h.catalogId;});
+        var refund=Math.floor((h.price||0)*0.9);
+        if(!confirm('Продать «'+(cat?cat.name:'шляпу')+'» за '+refund+' АР?'))return;
+        db.ref('players/'+currentUid).once('value').then(function(s2){
+            var d=s2.val()||{};
+            var updates={};
+            updates['balance']=(d.balance||0)+refund;
+            updates['hats/'+key]=null;
+            updates['history']=(d.history||[]).concat(['💰 Продана шляпа: '+(cat?cat.name:'?')+' +'+refund+' АР']).slice(-50);
+            db.ref('players/'+currentUid).update(updates).then(function(){
+                renderInventoryPanel();
+            });
+        });
+    });
 }
 function updateShopTimer(){
     var now=Date.now();
