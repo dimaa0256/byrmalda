@@ -19,10 +19,28 @@ body {
     font-family:'Nunito',sans-serif;
     color:#fff;
 }
-.wrap { width:100%; max-width:420px; padding:16px 16px 40px; }
+.wrap { width:100%; max-width:420px; padding:16px 16px 40px; position:relative; }
 .back-link { display:block; text-align:center; font-family:'Fredoka One',cursive; font-size:12px; letter-spacing:2px; color:rgba(255,180,0,0.5); text-decoration:none; margin-bottom:8px; }
 .title { font-family:'Fredoka One',cursive; font-size:26px; letter-spacing:4px; text-align:center; color:#fff; text-shadow:0 0 16px rgba(255,150,0,0.5); margin-bottom:4px; }
 .subtitle { text-align:center; font-size:11px; color:rgba(255,200,150,0.4); font-weight:800; letter-spacing:1px; margin-bottom:14px; }
+
+.top-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
+.top-row .back-link { margin-bottom:0; }
+.settings-btn { width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,180,0,0.25); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; transition:all .3s; flex-shrink:0; }
+.settings-btn:hover { background:rgba(255,180,0,0.15); transform:rotate(45deg); }
+
+#settings-panel { display:none; position:absolute; top:8px; left:8px; right:8px; background:linear-gradient(160deg,#180020,#0a0015); border:2px solid rgba(255,200,0,0.4); padding:20px 18px; z-index:100; border-radius:22px; box-shadow:0 20px 60px rgba(0,0,0,0.95); }
+.panel-title { font-family:'Fredoka One',cursive; font-size:18px; letter-spacing:2px; text-align:center; margin-bottom:14px; color:#ffd700; }
+.music-list { background:rgba(0,0,0,0.45); border:1px solid rgba(255,180,0,0.15); border-radius:12px; padding:4px; max-height:180px; overflow-y:auto; margin-bottom:10px; scrollbar-width:thin; }
+.music-item { display:flex; align-items:center; padding:7px 10px; font-size:12px; font-weight:700; color:rgba(255,220,150,0.55); border-radius:8px; }
+.music-item:hover { background:rgba(255,100,0,0.07); }
+.music-item.active { color:#ffd700; background:rgba(255,100,0,0.12); }
+.music-item label { flex-grow:1; cursor:pointer; }
+.loop-checkbox { width:16px; height:16px; margin-left:8px; cursor:pointer; accent-color:#ff3300; }
+.mute-toggle { padding:10px 14px; border-radius:10px; width:100%; font-family:'Nunito',sans-serif; font-size:13px; font-weight:800; letter-spacing:1px; cursor:pointer; border:1px solid; margin-bottom:8px; transition:all .2s; }
+.mute-toggle.on { background:rgba(46,125,50,0.2); color:#66bb6a; border-color:rgba(76,175,80,0.3); }
+.mute-toggle.off { background:rgba(192,57,43,0.2); color:#ef5350; border-color:rgba(231,76,60,0.3); }
+.btn-panel-close { width:100%; padding:9px; margin-top:4px; border-radius:12px; background:transparent; color:rgba(255,180,0,0.45); border:1px solid rgba(255,180,0,0.2); cursor:pointer; font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; letter-spacing:3px; }
 
 #auth-section input {
     width:100%; padding:12px; margin-bottom:10px; border-radius:12px;
@@ -136,9 +154,21 @@ body {
 
 <!-- ИГРА -->
 <div id="game-section" style="display:none">
-  <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
+  <div class="top-row">
+    <a href="index.html" class="back-link">← ГЛАВНАЯ</a>
+    <div class="settings-btn" onclick="toggleSettings(event)">⚙️</div>
+  </div>
   <div class="title">АПГРЕЙД</div>
   <div class="subtitle">СТАВЬ ШЛЯПЫ · ЛОВИ ШАНС</div>
+
+  <div id="settings-panel" onclick="event.stopPropagation()">
+      <div class="panel-title">🎵 ПЛЕЙЛИСТ</div>
+      <div class="music-list" id="music-playlist"></div>
+      <button id="m-toggle" class="mute-toggle on" onclick="toggleMute()">🎵 МУЗЫКА: ВКЛ</button>
+      <input type="range" id="music-vol" min="0" max="1" step="0.1" value="0.3" oninput="applyVolumes()" style="width:100%;margin-bottom:4px;">
+      <button onclick="closePanels()" class="btn-panel-close">✕ ЗАКРЫТЬ</button>
+  </div>
+
 
   <div class="balance-bar">
     <div><div class="lab">БАЛАНС</div><div class="val" id="balance">0 АР</div></div>
@@ -222,13 +252,156 @@ const firebaseConfig={apiKey:"AIzaSyCYptPoeocCbngAMfG_R-t32FOfIGJY13s",databaseU
 if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db=firebase.database(), auth=firebase.auth();
 let uid='',user='';
+    const playlist=[
+    {file:'sounds/2_dnevni_zapoi_1.mp3', name:'2 Дневных Запоя'},
+    {file:'sounds/Okolo_tebya.mp3', name:'Около Тебя'},
+    {file:'sounds/U_menya_est_qr_code.mp3', name:'У Меня Есть QR Code'},
+    {file:'sounds/a4.mp3', name:'A4'},
+    {file:'sounds/a_on_tebya_tseluet.mp3', name:'А Он Тебя Целует'},
+    {file:'sounds/ananasevi_sirop_1.mp3', name:'Ананасевый Сироп'},
+    {file:'sounds/angry_birds.mp3', name:'Angry Birds'},
+    {file:'sounds/are_you_are_you_coming_to_the_tree.mp3', name:'Are You Coming to the Tree'},
+    {file:'sounds/around_the_world.mp3', name:'Around the World'},
+    {file:'sounds/bablgam_1.mp3', name:'Баблгам 1'},
+    {file:'sounds/bablgam_2.mp3', name:'Баблгам 2'},
+    {file:'sounds/baclachn.mp3', name:'Балаклан'},
+    {file:'sounds/bad_piggies.mp3', name:'Bad Piggies'},
+    {file:'sounds/bam_bam_bam_1.mp3', name:'Бам Бам Бам'},
+    {file:'sounds/banyu_zatopili.mp3', name:'Баню Затопили'},
+    {file:'sounds/bayu_bayushki_boyu.mp3', name:'Баю Баюшки Баю'},
+    {file:'sounds/begi_dorogaya_begi.mp3', name:'Беги Дорогая Беги'},
+    {file:'sounds/bibi.mp3', name:'Bibi'},
+    {file:'sounds/burmaldance.mp3', name:'Бурмалданс'},
+    {file:'sounds/burmalfunk.mp3', name:'Бурмалфанк'},
+    {file:'sounds/chto_ty_ne_moy.mp3', name:'Что Ты Не Мой'},
+    {file:'sounds/dabbackwood.mp3', name:'Dabbackwood'},
+    {file:'sounds/daft_punk.mp3', name:'Daft Punk'},
+    {file:'sounds/dai_cledychi_spin_1.mp3', name:'Дай Следующий Спин'},
+    {file:'sounds/dame_tu_cosita.mp3', name:'Dame Tu Cosita'},
+    {file:'sounds/devchonki_lyubyat_v_dubayakh_otdykhat.mp3', name:'Девчонки в Дубаях'},
+    {file:'sounds/discipline.mp3', name:'Discipline'},
+    {file:'sounds/drunne.mp3', name:'Drunne'},
+    {file:'sounds/echo_posedim_1.mp3', name:'Эхо Посидим'},
+    {file:'sounds/ela_desce.mp3', name:'Ela Desce'},
+    {file:'sounds/fall_from_the_sky.mp3', name:'Fall from the Sky'},
+    {file:'sounds/feel good.mp3', name:'Feel Good'},
+    {file:'sounds/fiksiki.mp3', name:'Фиксики'},
+    {file:'sounds/fnaf.mp3', name:'FNAF'},
+    {file:'sounds/gangnam_style.mp3', name:'Gangnam Style'},
+    {file:'sounds/gigi_za_shagi.mp3', name:'Гиги за Шаги'},
+    {file:'sounds/golden_hammam.mp3', name:'Golden Hammam'},
+    {file:'sounds/gta_IV.mp3', name:'GTA IV'},
+    {file:'sounds/gta_san_andreas.mp3', name:'GTA San Andreas'},
+    {file:'sounds/harder_better_faster_stronger.mp3', name:'Harder Better Faster Stronger'},
+    {file:'sounds/i_think_i_lose_my_mind_in_hysteria.mp3', name:'Hysteria'},
+    {file:'sounds/ice_cube.mp3', name:'Ice Cube'},
+    {file:'sounds/just_the_way_you_are.mp3', name:'Just the Way You Are'},
+    {file:'sounds/koshka_brosila_kotyat.mp3', name:'Кошка Бросила Котят'},
+    {file:'sounds/krasnaya_stoyka.mp3', name:'Красная Стойка'},
+    {file:'sounds/kto_lychi_1.mp3', name:'Кто Лучше'},
+    {file:'sounds/led_led_sutki_na_prolet.mp3', name:'Лёд Лёд Сутки Напролёт'},
+    {file:'sounds/leto.mp3', name:'Лето'},
+    {file:'sounds/mama_ya_lyublyu....mp3', name:'Мама Я Люблю'},
+    {file:'sounds/mne tak tak plokho.mp3', name:'Мне Так Плохо'},
+    {file:'sounds/moya_mechta.mp3', name:'Моя Мечта'},
+    {file:'sounds/mozart.mp3', name:'Моцарт'},
+    {file:'sounds/nauchitsya_by_ne_paritsya po_pustyakam.mp3', name:'Не Париться по Пустякам'},
+    {file:'sounds/no_nekto_ne_prishel.mp3', name:'Никто Не Пришёл'},
+    {file:'sounds/nobody.mp3', name:'Nobody'},
+    {file:'sounds/ny_pogodi.mp3', name:'Ну Погоди'},
+    {file:'sounds/nyan_cat.mp3', name:'Nyan Cat'},
+    {file:'sounds/odin_banan_1.mp3', name:'Один Банан'},
+    {file:'sounds/oi_oi_oi_oi_1.mp3', name:'Ой Ой Ой'},
+    {file:'sounds/on_chuzhoy.mp3', name:'Он Чужой'},
+    {file:'sounds/onion.mp3', name:'Onion'},
+    {file:'sounds/orcestr_BAM_1.mp3', name:'Оркестр БАМ'},
+    {file:'sounds/ot_ulybki_raduga_svetley.mp3', name:'От Улыбки Радуга Светлей'},
+    {file:'sounds/otpysti_menya.mp3', name:'Отпусти Меня'},
+    {file:'sounds/pay_pay_pay.mp3', name:'Pay Pay Pay'},
+    {file:'sounds/pochemu_ty_s_nim_a_ne_so_mnoy.mp3', name:'Почему Ты с Ним'},
+    {file:'sounds/podoydi_zhe_poblizhe.mp3', name:'Подойди Поближе'},
+    {file:'sounds/popipo.mp3', name:'Popipo'},
+    {file:'sounds/poshlaya_molli.mp3', name:'Пошлая Молли'},
+    {file:'sounds/pou.mp3', name:'Pou'},
+    {file:'sounds/ptichki_1.mp3', name:'Птички'},
+    {file:'sounds/pubertat.mp3', name:'Pubertat'},
+    {file:'sounds/pura_aura.mp3', name:'Pura Aura'},
+    {file:'sounds/rush_e.mp3', name:'Rush E'},
+    {file:'sounds/rvanye_dzhinsy.mp3', name:'Рваные Джинсы'},
+    {file:'sounds/show.mp3', name:'Show'},
+    {file:'sounds/skibidi.mp3', name:'Skibidi'},
+    {file:'sounds/suzuki.mp3', name:'Suzuki'},
+    {file:'sounds/tanzelcore.mp3', name:'Tanzelcore'},
+    {file:'sounds/ti_slishkom_molod.mp3', name:'Ты Слишком Молод'},
+    {file:'sounds/tokyo.mp3', name:'Tokyo'},
+    {file:'sounds/toly_summer-byratino.mp3', name:'Буратино — Толя Саммер'},
+    {file:'sounds/toly_summer-tsenite_zhizn.mp3', name:'Цените Жизнь — Толя Саммер'},
+    {file:'sounds/toly_summer-za_gorami_za_lesami.mp3', name:'За Горами За Лесами — Толя Саммер'},
+    {file:'sounds/tung_tung_sahur.mp3', name:'Tung Tung Sahur'},
+    {file:'sounds/u_tebya_est_rendzh_rover.mp3', name:'У Тебя Есть Range Rover'},
+    {file:'sounds/vechno_molodoy.mp3', name:'Вечно Молодой'},
+    {file:"sounds/vernite_v_mody_lybov'.mp3", name:'Верните в Моду Любовь'},
+    {file:'sounds/ya_banan.mp3', name:'Я Банан'},
+    {file:'sounds/ya_ey_ona_mne.mp3', name:'Я Ей Она Мне'},
+    {file:'sounds/ya_lyublyu_basy_pizdets.mp3', name:'Я Люблю Басы'},
+    {file:'sounds/ya_nemnochko_menays_1.mp3', name:'Я Немножко Меняюсь'},
+    {file:'sounds/yara_yara.mp3', name:'Yara Yara'},
+    {file:'sounds/youtube_shorts.mp3', name:'YouTube Shorts'},
+    {file:'sounds/zakroy_glaza.mp3', name:'Закрой Глаза'},
+    {file:'sounds/zapakhlo_vesnoy.mp3', name:'Запахло Весной'},
+    {file:'sounds/zapert_na_ostrove_izza_interpola_1.mp3', name:'Заперт на Острове'},
+    {file:'sounds/zemlya_v_illyuminatore.mp3', name:'Земля в Иллюминаторе'}
+];
+
+let currentTrackIdx=parseInt(localStorage.getItem('musicTrack')||'0');
+let bgMusic=new Audio(playlist[currentTrackIdx] ? playlist[currentTrackIdx].file : '');
+bgMusic.loop=localStorage.getItem('musicLoop')==='1';
+let mOn=true;
+
+function renderPlaylist(){
+    document.getElementById('music-playlist').innerHTML=playlist.map((t,i)=>`
+        <div class="music-item ${i===currentTrackIdx?'active':''}">
+            <label onclick="playTrack(${i})">${t.name}</label>
+            <input type="checkbox" class="loop-checkbox" id="loop-${i}" onclick="updateLoop(${i})" ${i===currentTrackIdx&&bgMusic.loop?'checked':''}>
+        </div>`).join('');
+}
+function updateLoop(i){
+    if(i===currentTrackIdx){
+        bgMusic.loop=document.getElementById('loop-'+i).checked;
+        localStorage.setItem('musicLoop',bgMusic.loop?'1':'0');
+    }
+}
+function playTrack(i){
+    bgMusic.pause();currentTrackIdx=i;
+    localStorage.setItem('musicTrack',i);
+    bgMusic.src=playlist[i].file;
+    bgMusic.loop=document.getElementById('loop-'+i)?document.getElementById('loop-'+i).checked:false;
+    localStorage.setItem('musicLoop',bgMusic.loop?'1':'0');
+    if(mOn)bgMusic.play().catch(()=>{});
+    renderPlaylist();
+}
+bgMusic.onended=()=>{ if(!bgMusic.loop) playTrack((currentTrackIdx+1)%playlist.length); };
+
+function toggleSettings(e){ e.stopPropagation(); document.getElementById('settings-panel').style.display='block'; renderPlaylist(); }
+function closePanels(){ const p=document.getElementById('settings-panel'); if(p) p.style.display='none'; }
+function applyVolumes(){
+    const mVol=document.getElementById('music-vol').value;
+    bgMusic.volume=mOn?mVol:0;
+    if(mOn)bgMusic.play().catch(()=>{}); else bgMusic.pause();
+    document.getElementById('m-toggle').className=mOn?'mute-toggle on':'mute-toggle off';
+    document.getElementById('m-toggle').textContent=mOn?'🎵 МУЗЫКА: ВКЛ':'🎵 МУЗЫКА: ВЫКЛ';
+}
+function toggleMute(){ mOn=!mOn; applyVolumes(); }
+document.addEventListener('click',closePanels);
+
 
 function toEmail(u){return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app';}
 
 function login(){
     const u=document.getElementById('username').value.trim();
     const p=document.getElementById('password').value;
-    if(!u||!p) return;
+    if(!u||!p){ alert('Заполни ник и пароль'); return; }
+    if(p.length<6){ alert('Пароль должен быть минимум 6 символов'); return; }
     const fp=p+'_Brm9!';
     const isAuthErr=c=>['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c);
     db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
@@ -236,7 +409,7 @@ function login(){
             auth.signInWithEmailAndPassword(toEmail(u),fp)
                 .then(c=>{uid=c.user.uid;user=u;go();})
                 .catch(e1=>{
-                    if(!isAuthErr(e1.code)) return;
+                    if(!isAuthErr(e1.code)){ alert('Ошибка входа: '+e1.code); return; }
                     auth.signInWithEmailAndPassword(toEmail(u),p)
                         .then(c=>{c.user.updatePassword(fp).catch(()=>{});uid=c.user.uid;user=u;go();})
                         .catch(()=>alert('Неверный пароль!'));
@@ -254,9 +427,17 @@ function login(){
                         auth.signInWithEmailAndPassword(toEmail(u),fp)
                             .then(c=>{uid=c.user.uid;user=u;go();})
                             .catch(()=>alert('Ошибка входа'));
+                    } else if(e.code==='auth/weak-password'){
+                        alert('Слишком простой пароль (минимум 6 символов)');
+                    } else if(e.code==='auth/invalid-email'){
+                        alert('Ник должен содержать хотя бы одну букву или цифру');
+                    } else {
+                        alert('Ошибка регистрации: '+e.code);
                     }
                 });
         }
+    }).catch(err=>{
+        alert('Не удалось связаться с базой данных: '+(err.code||err.message)+'.\\nЕсли ошибка "PERMISSION_DENIED" — нужно обновить Firebase Rules в консоли (тестовые правила истекают через 30 дней).');
     });
 }
 
@@ -276,6 +457,10 @@ auth.onAuthStateChanged(fu=>{
             if(sessionReady) return;
             if(s.exists()&&s.val().username){user=String(s.val().username);go();}
             else{document.getElementById('auth-section').style.display='block';}
+        }).catch(err=>{
+            if(sessionReady) return;
+            document.getElementById('auth-section').style.display='block';
+            alert('Не удалось загрузить профиль: '+(err.code||err.message));
         });
     } else {
         document.getElementById('auth-section').style.display='block';
@@ -286,6 +471,7 @@ function go(){
     sessionReady=true;
     document.getElementById('auth-section').style.display='none';
     document.getElementById('game-section').style.display='block';
+    applyVolumes(); renderPlaylist();
     localStorage.setItem('lobbyUser', user);
     localStorage.setItem('lobbyUid', uid);
     db.ref('players/'+uid).update({lastSeen:Date.now(),currentPage:'🎩 Апгрейд'});
@@ -316,10 +502,10 @@ const HAT_CATALOG=[
     {id:'h10',name:'Золотая шляпа',img:'Zalypki/z10.jpg',rarity:'epic',price:120},
     {id:'h11',name:'Рубиновая шляпа',img:'Zalypki/z11.jpg',rarity:'epic',price:180},
     {id:'h12',name:'Аметистовая шляпа',img:'Zalypki/z12.jpg',rarity:'epic',price:250},
-    {id:'h13',name:'Сапфировая шляпа',img:'Zalypki/z13.jpg',rarity:'legendary',price:400},
-    {id:'h14',name:'Алмазная шляпа',img:'Zalypki/z14.jpg',rarity:'legendary',price:650},
-    {id:'h15',name:'Драгоценная шляпа',img:'Zalypki/z15.jpg',rarity:'mythical',price:1200},
-    {id:'h16',name:'Космическая шляпа',img:'Zalypki/z16.jpg',rarity:'mythical',price:2000}
+    {id:'h13',name:'Сапфировая шляпа',img:'Zalypki/z13.jpg',rarity:'legendary',price:500},
+    {id:'h14',name:'Алмазная шляпа',img:'Zalypki/z14.jpg',rarity:'legendary',price:1000},
+    {id:'h15',name:'Драгоценная шляпа',img:'Zalypki/z15.jpg',rarity:'mythical',price:1500},
+    {id:'h16',name:'Космическая шляпа',img:'Zalypki/z16.jpg',rarity:'mythical',price:3000,buyable:false}
 ];
 function hatIcon(h,size){
     if(!h.img) return '<span style="display:inline-block;width:'+size+'px;height:'+size+'px;"></span>';
