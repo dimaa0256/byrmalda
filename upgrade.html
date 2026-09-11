@@ -135,8 +135,8 @@ body {
 .cat-item { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid var(--c,#666); border-radius:14px; padding:9px; margin-bottom:7px; cursor:pointer; }
 .cat-item:active { transform:scale(0.98); }
 .cat-item .emo { width:38px; height:38px; border-radius:11px; background:radial-gradient(circle,var(--c,#666) 0%,transparent 70%); border:2px solid var(--c,#666); display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
-.cat-item .nm { font-family:'Fredoka One',cursive; font-size:12px; color:#fff; }
-.cat-item .rn { font-size:9px; font-weight:900; color:var(--c,#888); letter-spacing:1px; }
+.cat-item .nm { font-family:'Fredoka One',cursive; font-size:12px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cat-item .rn { font-size:9px; font-weight:900; color:var(--c,#888); letter-spacing:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cat-item .pr { margin-left:auto; font-family:'Fredoka One',cursive; font-size:12px; color:#ffd700; }
 .modal-close { width:100%; padding:10px; margin-top:4px; border-radius:12px; background:transparent; color:rgba(255,180,0,0.5); border:1px solid rgba(255,180,0,0.25); cursor:pointer; font-family:'Nunito',sans-serif; font-size:11px; font-weight:900; letter-spacing:2px; }
 
@@ -579,8 +579,8 @@ function openTargetPicker(){
         const c=RARITY_COLORS[h.rarity];
         return `<div class="cat-item" style="--c:${c}" onclick="pickTarget('${h.id}')">
             <div class="emo">${hatIcon(h,22)}</div>
-            <div><div class="nm">${h.name}</div><div class="rn">${RARITY_NAMES[h.rarity]}</div></div>
-            <div class="pr">${h.price} АР</div>
+            <div style="flex:1;min-width:0;"><div class="nm">${h.name}</div><div class="rn">${RARITY_NAMES[h.rarity]}</div></div>
+            <div class="pr" style="flex-shrink:0;">${h.price} АР</div>
         </div>`;
     }).join('');
     document.getElementById('target-modal').classList.add('open');

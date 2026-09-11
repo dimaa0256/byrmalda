@@ -632,6 +632,20 @@ input:-webkit-autofill:focus {
     .sup-msg-user{align-self:flex-end;background:linear-gradient(135deg,#8b0000,#cc2200);border-bottom-right-radius:4px;}
     .sup-msg-ai{align-self:flex-start;background:rgba(180,30,0,0.15);border:1px solid rgba(255,80,0,0.3);color:rgba(255,255,255,0.9);border-bottom-left-radius:4px;}
     .sup-msg-base{max-width:88%;padding:7px 12px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;}
+
+    .msgr-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,69,0,0.15);border-radius:14px;margin-bottom:8px;cursor:pointer;transition:background .15s;}
+    .msgr-row:active{background:rgba(255,69,0,0.1);}
+    .msgr-avatar{width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;}
+    .online-dot{position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;border-radius:50%;border:2px solid #0a0010;background:#555;}
+    .online-dot.on{background:#4caf50;box-shadow:0 0 6px rgba(76,175,80,0.7);}
+    .msgr-name{font-family:'Fredoka One',cursive;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .msgr-sub{font-size:11px;color:rgba(255,255,255,0.4);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+    .msgr-unread{width:9px;height:9px;border-radius:50%;background:#ff3300;flex-shrink:0;box-shadow:0 0 6px rgba(255,51,0,0.7);}
+    .req-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);border-radius:12px;margin-bottom:8px;}
+    .req-btn{padding:6px 12px;border-radius:9px;border:none;font-family:'Fredoka One',cursive;font-size:11px;cursor:pointer;}
+    .req-btn.ok{background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff;}
+    .req-btn.no{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.15);}
+    .msgr-section-title{font-size:10px;letter-spacing:2px;font-weight:900;color:rgba(255,150,100,0.4);margin:14px 0 8px;padding-left:2px;}
     .sup-qbtn{padding:4px 10px;border-radius:16px;background:rgba(180,0,0,0.1);border:1px solid rgba(255,69,0,0.2);color:rgba(255,120,60,0.8);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;}
 </style>
 </head>
@@ -1242,7 +1256,7 @@ input:-webkit-autofill:focus {
     document.addEventListener('click', function(e){
         const panels=['lobby-admin-panel','leaderboard-panel','quests-panel','shop-panel','inventory-panel'];
         const inside=panels.some(id=>document.getElementById(id)&&document.getElementById(id).contains(e.target));
-        const onBtn=e.target.closest('button')&&(e.target.closest('button').getAttribute('onclick')||'').match(/openVip|openLeaderboard|openQuests|openLobbyAdmin|openShop|openInventory|toggleNavMenu|openSupportChat/);
+        const onBtn=e.target.closest('button')&&(e.target.closest('button').getAttribute('onclick')||'').match(/openVip|openLeaderboard|openQuests|openLobbyAdmin|openShop|openInventory|toggleNavMenu|openSupportChat|openMessenger/);
         if(!inside&&!onBtn) panels.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
     });
 
@@ -2061,7 +2075,7 @@ function renderHatsShop(){
             +'<div style="width:40px;height:40px;border-radius:11px;background:radial-gradient(circle,'+c+'33,transparent);border:2px solid '+c+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">'+hatIcon(h,32)+'</div>'
             +'<div style="flex:1;min-width:0;">'
                 +'<div style="font-family:\'Fredoka One\',cursive;font-size:12px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+h.name+'</div>'
-                +'<div style="font-size:9px;font-weight:800;color:'+c+';letter-spacing:1px;">'+RARITY_NAMES[h.rarity]+'</div>'
+                +'<div style="font-size:9px;font-weight:800;color:'+c+';letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+RARITY_NAMES[h.rarity]+'</div>'
             +'</div>'
             +'<div style="text-align:right;flex-shrink:0;">'
                 +'<div style="font-family:\'Fredoka One\',cursive;font-size:12px;color:#ffd700;margin-bottom:4px;">'+h.price+' АР</div>'
@@ -2289,15 +2303,201 @@ function stopBunnySpawner(){if(bunnyTimer){clearInterval(bunnyTimer);bunnyTimer=
 function spawnParticles(x,y,color){for(var i=0;i<8;i++){var p=document.createElement('div');p.className='particle';var a=(Math.PI*2/8)*i,d=25+Math.random()*35;p.style.cssText='left:'+(x-4)+'px;top:'+(y-4)+'px;width:7px;height:7px;background:'+color+';--tx:'+(Math.cos(a)*d)+'px;--ty:'+(Math.sin(a)*d)+'px;';document.body.appendChild(p);setTimeout(function(){if(p.parentNode)p.remove();},630);}}
 function showBunnyNotif(type){var n=document.createElement('div');n.style.cssText='position:fixed;top:44%;left:50%;transform:translate(-50%,-50%);z-index:9500;background:rgba(0,0,0,0.9);border:2px solid '+type.color+';border-radius:18px;padding:18px 28px;text-align:center;pointer-events:none;';n.innerHTML='<div style="font-family:Fredoka One,cursive;font-size:13px;color:'+type.color+';letter-spacing:2px;margin-bottom:4px;">🎉 ПОЙМАЛ!</div><div style="font-size:20px;font-family:Fredoka One,cursive;color:#fff;margin-bottom:4px;">'+type.name+' Бурмалдаец</div><div style="font-size:14px;color:'+type.color+';">+'+type.eggs+' 🥚</div>';document.body.appendChild(n);setTimeout(function(){if(n.parentNode)n.remove();},2000);}
 // Поддержка
+/* ===== 💬 МЕССЕНДЖЕР: друзья и личные чаты ===== */
+let _friendsUnsub=null, _reqUnsub=null, _fcUnsub=null;
+let fcFriendUid='', fcFriendName='';
+
+function chatIdFor(a,b){ return [a,b].sort().join('_'); }
+
+function openMessenger(){
+    if(!currentUid){alert('Войди в аккаунт');return;}
+    document.getElementById('msgr-ov').style.display='flex';
+    listenFriendRequests();
+    listenFriendsList();
+}
+function closeMessenger(){
+    document.getElementById('msgr-ov').style.display='none';
+    if(_friendsUnsub){_friendsUnsub();_friendsUnsub=null;}
+    if(_reqUnsub){_reqUnsub();_reqUnsub=null;}
+}
+
+function listenFriendRequests(){
+    if(_reqUnsub)_reqUnsub();
+    var ref=db.ref('players/'+currentUid+'/friendReq');
+    ref.on('value',function(s){
+        var reqs=s.val()||{};
+        var wrap=document.getElementById('friend-req-wrap');
+        var keys=Object.keys(reqs);
+        if(!keys.length){wrap.innerHTML='';return;}
+        wrap.innerHTML='<div class="msgr-section-title">ЗАЯВКИ В ДРУЗЬЯ</div>'+keys.map(function(fromUid){
+            var r=reqs[fromUid]||{};
+            var safeName=(r.username||'???').replace(/'/g,'');
+            return '<div class="req-row"><div style="flex:1;font-weight:800;font-size:13px;color:#fff;">'+(r.username||'???')+'</div>'
+                +'<button class="req-btn ok" onclick="acceptFriendRequest(\''+fromUid+'\')">✓ Принять</button>'
+                +'<button class="req-btn no" onclick="declineFriendRequest(\''+fromUid+'\')">✕</button></div>';
+        }).join('');
+    }, function(err){ console.error('friendReq listen error', err); });
+    _reqUnsub=function(){ref.off();};
+}
+
+function sendFriendRequestByInput(){
+    var inp=document.getElementById('add-friend-inp');
+    var uname=(inp.value||'').trim();
+    if(!uname)return;
+    inp.value='';
+    if(uname.toLowerCase()===String(currentUser||'').toLowerCase()){alert('Нельзя добавить самого себя 🙂');return;}
+    db.ref('usernames/'+uname.toLowerCase()).once('value').then(function(s){
+        if(!s.exists()){alert('Игрок «'+uname+'» не найден');return;}
+        var targetUid=s.val();
+        if(targetUid===currentUid){alert('Нельзя добавить самого себя 🙂');return;}
+        db.ref('players/'+currentUid+'/friends/'+targetUid).once('value').then(function(fs){
+            if(fs.exists()){alert('Вы уже друзья!');return;}
+            db.ref('players/'+targetUid+'/friendReq/'+currentUid).set({username:String(currentUser),ts:Date.now()}).then(function(){
+                alert('Заявка отправлена!');
+            }).catch(function(err){alert('Ошибка: '+(err.code||err.message));});
+        });
+    }).catch(function(err){alert('Ошибка: '+(err.code||err.message));});
+}
+
+function acceptFriendRequest(fromUid){
+    db.ref('players/'+currentUid+'/friends/'+fromUid).set(true);
+    db.ref('players/'+fromUid+'/friends/'+currentUid).set(true);
+    db.ref('players/'+currentUid+'/friendReq/'+fromUid).remove();
+}
+function declineFriendRequest(fromUid){
+    db.ref('players/'+currentUid+'/friendReq/'+fromUid).remove();
+}
+
+function listenFriendsList(){
+    if(_friendsUnsub)_friendsUnsub();
+    var ref=db.ref('players/'+currentUid+'/friends');
+    ref.on('value',function(s){
+        var friends=s.val()||{};
+        var uids=Object.keys(friends);
+        var wrap=document.getElementById('friends-list');
+        if(!uids.length){wrap.innerHTML='<div style="text-align:center;padding:20px 10px;color:rgba(255,255,255,0.35);font-size:12px;font-weight:700;">Пока нет друзей — добавь по нику выше 👆</div>';return;}
+        Promise.all(uids.map(function(fuid){
+            var cid=chatIdFor(currentUid,fuid);
+            return Promise.all([
+                db.ref('players/'+fuid).once('value'),
+                db.ref('chats/'+cid+'/meta').once('value'),
+                db.ref('players/'+currentUid+'/chatReads/'+cid).once('value')
+            ]).then(function(r){
+                return {uid:fuid, data:r[0].val()||{}, meta:r[1].val()||{}, readTs:r[2].val()||0};
+            });
+        })).then(function(list){
+            var now=Date.now();
+            list.sort(function(a,b){
+                var aOn=(now-(a.data.lastSeen||0))<120000, bOn=(now-(b.data.lastSeen||0))<120000;
+                if(aOn!==bOn) return aOn?-1:1;
+                return (b.meta.lastMsgTs||0)-(a.meta.lastMsgTs||0);
+            });
+            wrap.innerHTML=list.map(function(f){
+                var online=(now-(f.data.lastSeen||0))<120000;
+                var unread=f.meta.lastMsgTs && f.meta.lastFrom!==currentUid && f.meta.lastMsgTs>f.readTs;
+                var sub=f.meta.lastMsg?f.meta.lastMsg:(online?(f.data.currentPage||'В сети'):'Не в сети');
+                return '<div class="msgr-row" onclick="openFriendChat(\''+f.uid+'\',\''+(f.data.username||'').replace(/'/g,'')+'\')">'
+                    +'<div class="msgr-avatar" style="background:linear-gradient(135deg,#6a1b9a,#4a148c);">👤<span class="online-dot'+(online?' on':'')+'"></span></div>'
+                    +'<div style="flex:1;min-width:0;"><div class="msgr-name">'+(f.data.username||'?')+'</div><div class="msgr-sub">'+sub+'</div></div>'
+                    +(unread?'<div class="msgr-unread"></div>':'')
+                    +'</div>';
+            }).join('');
+        });
+    }, function(err){ console.error('friends listen error', err); });
+    _friendsUnsub=function(){ref.off();};
+}
+
+function openFriendChat(friendUid,friendName){
+    fcFriendUid=friendUid; fcFriendName=friendName;
+    document.getElementById('msgr-ov').style.display='none';
+    document.getElementById('friend-chat-ov').style.display='flex';
+    document.getElementById('fc-name').textContent=friendName;
+    loadFriendChat();
+}
+function closeFriendChat(){
+    document.getElementById('friend-chat-ov').style.display='none';
+    if(_fcUnsub){_fcUnsub();_fcUnsub=null;}
+    document.getElementById('msgr-ov').style.display='flex';
+    listenFriendsList();
+}
+function loadFriendChat(){
+    var cid=chatIdFor(currentUid,fcFriendUid);
+    db.ref('players/'+fcFriendUid).once('value').then(function(s){
+        var d=s.val()||{};
+        var online=(Date.now()-(d.lastSeen||0))<120000;
+        document.getElementById('fc-dot').className='online-dot'+(online?' on':'');
+        document.getElementById('fc-status').textContent=online?(d.currentPage||'В сети'):'Не в сети';
+    });
+    if(_fcUnsub)_fcUnsub();
+    var ref=db.ref('chats/'+cid+'/messages');
+    ref.on('value',function(snap){
+        var msgs=snap.val()||{};
+        var box=document.getElementById('fc-msgs');
+        box.innerHTML='';
+        Object.values(msgs).sort(function(a,b){return a.ts-b.ts;}).forEach(function(m){
+            var div=document.createElement('div');
+            var isMe=m.from===currentUid;
+            div.className='sup-msg-base '+(isMe?'sup-msg-user':'sup-msg-ai');
+            var t=new Date(m.ts).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+            div.innerHTML=m.text.split('\n').join('<br>')+'<div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px;'+(isMe?'text-align:right;':'')+'">'+t+'</div>';
+            box.appendChild(div);
+        });
+        box.scrollTop=box.scrollHeight;
+        db.ref('players/'+currentUid+'/chatReads/'+cid).set(Date.now());
+    }, function(err){ console.error('chat listen error', err); });
+    _fcUnsub=function(){ref.off();};
+}
+function sendFriendMsg(){
+    var inp=document.getElementById('fc-inp');
+    var text=(inp.value||'').trim();
+    if(!text||!fcFriendUid)return;
+    inp.value='';
+    var cid=chatIdFor(currentUid,fcFriendUid);
+    db.ref('chats/'+cid+'/messages').push({from:currentUid,text:text,ts:Date.now()});
+    var usersObj={};usersObj[currentUid]=true;usersObj[fcFriendUid]=true;
+    db.ref('chats/'+cid+'/meta').update({lastMsg:text,lastMsgTs:Date.now(),lastFrom:currentUid,users:usersObj});
+}
+setTimeout(function(){var fi=document.getElementById('fc-inp');if(fi)fi.addEventListener('keypress',function(e){if(e.key==='Enter')sendFriendMsg();});},800);
+
+function openFriendProfile(friendUid){
+    if(!friendUid)return;
+    document.getElementById('friend-profile-ov').style.display='flex';
+    db.ref('players/'+friendUid).once('value').then(function(s){
+        var d=s.val()||{};
+        var online=(Date.now()-(d.lastSeen||0))<120000;
+        document.getElementById('fp-name').textContent=d.username||'?';
+        document.getElementById('fp-dot').className='online-dot'+(online?' on':'');
+        document.getElementById('fp-status').textContent=online?(d.currentPage||'В сети'):'Не в сети';
+        document.getElementById('fp-balance').textContent=(d.balance||0)+' АР';
+        var hats=Object.values(d.hats||{});
+        document.getElementById('fp-hats-count').textContent=hats.length;
+        var hatsWrap=document.getElementById('fp-hats');
+        if(!hats.length){
+            hatsWrap.innerHTML='<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.3);font-size:11px;padding:10px;">нет шляп</div>';
+            return;
+        }
+        hatsWrap.innerHTML=hats.map(function(h){
+            var cat=HAT_CATALOG.find(function(c){return c.id===h.catalogId;})||{};
+            var c=RARITY_COLORS[cat.rarity]||'#888';
+            return '<div style="aspect-ratio:1;border-radius:12px;background:rgba(255,255,255,0.04);border:2px solid '+c+';display:flex;align-items:center;justify-content:center;">'+hatIcon(cat,30)+'</div>';
+        }).join('');
+    }).catch(function(err){ console.error('profile load error', err); });
+}
+function closeFriendProfile(){
+    document.getElementById('friend-profile-ov').style.display='none';
+}
+
 function openSupportChat(){
     if(!currentUid){alert('Войди в аккаунт');return;}
     if(typeof bgMusic!=='undefined'&&bgMusic)bgMusic.pause();
+    document.getElementById('msgr-ov').style.display='none';
     document.getElementById('sup-ov').style.display='flex';
     loadSupportChat();
 }
 function closeSupportChat(){
     document.getElementById('sup-ov').style.display='none';
     if(_supUnsub){_supUnsub();_supUnsub=null;}
+    document.getElementById('msgr-ov').style.display='flex';
     if(typeof bgMusic!=='undefined'&&bgMusic&&typeof mOn!=='undefined'&&mOn)bgMusic.play().catch(function(){});
 }
 function loadSupportChat(){
@@ -2343,7 +2543,75 @@ setTimeout(function(){var si=document.getElementById('sup-inp');if(si)si.addEven
 </script>
 
     <div id="bunny-container" style="position:fixed;inset:0;pointer-events:none;z-index:8000;"></div>
-    <button class="support-fab" onclick="openSupportChat()">💬</button>
+    <button class="support-fab" onclick="openMessenger()">💬</button>
+    <!-- ===== СПИСОК СООБЩЕНИЙ (поддержка + друзья) ===== -->
+    <div id="msgr-ov" style="display:none;position:fixed;inset:0;z-index:9000;background:radial-gradient(ellipse at 60% 30%,#2a0a1a,#0a0010);flex-direction:column;align-items:center;">
+        <div style="width:100%;max-width:460px;height:100%;display:flex;flex-direction:column;">
+            <div style="padding:14px 16px 12px;background:linear-gradient(160deg,#1a0008,#0d0000);border-bottom:1px solid rgba(255,69,0,0.25);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                <div style="flex:1;"><div style="font-family:'Fredoka One',cursive;font-size:16px;letter-spacing:2px;">СООБЩЕНИЯ</div></div>
+                <button onclick="closeMessenger()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,69,0,0.2);border-radius:10px;padding:6px 12px;color:rgba(255,100,50,0.55);font-family:'Fredoka One',cursive;font-size:11px;cursor:pointer;">✕</button>
+            </div>
+            <div style="flex:1;overflow-y:auto;padding:14px;">
+                <div style="display:flex;gap:8px;margin-bottom:14px;">
+                    <input id="add-friend-inp" type="text" placeholder="Ник игрока..." autocomplete="off" maxlength="20" style="flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(255,69,0,0.2);border-radius:11px;padding:10px 12px;color:#fff;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;outline:none;">
+                    <button onclick="sendFriendRequestByInput()" style="padding:0 16px;border-radius:11px;border:none;background:linear-gradient(135deg,#ff8800,#ffcc00);color:#1a0800;font-family:'Fredoka One',cursive;font-size:12px;cursor:pointer;">➕</button>
+                </div>
+
+                <div id="friend-req-wrap"></div>
+
+                <div class="msgr-section-title">ЧАТЫ</div>
+                <div class="msgr-row" onclick="openSupportChat()">
+                    <div class="msgr-avatar" style="background:linear-gradient(135deg,#cc2200,#8b0000);">🎰</div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="msgr-name">Поддержка</div>
+                        <div class="msgr-sub">Вопросы и помощь по сайту</div>
+                    </div>
+                </div>
+
+                <div id="friends-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ЧАТ С ДРУГОМ ===== -->
+    <div id="friend-chat-ov" style="display:none;position:fixed;inset:0;z-index:9100;background:radial-gradient(ellipse at 60% 30%,#2a0a1a,#0a0010);flex-direction:column;align-items:center;">
+        <div style="width:100%;max-width:460px;height:100%;display:flex;flex-direction:column;">
+            <div style="padding:14px 16px 12px;background:linear-gradient(160deg,#1a0008,#0d0000);border-bottom:1px solid rgba(255,69,0,0.25);display:flex;align-items:center;gap:12px;flex-shrink:0;cursor:pointer;" onclick="openFriendProfile(fcFriendUid)">
+                <div class="msgr-avatar" style="background:linear-gradient(135deg,#6a1b9a,#4a148c);"><span id="fc-avatar">👤</span><span class="online-dot" id="fc-dot"></span></div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-family:'Fredoka One',cursive;font-size:15px;" id="fc-name">—</div>
+                    <div style="font-size:11px;color:rgba(255,150,100,0.5);" id="fc-status">—</div>
+                </div>
+                <button onclick="event.stopPropagation();closeFriendChat()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,69,0,0.2);border-radius:10px;padding:6px 12px;color:rgba(255,100,50,0.55);font-family:'Fredoka One',cursive;font-size:11px;cursor:pointer;">✕</button>
+            </div>
+            <div id="fc-msgs" style="flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;"></div>
+            <div style="padding:10px 12px;display:flex;gap:8px;background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,69,0,0.12);flex-shrink:0;">
+                <div style="flex:1;display:flex;align-items:center;background:rgba(0,0,0,0.45);border:1px solid rgba(255,69,0,0.2);border-radius:12px;padding:0 12px;"><input id="fc-inp" type="text" placeholder="Написать сообщение..." autocomplete="off" maxlength="500" style="flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;padding:9px 0;"></div>
+                <button onclick="sendFriendMsg()" style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#6a1b9a,#4a148c);border:none;color:#fff;font-size:17px;cursor:pointer;">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ПРОФИЛЬ ДРУГА ===== -->
+    <div id="friend-profile-ov" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;padding:16px;" onclick="closeFriendProfile()">
+        <div style="width:100%;max-width:400px;background:linear-gradient(160deg,#180020,#0a0015);border:2px solid rgba(255,200,0,0.4);border-radius:22px;padding:20px;max-height:85vh;overflow-y:auto;" onclick="event.stopPropagation()">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <div class="msgr-avatar" style="width:52px;height:52px;background:linear-gradient(135deg,#6a1b9a,#4a148c);font-size:24px;position:relative;">👤<span class="online-dot" id="fp-dot" style="width:14px;height:14px;"></span></div>
+                <div style="flex:1;">
+                    <div style="font-family:'Fredoka One',cursive;font-size:17px;" id="fp-name">—</div>
+                    <div style="font-size:12px;color:rgba(255,150,100,0.6);" id="fp-status">—</div>
+                </div>
+                <button onclick="closeFriendProfile()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,69,0,0.2);border-radius:10px;padding:6px 12px;color:rgba(255,100,50,0.55);font-family:'Fredoka One',cursive;font-size:11px;cursor:pointer;">✕</button>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border-radius:14px;padding:12px;margin-bottom:14px;text-align:center;">
+                <div style="font-size:10px;letter-spacing:2px;color:rgba(255,200,100,0.5);font-weight:900;">БАЛАНС</div>
+                <div style="font-family:'Fredoka One',cursive;font-size:20px;color:#ffd700;" id="fp-balance">—</div>
+            </div>
+            <div style="font-size:11px;letter-spacing:2px;font-weight:900;color:rgba(255,200,100,0.5);margin-bottom:8px;">ШЛЯПЫ (<span id="fp-hats-count">0</span>)</div>
+            <div id="fp-hats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+        </div>
+    </div>
+
     <div id="sup-ov" style="display:none;position:fixed;inset:0;z-index:9000;background:radial-gradient(ellipse at 60% 30%,#2a0a1a,#0a0010);flex-direction:column;align-items:center;">
         <div style="width:100%;max-width:460px;height:100%;display:flex;flex-direction:column;">
             <div style="padding:14px 16px 12px;background:linear-gradient(160deg,#1a0008,#0d0000);border-bottom:1px solid rgba(255,69,0,0.25);display:flex;align-items:center;gap:12px;flex-shrink:0;">
