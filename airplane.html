@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="БУРМАЛДА">
-    <meta name="theme-color" content="#0a0010">
+    <meta name="theme-color" content="#ff4500">
     <link rel="apple-touch-icon" href="./icon-192.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>✈️ ПОЛЁТ — БУРМАЛДА</title>
@@ -28,11 +28,6 @@
     margin:0;
     padding:0;
 }
-html{-webkit-tap-highlight-color:transparent;scrollbar-width:none;-ms-overflow-style:none;}
-html::-webkit-scrollbar{display:none;}
-body{-webkit-tap-highlight-color:transparent;}
-*{-webkit-tap-highlight-color:transparent;}
-
 
 html,body {
     width:100%;
@@ -799,6 +794,17 @@ const auth = firebase.auth();
 
 let user='', uid='', _pingInterval=null;
 function toEmail(u){ return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app'; }
+function toEmailSafe(u){
+    var s=String(u).toLowerCase();
+    var h1=0,h2=0;
+    for(var i=0;i<s.length;i++){
+        var c=s.charCodeAt(i);
+        h1=(Math.imul(h1,31)+c)|0;
+        h2=(Math.imul(h2,131)+c)|0;
+    }
+    var hex=(h1>>>0).toString(16).padStart(8,'0')+(h2>>>0).toString(16).padStart(8,'0');
+    return 'u'+hex+'@burmalda.app';
+}
 
 function login(){
     const u=document.getElementById('username').value.trim();
@@ -819,7 +825,7 @@ function login(){
                         .catch(()=>alert('Неверный пароль!'));
                 });
         } else {
-            auth.createUserWithEmailAndPassword(toEmail(u),fp)
+            auth.createUserWithEmailAndPassword(toEmailSafe(u),fp)
                 .then(cred=>{
                     uid=cred.user.uid; user=u;
                     db.ref('usernames/'+u.toLowerCase()).set(uid);
@@ -829,7 +835,7 @@ function login(){
                 .catch(e=>{
                     if(e.code==='auth/weak-password') alert('Пароль слишком короткий! Минимум 6 символов.');
                     else if(e.code==='auth/email-already-in-use'){
-                        auth.signInWithEmailAndPassword(toEmail(u),fp)
+                        auth.signInWithEmailAndPassword(toEmailSafe(u),fp)
                             .then(cred=>{uid=cred.user.uid;user=u;go();})
                             .catch(()=>alert('Ошибка входа'));
                     }

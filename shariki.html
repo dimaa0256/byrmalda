@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <title>Шарики — Бурмалда</title>
 <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#0a0010">
+<meta name="theme-color" content="#ff4500">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 * {
@@ -13,11 +13,6 @@
     padding:0;
     box-sizing:border-box;
 }
-html{-webkit-tap-highlight-color:transparent;scrollbar-width:none;-ms-overflow-style:none;}
-html::-webkit-scrollbar{display:none;}
-body{-webkit-tap-highlight-color:transparent;}
-*{-webkit-tap-highlight-color:transparent;}
-
 
 body {
     background:radial-gradient(ellipse at top,#1a0a2e 0%,#0d0618 60%,#050308 100%);
@@ -886,6 +881,17 @@ function renderPlaylist(){
 }
 
 function toEmail(u){return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.app';}
+function toEmailSafe(u){
+    var s=String(u).toLowerCase();
+    var h1=0,h2=0;
+    for(var i=0;i<s.length;i++){
+        var c=s.charCodeAt(i);
+        h1=(Math.imul(h1,31)+c)|0;
+        h2=(Math.imul(h2,131)+c)|0;
+    }
+    var hex=(h1>>>0).toString(16).padStart(8,'0')+(h2>>>0).toString(16).padStart(8,'0');
+    return 'u'+hex+'@burmalda.app';
+}
 
 function login(){
     const u=document.getElementById('username').value.trim();
@@ -905,7 +911,7 @@ function login(){
                         .catch(()=>alert('Неверный пароль!'));
                 });
         } else {
-            auth.createUserWithEmailAndPassword(toEmail(u),fp)
+            auth.createUserWithEmailAndPassword(toEmailSafe(u),fp)
                 .then(c=>{
                     uid=c.user.uid;user=u;
                     db.ref('usernames/'+u.toLowerCase()).set(uid);
@@ -914,7 +920,7 @@ function login(){
                 })
                 .catch(e=>{
                     if(e.code==='auth/email-already-in-use'){
-                        auth.signInWithEmailAndPassword(toEmail(u),fp)
+                        auth.signInWithEmailAndPassword(toEmailSafe(u),fp)
                             .then(c=>{uid=c.user.uid;user=u;go();})
                             .catch(()=>alert('Ошибка входа'));
                     } else if(e.code==='auth/weak-password'){
