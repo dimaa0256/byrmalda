@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Апгрейд — Бурмалда</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#ff4500">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -255,6 +257,9 @@ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db=firebase.database(), auth=firebase.auth();
 let uid='',user='';
     const playlist=[
+    {file:'sounds/bam_bam_bam_1.mp3', name:'Бам Бам Бам'},
+    {file:'sounds/bad_piggies.mp3', name:'Bad Piggies'},
+    {file:'sounds/baclachn.mp3', name:'Балаклан'},
     {file:'sounds/Okolo_tebya.mp3', name:'Около Тебя'},
     {file:'sounds/U_menya_est_qr_code.mp3', name:'У Меня Есть QR Code'},
     {file:'sounds/a4.mp3', name:'A4'},
@@ -265,9 +270,6 @@ let uid='',user='';
     {file:'sounds/around_the_world.mp3', name:'Around the World'},
     {file:'sounds/bablgam_1.mp3', name:'Баблгам 1'},
     {file:'sounds/bablgam_2.mp3', name:'Баблгам 2'},
-    {file:'sounds/baclachn.mp3', name:'Балаклан'},
-    {file:'sounds/bad_piggies.mp3', name:'Bad Piggies'},
-    {file:'sounds/bam_bam_bam_1.mp3', name:'Бам Бам Бам'},
     {file:'sounds/banyu_zatopili.mp3', name:'Баню Затопили'},
     {file:'sounds/bayu_bayushki_boyu.mp3', name:'Баю Баюшки Баю'},
     {file:'sounds/begi_dorogaya_begi.mp3', name:'Беги Дорогая Беги'},
@@ -345,7 +347,6 @@ let uid='',user='';
     {file:'sounds/youtube_shorts.mp3', name:'YouTube Shorts'},
     {file:'sounds/zakroy_glaza.mp3', name:'Закрой Глаза'},
     {file:'sounds/zapakhlo_vesnoy.mp3', name:'Запахло Весной'},
-    {file:'sounds/zapert_na_ostrove_izza_interpola_1.mp3', name:'Заперт на Острове'},
     {file:'sounds/zemlya_v_illyuminatore.mp3', name:'Земля в Иллюминаторе'}
 ];
 
@@ -690,6 +691,9 @@ function closeResult(){
 }
 
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',()=>m.classList.remove('open')));
+if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
 </script>
 </body>
 </html>

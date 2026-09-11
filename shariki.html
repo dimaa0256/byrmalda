@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <title>Шарики — Бурмалда</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#ff4500">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 * {
@@ -883,7 +885,8 @@ function toEmail(u){return u.toLowerCase().replace(/[^a-z0-9]/g,'_')+'@burmalda.
 function login(){
     const u=document.getElementById('username').value.trim();
     const p=document.getElementById('password').value;
-    if(!u||!p) return;
+    if(!u||!p){ alert('Заполни ник и пароль'); return; }
+    if(p.length<6){ alert('Пароль должен быть минимум 6 символов'); return; }
     const fp=p+'_Brm9!';
     const isAuthErr=c=>['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c);
     db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
@@ -891,7 +894,7 @@ function login(){
             auth.signInWithEmailAndPassword(toEmail(u),fp)
                 .then(c=>{uid=c.user.uid;user=u;go();})
                 .catch(e1=>{
-                    if(!isAuthErr(e1.code)) return;
+                    if(!isAuthErr(e1.code)){ alert('Ошибка входа: '+e1.code); return; }
                     auth.signInWithEmailAndPassword(toEmail(u),p)
                         .then(c=>{c.user.updatePassword(fp).catch(()=>{});uid=c.user.uid;user=u;go();})
                         .catch(()=>alert('Неверный пароль!'));
@@ -909,9 +912,17 @@ function login(){
                         auth.signInWithEmailAndPassword(toEmail(u),fp)
                             .then(c=>{uid=c.user.uid;user=u;go();})
                             .catch(()=>alert('Ошибка входа'));
+                    } else if(e.code==='auth/weak-password'){
+                        alert('Слишком простой пароль (минимум 6 символов)');
+                    } else if(e.code==='auth/invalid-email'){
+                        alert('Ник должен содержать хотя бы одну букву или цифру');
+                    } else {
+                        alert('Ошибка регистрации: '+e.code);
                     }
                 });
         }
+    }).catch(err=>{
+        alert('Не удалось связаться с базой данных: '+(err.code||err.message)+'.\nЕсли ошибка "PERMISSION_DENIED" — нужно обновить Firebase Rules в консоли (тестовые правила истекают через 30 дней).');
     });
 }
 
@@ -921,17 +932,24 @@ _loadingDiv.textContent='ЗАГРУЗКА...';
 document.getElementById('auth-section').style.display='none';
 document.getElementById('auth-section').parentNode.insertBefore(_loadingDiv,document.getElementById('auth-section'));
 
+var _gameReady=false;
 auth.onAuthStateChanged(fu=>{
     _loadingDiv.remove();
+    if(_gameReady) return;
     if(fu){uid=fu.uid;
         db.ref('players/'+uid).once('value').then(s=>{
+            if(_gameReady) return;
             if(s.exists()&&s.val().username){user=String(s.val().username);go();}
-            else{auth.signOut();uid='';}
+            else{document.getElementById('auth-section').style.display='block';}
+        }).catch(()=>{
+            if(_gameReady) return;
+            document.getElementById('auth-section').style.display='block';
         });
+    } else {
+        document.getElementById('auth-section').style.display='block';
     }
 });
 
-var _gameReady=false;
 function go(){
     _gameReady=true;
     document.getElementById('auth-section').style.display='none';
@@ -1722,5 +1740,10 @@ function updatePhysics(){
             <button class="fate-btn fate-btn-gold" onclick="closeFateResult()">ОК</button>
         </div>
     </div>
+    <script>
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
+      }
+    </script>
 </body>
 </html>

@@ -1121,7 +1121,8 @@ input:-webkit-autofill:focus {
     function login(){
         const u=document.getElementById('username').value.trim();
         const p=document.getElementById('password').value;
-        if(!u||!p) return;
+        if(!u||!p){ alert('Заполни ник и пароль'); return; }
+        if(p.length<6){ alert('Пароль должен быть минимум 6 символов'); return; }
         const fp=p+'_Brm9!';
         const isAuthErr=c=>['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials'].includes(c);
         db.ref('usernames/'+u.toLowerCase()).once('value').then(snap=>{
@@ -1152,6 +1153,8 @@ input:-webkit-autofill:focus {
                         } else alert('Ошибка: '+e.message);
                     });
             }
+        }).catch(err=>{
+            alert('Не удалось связаться с базой данных: '+(err.code||err.message)+'.\nЕсли ошибка "PERMISSION_DENIED" — нужно обновить Firebase Rules в консоли (тестовые правила истекают через 30 дней).');
         });
     }
 
