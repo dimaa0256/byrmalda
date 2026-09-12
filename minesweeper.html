@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="БУРМАЛДА">
-    <meta name="theme-color" content="#ff4500">
+    <meta name="theme-color" content="#0a0010">
     <link rel="apple-touch-icon" href="./icon-192.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>💣 Сапёр — Бурмалда</title>
@@ -21,6 +21,11 @@
     margin: 0;
     padding: 0;
 }
+html{-webkit-tap-highlight-color:transparent;scrollbar-width:none;-ms-overflow-style:none;}
+html::-webkit-scrollbar{display:none;}
+body{-webkit-tap-highlight-color:transparent;}
+*{-webkit-tap-highlight-color:transparent;}
+
 
 html, body {
     width: 100%;
@@ -1457,7 +1462,7 @@ function toEmailSafe(u){
                 div.innerHTML =
                     '<div style="display: flex; align-items: center; gap: 8px">' +
                     '<span onclick="deleteUser(event,\'' + c.key + '\')" style="color: #ef5350; font-size: 16px; cursor: pointer; padding: 2px 5px; border-radius: 4px" onmouseover="this.style.background=\'rgba(255,60,60,0.18)\'" onmouseout="this.style.background=\'transparent\'">✖</span>' +
-                    '<span onclick="openProfile(\'' + c.key + '\')" style="cursor: pointer">' + c.key + '</span></div>' +
+                    '<span onclick="openProfile(\'' + c.key + '\')" style="cursor: pointer">' + (c.val().username||c.key) + '</span></div>' +
                     '<span onclick="openProfile(\'' + c.key + '\')" style="color: rgba(255,200,0,0.5); cursor: pointer">' + c.val().balance + ' АР</span>';
                 list.appendChild(div);
             });

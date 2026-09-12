@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="БУРМАЛДА">
-    <meta name="theme-color" content="#ff4500">
+    <meta name="theme-color" content="#0a0010">
     <link rel="apple-touch-icon" href="./icon-192.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>✈️ ПОЛЁТ — БУРМАЛДА</title>
@@ -28,6 +28,11 @@
     margin:0;
     padding:0;
 }
+html{-webkit-tap-highlight-color:transparent;scrollbar-width:none;-ms-overflow-style:none;}
+html::-webkit-scrollbar{display:none;}
+body{-webkit-tap-highlight-color:transparent;}
+*{-webkit-tap-highlight-color:transparent;}
+
 
 html,body {
     width:100%;
@@ -1522,7 +1527,7 @@ function loadAdminUsers(){
             d.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid rgba(255,180,0,0.07);color:rgba(255,220,150,0.8);font-size:13px;font-weight:700;border-radius:8px;cursor:pointer;transition:background .2s;';
             d.onmouseover=()=>d.style.background='rgba(255,100,0,0.07)';
             d.onmouseout=()=>d.style.background='transparent';
-            d.innerHTML=`<span style="display: flex; align-items: center; gap: 8px"><span onclick="event.stopPropagation();apDeleteUser('${c.key}')" style="color: #ef5350; font-size: 15px; cursor: pointer; padding: 2px 5px; border-radius: 4px" onmouseover="this.style.background='rgba(255,60,60,0.18)'" onmouseout="this.style.background='transparent'">✖</span>${c.key}</span><span style="color: rgba(255,200,0,0.5)">${c.val().balance} АР</span>`;
+            d.innerHTML=`<span style="display: flex; align-items: center; gap: 8px"><span onclick="event.stopPropagation();apDeleteUser('${c.key}')" style="color: #ef5350; font-size: 15px; cursor: pointer; padding: 2px 5px; border-radius: 4px" onmouseover="this.style.background='rgba(255,60,60,0.18)'" onmouseout="this.style.background='transparent'">✖</span>${c.val().username||c.key}</span><span style="color: rgba(255,200,0,0.5)">${c.val().balance} АР</span>`;
             d.onclick=()=>openAdminProfile(c.key);
             list.appendChild(d);
         });
