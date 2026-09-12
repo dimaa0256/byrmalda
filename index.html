@@ -2348,7 +2348,7 @@ function listenFriendRequests(){
             var r=reqs[fromUid]||{};
             var safeName=(r.username||'???').replace(/'/g,'');
             return '<div class="req-row"><div style="flex:1;font-weight:800;font-size:13px;color:#fff;">'+(r.username||'???')+'</div>'
-                +'<button class="req-btn ok" onclick="acceptFriendRequest(\''+fromUid+'\')">✓ Принять</button>'
+                +'<button class="req-btn ok" onclick="acceptFriendRequest(\''+fromUid+'\',\''+safeName+'\')">✓ Принять</button>'
                 +'<button class="req-btn no" onclick="declineFriendRequest(\''+fromUid+'\')">✕</button></div>';
         }).join('');
     }, function(err){ console.error('friendReq listen error', err); });
@@ -2411,10 +2411,11 @@ function sendFriendRequestByInput(){
     }).catch(function(err){alert('Ошибка: '+(err.code||err.message));});
 }
 
-function acceptFriendRequest(fromUid){
+function acceptFriendRequest(fromUid,fromName){
     db.ref('players/'+currentUid+'/friends/'+fromUid).set(true);
     db.ref('players/'+fromUid+'/friends/'+currentUid).set(true);
     db.ref('players/'+currentUid+'/friendReq/'+fromUid).remove();
+    openFriendChat(fromUid, fromName||'Друг');
 }
 function declineFriendRequest(fromUid){
     db.ref('players/'+currentUid+'/friendReq/'+fromUid).remove();
@@ -2452,6 +2453,7 @@ function listenFriendsList(){
                     +'<div class="msgr-avatar" style="background:linear-gradient(135deg,#6a1b9a,#4a148c);">👤<span class="online-dot'+(online?' on':'')+'"></span></div>'
                     +'<div style="flex:1;min-width:0;"><div class="msgr-name">'+(f.data.username||'?')+'</div><div class="msgr-sub">'+sub+'</div></div>'
                     +(unread?'<div class="msgr-unread"></div>':'')
+                    +'<button onclick="event.stopPropagation();openFriendProfile(\''+f.uid+'\')" style="flex-shrink:0;background:rgba(255,180,0,0.1);border:1px solid rgba(255,180,0,0.25);border-radius:9px;padding:6px 8px;color:#ffd700;font-size:13px;cursor:pointer;">👤</button>'
                     +'</div>';
             }).join('');
         });
@@ -2635,6 +2637,7 @@ setTimeout(function(){var si=document.getElementById('sup-inp');if(si)si.addEven
                     <div style="font-family:'Fredoka One',cursive;font-size:15px;" id="fc-name">—</div>
                     <div style="font-size:11px;color:rgba(255,150,100,0.5);" id="fc-status">—</div>
                 </div>
+                <button onclick="event.stopPropagation();openFriendProfile(fcFriendUid)" style="background:rgba(255,180,0,0.1);border:1px solid rgba(255,180,0,0.3);border-radius:10px;padding:6px 10px;color:#ffd700;font-family:'Fredoka One',cursive;font-size:11px;cursor:pointer;">👤 Профиль</button>
                 <button onclick="event.stopPropagation();closeFriendChat()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,69,0,0.2);border-radius:10px;padding:6px 12px;color:rgba(255,100,50,0.55);font-family:'Fredoka One',cursive;font-size:11px;cursor:pointer;">✕</button>
             </div>
             <div id="fc-msgs" style="flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;"></div>
