@@ -2412,8 +2412,12 @@ function sendFriendRequestByInput(){
 }
 
 function acceptFriendRequest(fromUid,fromName){
-    db.ref('players/'+currentUid+'/friends/'+fromUid).set(true);
-    db.ref('players/'+fromUid+'/friends/'+currentUid).set(true);
+    db.ref('players/'+currentUid+'/friends/'+fromUid).set(true).catch(function(err){
+        alert('Не удалось добавить друга (своя карточка): '+(err.code||err.message));
+    });
+    db.ref('players/'+fromUid+'/friends/'+currentUid).set(true).catch(function(err){
+        alert('Не удалось добавить друга (карточка собеседника): '+(err.code||err.message)+'.\nСкорее всего дело в Firebase Rules — нужно обновить правило для "players/$uid/friends/$friendUid".');
+    });
     db.ref('players/'+currentUid+'/friendReq/'+fromUid).remove();
     openFriendChat(fromUid, fromName||'Друг');
 }
