@@ -1029,16 +1029,34 @@ function toggleDaily(u){
 }
 
 function deletePlayer(u){
-  if(!confirm('Удалить игрока "'+u+'"? Это необратимо!')) return;
+  if(!confirm('Удалить игрока "'+u+'"? Аккаунт будет забанен — игрок не сможет зайти обратно даже под тем же паролем. Это необратимо!')) return;
   // Сначала получаем username чтобы удалить из usernames/
   db.ref('players/'+u+'/username').once('value').then(s=>{
     const username = s.val();
-    db.ref('players/'+u).remove();
-    if(username) db.ref('usernames/'+username.toLowerCase()).remove();
+    // Помечаем как забаненного ДО удаления записи — иначе banned-флаг негде будет хранить
+    db.ref('banned/'+u).set(true).catch(err=>{
+      alert('Не удалось поставить бан: '+(err.code||err.message)+'\nПроверь Firebase Rules для пути "banned".');
+    });
+    db.ref('players/'+u).remove().catch(err=>{
+      alert('Не удалось удалить карточку игрока: '+(err.code||err.message));
+    });
+    if(username){
+      db.ref('usernames/'+username.toLowerCase()).remove().catch(err=>{
+        alert('Не удалось освободить ник "'+username+'": '+(err.code||err.message)+'\nПроверь правило записи для "usernames" — оно должно разрешать удаление админом.');
+      });
+    }
     selectedPlayer='';
-    document.getElementById('profile-body').innerHTML='<div style="color: var(--dim); font-family: Share Tech Mono,monospace; font-size: 12px; text-align: center; padding: 40px 0; letter-spacing: 2px">ИГРОК УДАЛЁН</div>';
+    document.getElementById('profile-body').innerHTML='<div style="color: var(--dim); font-family: Share Tech Mono,monospace; font-size: 12px; text-align: center; padding: 40px 0; letter-spacing: 2px">ИГРОК УДАЛЁН И ЗАБАНЕН</div>';
     allPlayers = allPlayers.filter(p => p.key !== u);
     renderTable(filterPlayers());
+  }).catch(err=>{
+    alert('Не удалось прочитать данные игрока: '+(err.code||err.message));
+  });
+}
+function unbanPlayer(u){
+  if(!confirm('Снять бан с этого UID? Игрок сможет снова пользоваться сайтом (но со старым ником придётся регистрироваться заново, если запись была удалена).')) return;
+  db.ref('banned/'+u).remove().then(()=>alert('Бан снят.')).catch(err=>{
+    alert('Не удалось снять бан: '+(err.code||err.message));
   });
 }
 

@@ -948,6 +948,9 @@ auth.onAuthStateChanged(fu=>{
     _loadingDiv.remove();
     if(_gameReady) return;
     if(fu){uid=fu.uid;
+            db.ref('banned/'+uid).once('value').then(function(bs){
+                if(bs.val()){ alert('Твой аккаунт был удалён администрацией.'); auth.signOut(); }
+            });
         db.ref('players/'+uid).once('value').then(s=>{
             if(_gameReady) return;
             if(s.exists()&&s.val().username){user=String(s.val().username);go();}

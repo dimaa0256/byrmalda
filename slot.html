@@ -1220,6 +1220,9 @@ function toEmailSafe(u){
         _loadingDiv.remove();
         if(firebaseUser && !uid){
             uid=firebaseUser.uid;
+            db.ref('banned/'+uid).once('value').then(function(bs){
+                if(bs.val()){ alert('Твой аккаунт был удалён администрацией.'); auth.signOut(); }
+            });
             db.ref('players/'+uid+'/username').once('value').then(s=>{
                 if(s.exists()){ user=s.val(); go(); }
                 else { document.getElementById('auth-section').style.display='block'; }
@@ -1739,12 +1742,15 @@ function toEmailSafe(u){
         if(!duelData || _roundBusy || _duelEnded) return;
         _roundBusy = true;
         const d = duelData;
-        const sc = d.scores||{challenger:0,opponent:0};
-        const newSc = {challenger: sc.challenger||0, opponent: sc.opponent||0};
-        newSc[myDuelRole]++;
         const winsNeeded = d.winsNeeded||3;
-        const finished = newSc[myDuelRole] >= winsNeeded;
-        db.ref('duels/'+d.duelId).update({scores: newSc, status: finished ? 'finished' : 'active'});
+        // атомарный инкремент через transaction() вместо чтения+перезаписи —
+        // иначе если оба игрока выигрывают почти одновременно, одна из побед теряется
+        db.ref('duels/'+d.duelId+'/scores/'+myDuelRole).transaction(cur=>(cur||0)+1).then(res=>{
+            const newVal = res.snapshot.val();
+            if(newVal >= winsNeeded){
+                db.ref('duels/'+d.duelId).update({status:'finished'});
+            }
+        }).catch(err=>{ console.error('duel score error', err); _roundBusy=false; });
     }
 
     function duelLose(){

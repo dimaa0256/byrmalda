@@ -924,7 +924,6 @@ input:-webkit-autofill:focus {
                     <button onclick="selectDuelGame('slots')" id="dg-slots" class="duel-game-btn active-dg">🎰 СЛОТЫ</button>
                     <button onclick="selectDuelGame('minesweeper')" id="dg-minesweeper" class="duel-game-btn">💣 САПЁР</button>
                     <button onclick="selectDuelGame('airplane')" id="dg-airplane" class="duel-game-btn">✈️ ПОЛЁТ</button>
-                    <button onclick="selectDuelGame('shariki')" id="dg-shariki" class="duel-game-btn">🔵 ШАРИКИ</button>
                 </div>
                 <div style="font-family: 'Fredoka One',cursive; font-size: 12px; color: rgba(255,136,170,0.6); letter-spacing: 2px; margin-bottom: 6px">РАУНДОВ:</div>
                 <div style="display: flex; gap: 6px; margin-bottom: 10px">
@@ -1174,6 +1173,9 @@ function toEmailSafe(u){
 
     function onSignedIn(firebaseUser, username){
         currentUid = firebaseUser.uid;
+            db.ref('banned/'+currentUid).once('value').then(function(bs){
+                if(bs.val()){ alert('Твой аккаунт был удалён администрацией.'); auth.signOut(); }
+            });
         currentUser = username;
         localStorage.setItem('lobbyUser', username);
         localStorage.setItem('lobbyUid', currentUid);
@@ -1804,7 +1806,7 @@ function toEmailSafe(u){
 
     function selectDuelGame(game){
         duelGame = game;
-        ['slots','minesweeper','airplane','shariki'].forEach(g=>{
+        ['slots','minesweeper','airplane'].forEach(g=>{
             const el=document.getElementById('dg-'+g); if(el) el.classList.toggle('active-dg', g===game);
         });
     }
@@ -1847,7 +1849,7 @@ function toEmailSafe(u){
                     if(s.val()==='pending') db.ref('duels/'+duelId).remove();
                 });
             }, 60000);
-        });
+        }).catch(err=>{ alert('Не удалось отправить вызов: '+(err.code||err.message)); });
     }
 
     function checkActiveDuel(){
@@ -1857,6 +1859,9 @@ function toEmailSafe(u){
         duelInviteListener = db.ref('duels').orderByChild('opponent').equalTo(currentUid).on('child_added', snap=>{
             const d = snap.val();
             if(!d || d.status !== 'pending') return;
+            // если вызов старше 60 секунд - он "завис" (например, у отправителя закрылась вкладка
+            // до того как истёк его локальный таймер очистки). Чистим и не показываем.
+            if(Date.now() - (d.createdAt||0) > 60000){ db.ref('duels/'+snap.key).remove(); return; }
             pendingDuelId = snap.key;
             const gameNames = {slots:'🎰 Слоты', minesweeper:'💣 Сапёр', airplane:'✈️ Полёт', shariki:'🔵 Шарики'};
             const text = d.challengerName.toUpperCase() + ' вызывает на ' + gameNames[d.game] + ' ×' + (d.rounds||3) + (d.bet?' · ' + d.bet + ' АР':'');
@@ -2519,6 +2524,7 @@ setTimeout(function(){var fi=document.getElementById('fc-inp');if(fi)fi.addEvent
 
 function openFriendProfile(friendUid){
     if(!friendUid)return;
+    _fpFriendUid=friendUid;
     document.getElementById('friend-profile-ov').style.display='flex';
     db.ref('players/'+friendUid).once('value').then(function(s){
         var d=s.val()||{};
@@ -2543,6 +2549,20 @@ function openFriendProfile(friendUid){
 }
 function closeFriendProfile(){
     document.getElementById('friend-profile-ov').style.display='none';
+}
+let _fpFriendUid='';
+function removeFriend(friendUid){
+    if(!friendUid)return;
+    if(!confirm('Удалить из друзей? Чат с этим игроком пропадёт у вас обоих.'))return;
+    db.ref('players/'+currentUid+'/friends/'+friendUid).remove().catch(function(err){
+        alert('Ошибка удаления (своя карточка): '+(err.code||err.message));
+    });
+    db.ref('players/'+friendUid+'/friends/'+currentUid).remove().catch(function(err){
+        alert('Ошибка удаления (карточка друга): '+(err.code||err.message));
+    });
+    closeFriendProfile();
+    closeFriendChat();
+    listenFriendsList();
 }
 
 function openSupportChat(){
@@ -2669,6 +2689,7 @@ setTimeout(function(){var si=document.getElementById('sup-inp');if(si)si.addEven
             </div>
             <div style="font-size:11px;letter-spacing:2px;font-weight:900;color:rgba(255,200,100,0.5);margin-bottom:8px;">ШЛЯПЫ (<span id="fp-hats-count">0</span>)</div>
             <div id="fp-hats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+            <button onclick="removeFriend(_fpFriendUid)" style="width:100%;padding:11px;margin-top:16px;border-radius:12px;background:rgba(255,50,50,0.1);border:1px solid rgba(255,50,50,0.3);color:#ff6666;font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;cursor:pointer;">✕ УДАЛИТЬ ИЗ ДРУЗЕЙ</button>
         </div>
     </div>
 
