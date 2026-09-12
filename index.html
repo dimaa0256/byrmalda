@@ -2362,10 +2362,12 @@ function listenFriendRequests(){
 
 let _allUsernames=null;
 let _searchDebounce=null;
+let _allUsernamesMap=null;
 function loadAllUsernamesCache(){
     if(_allUsernames) return Promise.resolve(_allUsernames);
     return db.ref('usernames').once('value').then(function(s){
-        _allUsernames=Object.keys(s.val()||{});
+        _allUsernamesMap=s.val()||{};
+        _allUsernames=Object.keys(_allUsernamesMap);
         return _allUsernames;
     });
 }
@@ -2378,16 +2380,35 @@ function renderFriendSearchResults(){
         if(!q){ wrap.style.display='none'; wrap.innerHTML=''; return; }
         loadAllUsernamesCache().then(function(list){
             var myName=String(currentUser||'').toLowerCase();
-            var matches=list.filter(function(n){ return n.indexOf(q)!==-1 && n!==myName; }).slice(0,8);
-            if(!matches.length){
+            var candidates=list.filter(function(n){ return n.indexOf(q)!==-1 && n!==myName; }).slice(0,8);
+            if(!candidates.length){
                 wrap.innerHTML='<div style="padding:10px 14px;color:rgba(255,255,255,0.3);font-size:12px;">Никого не найдено</div>';
                 wrap.style.display='block';
                 return;
             }
-            wrap.innerHTML=matches.map(function(n){
-                return '<div class="search-result-row" onclick="pickSearchResult(\''+n+'\')">'+n+'</div>';
-            }).join('');
-            wrap.style.display='block';
+            // проверяем, что аккаунт реально существует и не забанен, прежде чем показывать в поиске
+            Promise.all(candidates.map(function(n){
+                var uid=_allUsernamesMap[n];
+                return Promise.all([
+                    db.ref('players/'+uid).once('value'),
+                    db.ref('banned/'+uid).once('value')
+                ]).then(function(res){
+                    var alive = res[0].exists() && !res[1].val();
+                    if(!alive) db.ref('usernames/'+n).remove().catch(function(){}); // заодно чистим протухшую запись
+                    return alive ? n : null;
+                });
+            })).then(function(results){
+                var matches=results.filter(Boolean);
+                if(!matches.length){
+                    wrap.innerHTML='<div style="padding:10px 14px;color:rgba(255,255,255,0.3);font-size:12px;">Никого не найдено</div>';
+                    wrap.style.display='block';
+                    return;
+                }
+                wrap.innerHTML=matches.map(function(n){
+                    return '<div class="search-result-row" onclick="pickSearchResult(\''+n+'\')">'+n+'</div>';
+                }).join('');
+                wrap.style.display='block';
+            });
         });
     },150);
 }
@@ -2407,11 +2428,23 @@ function sendFriendRequestByInput(){
         if(!s.exists()){alert('Игрок «'+uname+'» не найден');return;}
         var targetUid=s.val();
         if(targetUid===currentUid){alert('Нельзя добавить самого себя 🙂');return;}
-        db.ref('players/'+currentUid+'/friends/'+targetUid).once('value').then(function(fs){
-            if(fs.exists()){alert('Вы уже друзья!');return;}
-            db.ref('players/'+targetUid+'/friendReq/'+currentUid).set({username:String(currentUser),ts:Date.now()}).then(function(){
-                alert('Заявка отправлена!');
-            }).catch(function(err){alert('Ошибка: '+(err.code||err.message));});
+        Promise.all([
+            db.ref('players/'+targetUid).once('value'),
+            db.ref('banned/'+targetUid).once('value')
+        ]).then(function(res){
+            var playerSnap=res[0], banSnap=res[1];
+            if(banSnap.val() || !playerSnap.exists()){
+                alert('Этот игрок больше недоступен.');
+                // на всякий случай чистим протухшую запись ника, если он всё ещё указан на этого игрока
+                db.ref('usernames/'+uname.toLowerCase()).remove().catch(function(){});
+                return;
+            }
+            db.ref('players/'+currentUid+'/friends/'+targetUid).once('value').then(function(fs){
+                if(fs.exists()){alert('Вы уже друзья!');return;}
+                db.ref('players/'+targetUid+'/friendReq/'+currentUid).set({username:String(currentUser),ts:Date.now()}).then(function(){
+                    alert('Заявка отправлена!');
+                }).catch(function(err){alert('Ошибка: '+(err.code||err.message));});
+            });
         });
     }).catch(function(err){alert('Ошибка: '+(err.code||err.message));});
 }
