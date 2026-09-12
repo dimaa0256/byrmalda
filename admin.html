@@ -662,6 +662,7 @@ body::after {
       <div class="stat-card"><div class="stat-label">ИГРОКОВ ОНЛАЙН</div><div class="stat-val" id="s-online">—</div></div>
       <div class="stat-card"><div class="stat-label">ЕЖЕДН. НАГРАДА</div><div class="stat-val blue" id="s-daily">—</div></div>
     </div>
+    <button onclick="cleanupEmptyPlayers()" style="width:100%;padding:9px;margin-bottom:14px;border-radius:10px;background:rgba(255,120,0,0.08);border:1px solid rgba(255,120,0,0.25);color:#ff9944;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;">🧹 НАЙТИ И УДАЛИТЬ ЗАПИСИ БЕЗ НИКА</button>
 
     
     <div class="nav-tabs">
@@ -1028,6 +1029,30 @@ function toggleDaily(u){
   });
 }
 
+function cleanupEmptyPlayers(){
+  // ищем игроков, у которых нет username даже после обратного поиска через usernames/
+  const empty = allPlayers.filter(p => !p.username);
+  if(!empty.length){ alert('Пустых записей не найдено 🎉'); return; }
+  const preview = empty.slice(0,15).map(p=>'• '+p.key.substring(0,12)+'… ('+(p.balance||0)+' АР)').join('\n');
+  const more = empty.length>15 ? '\n…и ещё '+(empty.length-15) : '';
+  if(!confirm('Найдено записей без ника: '+empty.length+'\n\n'+preview+more+'\n\nУдалить их все безвозвратно?')) return;
+  let done=0, failed=0;
+  empty.forEach(p=>{
+    db.ref('players/'+p.key).remove().then(()=>{
+      done++;
+      if(done+failed===empty.length){
+        alert('Готово. Удалено: '+done+(failed?', ошибок: '+failed:''));
+        loadPlayers();
+      }
+    }).catch(()=>{
+      failed++;
+      if(done+failed===empty.length){
+        alert('Готово. Удалено: '+done+(failed?', ошибок: '+failed:''));
+        loadPlayers();
+      }
+    });
+  });
+}
 function deletePlayer(u){
   if(!confirm('Удалить игрока "'+u+'"? Аккаунт будет забанен — игрок не сможет зайти обратно даже под тем же паролем. Это необратимо!')) return;
   // Сначала получаем username чтобы удалить из usernames/
