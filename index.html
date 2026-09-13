@@ -1028,6 +1028,7 @@ input:-webkit-autofill:focus {
     </div>
     <div class="divider"></div>
     <div class="footer-text">18+</div>
+    <div style="text-align:center;font-size:9px;color:rgba(255,255,255,0.2);font-family:monospace;margin-top:4px;">build 20260913-1636</div>
 </div>
 
 <button class="music-fab" onclick="toggleMusicPanel(event)">🎵</button>
@@ -2404,7 +2405,8 @@ function renderFriendSearchResults(){
                     db.ref('players/'+uid).once('value'),
                     db.ref('banned/'+uid).once('value')
                 ]).then(function(res){
-                    var alive = res[0].exists() && !res[1].val();
+                    var pdata = res[0].val();
+                    var alive = res[0].exists() && !res[1].val() && pdata && pdata.username && String(pdata.username).toLowerCase()===n;
                     if(!alive) db.ref('usernames/'+n).remove().catch(function(){}); // заодно чистим протухшую запись
                     return alive ? n : null;
                 });
@@ -2451,8 +2453,10 @@ function sendFriendRequestByInput(){
             db.ref('banned/'+targetUid).once('value')
         ]).then(function(res){
             var playerSnap=res[0], banSnap=res[1];
-            if(banSnap.val() || !playerSnap.exists()){
-                alert('Этот игрок больше недоступен.');
+            var pdata=playerSnap.val();
+            var isCurrentNick = pdata && pdata.username && String(pdata.username).toLowerCase()===uname.toLowerCase();
+            if(banSnap.val() || !playerSnap.exists() || !isCurrentNick){
+                alert(isCurrentNick===false && playerSnap.exists() ? 'Этот игрок сменил ник, попробуй найти его через поиск заново.' : 'Этот игрок больше недоступен.');
                 // на всякий случай чистим протухшую запись ника, если он всё ещё указан на этого игрока
                 db.ref('usernames/'+uname.toLowerCase()).remove().catch(function(){});
                 return;
@@ -2767,6 +2771,5 @@ setTimeout(function(){var si=document.getElementById('sup-inp');if(si)si.addEven
             </div>
         </div>
     </div>
-    <div style="position:fixed;bottom:2px;right:6px;font-size:9px;color:rgba(255,255,255,0.25);z-index:99999;font-family:monospace;pointer-events:none;">build 20260913-1636</div>
 </body>
 </html>
