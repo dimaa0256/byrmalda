@@ -744,6 +744,18 @@ input:-webkit-autofill:focus {
         <button onclick="buyNormalNick()" style="width:100%;padding:11px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:rgba(255,255,255,0.08);color:#fff;">ВЕРНУТЬ</button>
     </div>
 
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:24px;">✏️</span>
+            <div style="flex:1;">
+                <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#fff;">ИЗМЕНИТЬ НИК</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">Выбрать новый ник для аккаунта</div>
+            </div>
+            <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#ffd700;">100 АР</div>
+        </div>
+        <button onclick="buyChangeNick()" style="width:100%;padding:11px;border-radius:12px;border:1px solid rgba(255,180,0,0.3);font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;cursor:pointer;background:rgba(255,180,0,0.1);color:#ffd700;">ИЗМЕНИТЬ</button>
+    </div>
+
     <!-- 🥚 ПАСХАЛЬНАЯ АКЦИЯ -->
     <div id="shop-easter-item" style="display:none;background:rgba(255,200,100,0.06);border:1px solid rgba(255,180,0,0.2);border-radius:16px;padding:14px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
@@ -2035,6 +2047,48 @@ function updateNickShopBtn(has){
     var buy=document.getElementById('shop-nick-buy'),reset=document.getElementById('shop-nick-reset');
     if(buy)buy.style.display=has?'none':'block';
     if(reset)reset.style.display=has?'block':'none';
+}
+function buyChangeNick(){
+    if(!currentUid){alert('Сначала войдите в аккаунт');return;}
+    var newNick = prompt('Введи новый ник (2–15 символов):');
+    if(!newNick) return;
+    newNick = newNick.trim();
+    if(newNick.length<2 || newNick.length>15){ alert('Ник должен быть от 2 до 15 символов'); return; }
+    if(newNick.toLowerCase()===String(currentUser||'').toLowerCase()){ alert('Это и есть твой текущий ник 🙂'); return; }
+    db.ref('players/'+currentUid+'/balance').once('value').then(function(s){
+        var bal=s.val()||0;
+        if(bal<100){alert('Нужно 100 АР.');return;}
+        db.ref('usernames/'+newNick.toLowerCase()).once('value').then(function(us){
+            if(us.exists() && us.val()!==currentUid){ alert('Этот ник уже занят!'); return; }
+            if(!confirm('Сменить ник на "'+newNick+'" за 100 АР?'))return;
+            // чистим все старые записи usernames на этот uid (в т.ч. возможные дубли) и ставим новую
+            db.ref('usernames').once('value').then(function(allSnap){
+                var all=allSnap.val()||{};
+                var updates={};
+                Object.keys(all).forEach(function(key){
+                    if(all[key]===currentUid && key!==newNick.toLowerCase()) updates[key]=null;
+                });
+                updates[newNick.toLowerCase()]=currentUid;
+                db.ref('usernames').update(updates).then(function(){
+                    db.ref('players/'+currentUid).update({username:newNick, balance:bal-100}).then(function(){
+                        db.ref('players/'+currentUid+'/history').once('value').then(function(hs){
+                            var h=hs.val()||[];
+                            h.push('✏️ Смена ника на "'+newNick+'" — 100 АР');
+                            db.ref('players/'+currentUid+'/history').set(h.slice(-50));
+                        });
+                        currentUser=newNick;
+                        localStorage.setItem('lobbyUser', currentUser);
+                        showUserBlock();
+                        alert('Готово! Твой новый ник: '+newNick);
+                    }).catch(function(err){
+                        alert('Ник в базе имён обновлён, но не удалось обновить карточку: '+(err.code||err.message));
+                    });
+                }).catch(function(err){
+                    alert('Не удалось сменить ник: '+(err.code||err.message));
+                });
+            });
+        }).catch(function(err){ alert('Ошибка: '+(err.code||err.message)); });
+    });
 }
 function buyRainbowNick(){
     if(!currentUid)return;
