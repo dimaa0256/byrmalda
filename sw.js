@@ -1,13 +1,14 @@
-const CACHE = 'burmalda-v3';
+const CACHE = 'burmalda-v5';
 const ASSETS = [
-  '/index.html',
-  '/slot.html',
-  '/minesweeper.html',
-  '/airplane.html',
-  '/shariki.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  './index.html',
+  './slot.html',
+  './minesweeper.html',
+  './airplane.html',
+  './shariki.html',
+  './upgrade.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', e => {
