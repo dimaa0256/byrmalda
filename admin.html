@@ -662,7 +662,8 @@ body::after {
       <div class="stat-card"><div class="stat-label">ИГРОКОВ ОНЛАЙН</div><div class="stat-val" id="s-online">—</div></div>
       <div class="stat-card"><div class="stat-label">ЕЖЕДН. НАГРАДА</div><div class="stat-val blue" id="s-daily">—</div></div>
     </div>
-    <button onclick="cleanupEmptyPlayers()" style="width:100%;padding:9px;margin-bottom:14px;border-radius:10px;background:rgba(255,120,0,0.08);border:1px solid rgba(255,120,0,0.25);color:#ff9944;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;">🧹 НАЙТИ И УДАЛИТЬ ЗАПИСИ БЕЗ НИКА</button>
+    <button onclick="cleanupEmptyPlayers()" style="width:100%;padding:9px;margin-bottom:8px;border-radius:10px;background:rgba(255,120,0,0.08);border:1px solid rgba(255,120,0,0.25);color:#ff9944;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;">🧹 НАЙТИ И УДАЛИТЬ ЗАПИСИ БЕЗ НИКА</button>
+    <button onclick="cleanupDuplicateUsernames()" style="width:100%;padding:9px;margin-bottom:14px;border-radius:10px;background:rgba(255,120,0,0.08);border:1px solid rgba(255,120,0,0.25);color:#ff9944;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;">🧹 ПОЧИСТИТЬ СТАРЫЕ/ЛИШНИЕ НИКИ</button>
 
     
     <div class="nav-tabs">
@@ -1029,6 +1030,35 @@ function toggleDaily(u){
   });
 }
 
+function cleanupDuplicateUsernames(){
+  Promise.all([db.ref('players').once('value'), db.ref('usernames').once('value')]).then(function(res){
+    const players = res[0].val()||{};
+    const usernames = res[1].val()||{};
+    const toRemove = [];
+    Object.keys(usernames).forEach(function(nameKey){
+      const uid = usernames[nameKey];
+      const p = players[uid];
+      // запись ника считается лишней, если: игрока с таким uid больше нет,
+      // либо у него уже другой (актуальный) ник, а это — старый, оставшийся после переименования
+      if(!p || (p.username && String(p.username).toLowerCase() !== nameKey)){
+        toRemove.push(nameKey);
+      }
+    });
+    if(!toRemove.length){ alert('Старых/лишних ников не найдено 🎉'); return; }
+    const preview = toRemove.slice(0,15).map(n=>'• '+n).join('\n');
+    const more = toRemove.length>15 ? '\n…и ещё '+(toRemove.length-15) : '';
+    if(!confirm('Найдено лишних записей ников: '+toRemove.length+'\n\n'+preview+more+'\n\nУдалить их?')) return;
+    const updates = {};
+    toRemove.forEach(n=>{ updates[n]=null; });
+    db.ref('usernames').update(updates).then(()=>{
+      alert('Готово. Удалено: '+toRemove.length);
+    }).catch(err=>{
+      alert('Ошибка при удалении: '+(err.code||err.message));
+    });
+  }).catch(err=>{
+    alert('Ошибка чтения базы: '+(err.code||err.message));
+  });
+}
 function cleanupEmptyPlayers(){
   // ищем игроков, у которых нет username даже после обратного поиска через usernames/
   const empty = allPlayers.filter(p => !p.username);

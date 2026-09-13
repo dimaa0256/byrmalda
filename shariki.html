@@ -1484,15 +1484,26 @@ function updatePhysics(){
             // Получаем старый ник
             db.ref('players/'+lapUser+'/username').once('value').then(os=>{
                 const oldNick = os.val();
-                // Удаляем старый ник из usernames
-                if(oldNick) db.ref('usernames/'+String(oldNick).toLowerCase()).remove();
-                // Пишем новый
-                db.ref('usernames/'+newNick.toLowerCase()).set(lapUser);
-                db.ref('players/'+lapUser+'/username').set(newNick);
-                // Обновляем UI
-                document.getElementById('lap-name').textContent = newNick.toUpperCase();
-                lapRenameCancel();
-                loadLobbyAdminUsers();
+                // Удаляем старый ник из usernames (и заодно любые другие протухшие записи на этот uid)
+                db.ref('usernames').once('value').then(allSnap=>{
+                    const all = allSnap.val()||{};
+                    const updates = {};
+                    Object.keys(all).forEach(key=>{
+                        if(all[key]===lapUser && key!==newNick.toLowerCase()) updates[key]=null;
+                    });
+                    updates[newNick.toLowerCase()] = lapUser;
+                    db.ref('usernames').update(updates).then(()=>{
+                        db.ref('players/'+lapUser+'/username').set(newNick).then(()=>{
+                            document.getElementById('lap-name').textContent = newNick.toUpperCase();
+                            lapRenameCancel();
+                            loadLobbyAdminUsers();
+                        }).catch(err=>{
+                            alert('Ник в списке обновлён, но не удалось обновить карточку игрока: '+(err.code||err.message));
+                        });
+                    }).catch(err=>{
+                        alert('Не удалось переименовать: '+(err.code||err.message)+'\nСтарый ник мог остаться занятым.');
+                    });
+                });
             });
         });
     }
