@@ -2331,7 +2331,7 @@ function chatIdFor(a,b){ return [a,b].sort().join('_'); }
 function openMessenger(){
     if(!currentUid){alert('Войди в аккаунт');return;}
     document.getElementById('msgr-ov').style.display='flex';
-    _allUsernames=null; // обновляем кэш ников при каждом открытии
+    _allUsernames=null; _allUsernamesMap=null; // обновляем кэш ников при каждом открытии
     listenFriendRequests();
     listenFriendsList();
 }
@@ -2405,6 +2405,13 @@ function renderFriendSearchResults(){
                     return;
                 }
                 wrap.innerHTML=matches.map(function(n){
+                    return '<div class="search-result-row" onclick="pickSearchResult(\''+n+'\')">'+n+'</div>';
+                }).join('');
+                wrap.style.display='block';
+            }).catch(function(err){
+                console.error('Ошибка фильтрации поиска:', err);
+                // на всякий случай показываем нефильтрованный список, чтобы поиск хотя бы не завис молча
+                wrap.innerHTML=candidates.map(function(n){
                     return '<div class="search-result-row" onclick="pickSearchResult(\''+n+'\')">'+n+'</div>';
                 }).join('');
                 wrap.style.display='block';
