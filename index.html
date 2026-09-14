@@ -689,19 +689,21 @@ input:-webkit-autofill:focus {
 
     
     <div id="user-block" style="display: none">
-        <div class="user-bar">
-            <div style="min-width:0; flex-shrink:1;">
-                <div class="user-bar-name">игрок</div>
-                <div style="display: flex; align-items: center; gap: 4px; min-width:0;">
-                    <div class="user-bar-val" id="lobby-username" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"></div>
+        <div class="user-bar" style="flex-direction: column; align-items: stretch; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <div style="min-width: 0; flex-shrink: 1;">
+                    <div class="user-bar-name">игрок</div>
+                    <div class="user-bar-val" id="lobby-username" style="max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"></div>
+                </div>
+                <button class="btn-logout" onclick="logout()" style="flex-shrink: 0;">ВЫЙТИ</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(255,180,0,0.15);">
+                <div class="user-bar-name" style="margin-bottom: 0;">баланс</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div id="egg-balance-wrap" style="display:none;"><span style="font-family:'Fredoka One',cursive;font-size:13px;color:#ffdd44;" id="lobby-eggs">0 🥚</span></div>
+                    <div class="user-bar-bal" id="lobby-balance">0 АР</div>
                 </div>
             </div>
-            <div style="text-align: right; flex-shrink:0;">
-                <div class="user-bar-name">баланс</div>
-                <div class="user-bar-bal" id="lobby-balance">0 АР</div>
-                <div id="egg-balance-wrap" style="display:none;margin-top:1px;"><span style="font-family:'Fredoka One',cursive;font-size:13px;color:#ffdd44;" id="lobby-eggs">0 🥚</span></div>
-            </div>
-            <button class="btn-logout" onclick="logout()">ВЫЙТИ</button>
         </div>
 
         <div style="margin-top:8px;text-align:center;">
