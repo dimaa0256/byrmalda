@@ -195,6 +195,7 @@ input::placeholder {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
 }
 
 .user-bar-name {
@@ -204,13 +205,14 @@ input::placeholder {
     color: rgba(255,180,100,0.5);
     text-transform: uppercase;
     margin-bottom: 2px;
+    white-space: nowrap;
 }
 
 .user-bar-val {
     font-family: 'Fredoka One', cursive;
     font-size: 18px;
     color: #fff;
-    max-width: 140px;
+    max-width: 110px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -221,6 +223,8 @@ input::placeholder {
     font-size: 18px;
     color: #ffd700;
     text-shadow: 0 0 8px rgba(255,215,0,0.5);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-logout {
@@ -234,6 +238,8 @@ input::placeholder {
     cursor: pointer;
     letter-spacing: 1px;
     transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-logout:hover {
@@ -684,13 +690,13 @@ input:-webkit-autofill:focus {
     
     <div id="user-block" style="display: none">
         <div class="user-bar">
-            <div>
+            <div style="min-width:0; flex-shrink:1;">
                 <div class="user-bar-name">игрок</div>
-                <div style="display: flex; align-items: center; gap: 4px">
-                    <div class="user-bar-val" id="lobby-username" style="max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"></div>
+                <div style="display: flex; align-items: center; gap: 4px; min-width:0;">
+                    <div class="user-bar-val" id="lobby-username" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"></div>
                 </div>
             </div>
-            <div style="text-align: right">
+            <div style="text-align: right; flex-shrink:0;">
                 <div class="user-bar-name">баланс</div>
                 <div class="user-bar-bal" id="lobby-balance">0 АР</div>
                 <div id="egg-balance-wrap" style="display:none;margin-top:1px;"><span style="font-family:'Fredoka One',cursive;font-size:13px;color:#ffdd44;" id="lobby-eggs">0 🥚</span></div>
