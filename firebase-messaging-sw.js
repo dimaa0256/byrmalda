@@ -16,13 +16,16 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // Показываем уведомление, когда сайт закрыт/не в фокусе
+// ВАЖНО: читаем именно из payload.data, а не payload.notification —
+// если бы в сообщении было поле notification, браузер показал бы его САМ,
+// а потом ещё раз показался бы наш собственный вызов ниже — уведомление дублировалось бы.
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || 'Бурмалда';
-  const body = payload.notification?.body || '';
+  const title = payload.data?.title || 'Бурмалда';
+  const body = payload.data?.body || '';
   self.registration.showNotification(title, {
     body,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: './icon-192.png',
+    badge: './icon-192.png',
   });
 });
 
