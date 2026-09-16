@@ -1084,6 +1084,7 @@ input:-webkit-autofill:focus {
         apiKey: "AIzaSyCYptPoeocCbngAMfG_R-t32FOfIGJY13s",
         databaseURL: "https://dima256-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "dima256",
+        messagingSenderId: "208400853144",
         appId: "1:208400853144:web:78eb608f5aacd57e8848ed"
     };
     firebase.initializeApp(firebaseConfig);
@@ -2408,10 +2409,12 @@ const VAPID_KEY = 'BKpHK2nmyqZA-4WEiyGF9p5iYxqsPxrA-iwV39k0t43E680q___DQvV22foFN
 const PUSH_WORKER_URL = 'https://burmalda-push.dimochka0256.workers.dev/';
 
 let _pushMessaging = null;
+let _pushInitError = '';
 function getPushMessaging(){
     if(_pushMessaging) return _pushMessaging;
-    if(!('serviceWorker' in navigator) || !firebase.messaging) return null;
-    try { _pushMessaging = firebase.messaging(); } catch(e){ console.error('messaging init error', e); return null; }
+    if(!('serviceWorker' in navigator)){ _pushInitError='Браузер не поддерживает Service Worker'; return null; }
+    if(!firebase.messaging){ _pushInitError='firebase-messaging-compat.js не загрузился'; return null; }
+    try { _pushMessaging = firebase.messaging(); } catch(e){ _pushInitError=(e.message||String(e)); console.error('messaging init error', e); return null; }
     return _pushMessaging;
 }
 
@@ -2445,7 +2448,7 @@ function enablePushNotifications(){
         if(perm!=='granted'){ return; }
         navigator.serviceWorker.register('./firebase-messaging-sw.js').then(function(reg){
             const messaging = getPushMessaging();
-            if(!messaging){ alert('Не удалось инициализировать уведомления'); return; }
+            if(!messaging){ alert('Не удалось инициализировать уведомления: '+_pushInitError); return; }
             messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg }).then(function(token){
                 if(!token){ alert('Не удалось получить токен уведомлений'); return; }
                 db.ref('players/'+currentUid+'/fcmToken').set(token).then(function(){
